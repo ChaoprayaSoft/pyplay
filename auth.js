@@ -1,18 +1,27 @@
 // --- Auth & Google Sheets Sync Utility ---
 
+// ==========================================
+// ⚙️ GOOGLE CLOUD INTEGRATION VARIABLES
+// ==========================================
+// 1. Paste your deployed Google Apps Script Web App URL here:
+const GOOGLE_SHEETS_SCRIPT_URL = ""; 
+
+// 2. Paste your Google OAuth Client ID here:
+const GOOGLE_OAUTH_CLIENT_ID = "103949829472-placeholder.apps.googleusercontent.com"; 
+// ==========================================
+
 const DEFAULT_AVATARS = ["🐱", "🐶", "🦊", "🦁", "🐯", "🐼", "🐨", "🐸", "🐙", "🦄"];
 const DEFAULT_COLORS = ["#3b82f6", "#10b981", "#ef4444", "#f59e0b", "#8b5cf6", "#ec4899"];
 
 const PyPlayAuth = {
     // Current local state
     user: null,
-    scriptUrl: localStorage.getItem('pyplay_gs_url') || '', // Google Apps Script URL
-    googleClientId: localStorage.getItem('pyplay_google_client_id') || '103949829472-placeholder.apps.googleusercontent.com',
+    scriptUrl: GOOGLE_SHEETS_SCRIPT_URL, // Configured via GOOGLE_SHEETS_SCRIPT_URL above
+    googleClientId: GOOGLE_OAUTH_CLIENT_ID, // Configured via GOOGLE_OAUTH_CLIENT_ID above
 
     init() {
         this.loadLocalUser();
         this.createAppHeader();
-        this.createSettingsModal();
         this.createLoginModal();
         this.initGoogleAuth();
     },
@@ -244,12 +253,6 @@ const PyPlayAuth = {
         }
     },
 
-    setScriptUrl(url) {
-        this.scriptUrl = url;
-        localStorage.setItem('pyplay_gs_url', url);
-        window.location.reload();
-    },
-
     // --- UI Templates ---
     createAppHeader() {
         const header = document.querySelector('header');
@@ -281,16 +284,6 @@ const PyPlayAuth = {
                 ${this.user.role === 'Admin' ? `<a href="admin.html" class="btn btn-outline" style="border-color: rgba(239, 68, 68, 0.4); color: #fca5a5;">🛡️ Admin</a>` : ''}
                 <button class="btn btn-outline" onclick="PyPlayAuth.logout()">Log Out</button>
             `;
-
-            // Add settings cog (ONLY FOR ADMIN ACCESS)
-            if (this.user.role === 'Admin') {
-                const settingsBtn = document.createElement('button');
-                settingsBtn.className = 'btn btn-outline';
-                settingsBtn.innerHTML = '⚙️';
-                settingsBtn.title = "Configure Google Sheets Sync";
-                settingsBtn.onclick = () => this.openSettingsModal();
-                profileDiv.appendChild(settingsBtn);
-            }
         } else {
             profileDiv.innerHTML = `
                 <button class="btn btn-outline" onclick="PyPlayAuth.openLoginModal()">Join Now</button>
@@ -305,40 +298,6 @@ const PyPlayAuth = {
         } else {
             header.appendChild(profileDiv);
         }
-    },
-
-    createSettingsModal() {
-        const modal = document.createElement('div');
-        modal.id = 'pyplay-settings-modal';
-        modal.className = 'pyplay-modal-overlay hidden';
-        modal.style.cssText = `
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);
-            display: none; align-items: center; justify-content: center; z-index: 10000;
-        `;
-        modal.innerHTML = `
-            <div class="glass-panel" style="width: 450px; padding: 2rem; display:flex; flex-direction:column; gap:1.5rem;">
-                <h3 style="font-size:1.5rem; font-weight:700;">⚙️ Sync & Auth Settings</h3>
-                <p style="font-size:0.875rem; color:var(--text-muted); line-height:1.4;">
-                    Configure your platform cloud integrations below.
-                </p>
-                <div style="display:flex; flex-direction:column; gap:1rem;">
-                    <div style="display:flex; flex-direction:column; gap:0.35rem;">
-                        <label style="font-size:0.75rem; font-weight:600; text-transform:uppercase; color:var(--text-muted);">Script Web App URL</label>
-                        <input type="text" id="pyplay-gs-url-input" placeholder="https://script.google.com/macros/s/.../exec" style="background:rgba(0,0,0,0.3); border:1px solid var(--panel-border); color:white; border-radius:8px; padding:0.75rem; font-family:var(--font-ui); font-size:0.9rem; outline:none; width: 100%;" value="${this.scriptUrl}">
-                    </div>
-                    <div style="display:flex; flex-direction:column; gap:0.35rem;">
-                        <label style="font-size:0.75rem; font-weight:600; text-transform:uppercase; color:var(--text-muted);">Google Client ID (OAuth)</label>
-                        <input type="text" id="pyplay-google-client-id-input" placeholder="Client ID from Google Cloud Console" style="background:rgba(0,0,0,0.3); border:1px solid var(--panel-border); color:white; border-radius:8px; padding:0.75rem; font-family:var(--font-ui); font-size:0.9rem; outline:none; width: 100%;" value="${this.googleClientId}">
-                    </div>
-                </div>
-                <div style="display:flex; gap:1rem; margin-top:1rem;">
-                    <button class="btn btn-outline" onclick="document.getElementById('pyplay-settings-modal').style.display = 'none'" style="flex:1; justify-content:center;">Cancel</button>
-                    <button class="btn btn-primary" onclick="PyPlayAuth.saveSettingsUrl()" style="flex:1; justify-content:center;">Save & Sync</button>
-                </div>
-            </div>
-        `;
-        document.body.appendChild(modal);
     },
 
     createLoginModal() {
@@ -375,25 +334,7 @@ const PyPlayAuth = {
         this.initGoogleAuth();
     },
 
-    openSettingsModal() {
-        document.getElementById('pyplay-settings-modal').style.display = 'flex';
-    },
 
-    saveSettingsUrl() {
-        const valUrl = document.getElementById('pyplay-gs-url-input').value.trim();
-        const valClientId = document.getElementById('pyplay-google-client-id-input').value.trim();
-        
-        this.setScriptUrl(valUrl);
-        
-        this.googleClientId = valClientId;
-        localStorage.setItem('pyplay_google_client_id', valClientId);
-        
-        // Re-initialize Google Auth with new Client ID
-        this.initGoogleAuth();
-        
-        document.getElementById('pyplay-settings-modal').style.display = 'none';
-        alert("Sync & Auth settings saved successfully! 🚀");
-    },
 
     async editNicknamePrompt() {
         if (!this.user) return;
