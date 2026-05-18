@@ -132,11 +132,11 @@ const PyPlayAuth = {
     },
 
     // --- Actions ---
-    async login(email, name, role = "Learner") {
-        const randomAvatar = DEFAULT_AVATARS[Math.floor(Math.random() * DEFAULT_AVATARS.length)];
+    async login(email, name, role = "Learner", avatar = null) {
+        const randomAvatar = avatar || DEFAULT_AVATARS[Math.floor(Math.random() * DEFAULT_AVATARS.length)];
         const randomColor = DEFAULT_COLORS[Math.floor(Math.random() * DEFAULT_COLORS.length)];
         
-        const userData = {
+        let userData = {
             email,
             name,
             avatar: randomAvatar,
@@ -151,9 +151,39 @@ const PyPlayAuth = {
             lastUpdated: new Date().toISOString()
         };
 
+        // Try to fetch existing profile from Google Sheets if scriptUrl is configured
+        if (this.scriptUrl) {
+            try {
+                // Set temporary user object so syncFromSheets has access to the email for fetching
+                this.user = { email, name }; 
+                const sheetsData = await this.syncFromSheets();
+                if (sheetsData && sheetsData.email) {
+                    // Existing user found! Restore their profile and progress
+                    userData = {
+                        email: sheetsData.email,
+                        name: sheetsData.name || name,
+                        avatar: sheetsData.avatar || randomAvatar,
+                        color: sheetsData.color || randomColor,
+                        role: sheetsData.role || role,
+                        progress: typeof sheetsData.progress === 'string' ? JSON.parse(sheetsData.progress) : (sheetsData.progress || userData.progress),
+                        lastUpdated: sheetsData.lastUpdated || new Date().toISOString()
+                    };
+                } else {
+                    // New user! Initiate and push newly created data to Sheets
+                    await this.pushUserToSheets(userData);
+                }
+            } catch (err) {
+                console.warn("Could not sync with Google Sheets during login, falling back to local initial setup.", err);
+                // Fallback to pushing newly created user
+                await this.pushUserToSheets(userData);
+            }
+        } else {
+            // Push locally if no scriptUrl is set yet
+            await this.pushUserToSheets(userData);
+        }
+
         this.saveLocalUser(userData);
-        await this.pushUserToSheets(userData);
-        await this.logToSheets(email, name, "Logged In");
+        await this.logToSheets(email, userData.name, "Logged In");
         
         // Refresh page or redirect
         window.location.reload();
@@ -252,13 +282,15 @@ const PyPlayAuth = {
                 <button class="btn btn-outline" onclick="PyPlayAuth.logout()">Log Out</button>
             `;
 
-            // Add settings cog (BOTH ADMIN AND LEARNER ACCESS)
-            const settingsBtn = document.createElement('button');
-            settingsBtn.className = 'btn btn-outline';
-            settingsBtn.innerHTML = '⚙️';
-            settingsBtn.title = "Configure Google Sheets Sync";
-            settingsBtn.onclick = () => this.openSettingsModal();
-            profileDiv.appendChild(settingsBtn);
+            // Add settings cog (ONLY FOR ADMIN ACCESS)
+            if (this.user.role === 'Admin') {
+                const settingsBtn = document.createElement('button');
+                settingsBtn.className = 'btn btn-outline';
+                settingsBtn.innerHTML = '⚙️';
+                settingsBtn.title = "Configure Google Sheets Sync";
+                settingsBtn.onclick = () => this.openSettingsModal();
+                profileDiv.appendChild(settingsBtn);
+            }
         } else {
             profileDiv.innerHTML = `
                 <button class="btn btn-outline" onclick="PyPlayAuth.openLoginModal()">Join Now</button>
@@ -319,46 +351,19 @@ const PyPlayAuth = {
             display: none; align-items: center; justify-content: center; z-index: 10000;
         `;
         modal.innerHTML = `
-            <div class="glass-panel" style="width: 420px; padding: 2.2rem; display:flex; flex-direction:column; gap:1.15rem; text-align:center;">
-                <div style="font-size:2.5rem;">🐍</div>
+            <div class="glass-panel" style="width: 420px; padding: 2.5rem; display:flex; flex-direction:column; gap:1.5rem; text-align:center;">
+                <div style="font-size:3rem;">🐍</div>
                 <div>
-                    <h3 style="font-size:1.5rem; font-weight:700; color:#fff;">Sign In with Gmail</h3>
-                    <p style="font-size:0.8rem; color:var(--text-muted); margin-top:0.25rem;">Choose an account or register a new one</p>
+                    <h3 style="font-size:1.75rem; font-weight:700; color:#fff;">Sign In with Google</h3>
+                    <p style="font-size:0.875rem; color:var(--text-muted); margin-top:0.25rem;">Sign in with your Google Account to access PyPlay</p>
                 </div>
                 
                 <!-- Google API Button Container -->
-                <div style="display:flex; flex-direction:column; gap:0.5rem; align-items:center; margin-top:0.25rem;">
-                    <span style="font-size:0.75rem; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; align-self:flex-start;">Sign In with Google API</span>
+                <div style="display:flex; flex-direction:column; gap:0.5rem; align-items:center; margin-top:1rem; margin-bottom:1rem;">
                     <div id="google-signin-btn-api" style="width:100%; display:flex; justify-content:center;"></div>
                 </div>
-
-                <div style="border-top: 1px solid var(--panel-border); margin: 0.25rem 0; position:relative; text-align:center;">
-                    <span style="position:absolute; top:-10px; left:50%; transform:translateX(-50%); background:#181c2b; padding:0 0.5rem; font-size:0.65rem; color:var(--text-muted); font-weight:700; text-transform:uppercase; letter-spacing:0.05em;">Or Join with Custom Account</span>
-                </div>
-
-                <!-- Custom Real Gmail Form -->
-                <div style="display:flex; flex-direction:column; gap:0.75rem; text-align:left; margin-top:0.25rem;">
-                    <div style="display:flex; flex-direction:column; gap:0.25rem;">
-                        <label style="font-size:0.7rem; font-weight:600; color:var(--text-muted);">Your Name</label>
-                        <input type="text" id="login-name-input" placeholder="e.g. John Doe" style="background:rgba(0,0,0,0.3); border:1px solid var(--panel-border); color:white; border-radius:8px; padding:0.5rem 0.75rem; font-family:var(--font-ui); font-size:0.85rem; outline:none;">
-                    </div>
-                    <div style="display:flex; flex-direction:column; gap:0.25rem;">
-                        <label style="font-size:0.7rem; font-weight:600; color:var(--text-muted);">Gmail Address</label>
-                        <input type="email" id="login-email-input" placeholder="e.g. john@gmail.com" style="background:rgba(0,0,0,0.3); border:1px solid var(--panel-border); color:white; border-radius:8px; padding:0.5rem 0.75rem; font-family:var(--font-ui); font-size:0.85rem; outline:none;">
-                    </div>
-                </div>
-
-                <button class="btn btn-primary" onclick="PyPlayAuth.handleEmailLogin()" style="justify-content:center; width:100%; padding:0.6rem; font-size:0.9rem; border-radius:8px; display:flex; align-items:center; gap:0.5rem; font-weight:700; cursor:pointer;">
-                    <svg width="16" height="16" viewBox="0 0 24 24" style="display:block;">
-                        <path fill="#ffffff" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v3.92h6.69c-.29 1.5-1.14 2.77-2.43 3.63v3.02h3.92c2.29-2.11 3.56-5.22 3.56-8.9z"/>
-                        <path fill="#ffffff" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.92-3.04c-1.08.72-2.48 1.16-4.01 1.16-3.09 0-5.72-2.08-6.66-4.88H1.31v3.14C3.29 22.39 7.37 24 12 24z"/>
-                        <path fill="#ffffff" d="M5.34 14.33c-.24-.72-.38-1.49-.38-2.33s.14-1.61.38-2.33V6.53H1.31C.48 8.18 0 10.03 0 12s.48 3.82 1.31 5.47l4.03-3.14z"/>
-                        <path fill="#ffffff" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.43-3.43C17.95 1.19 15.24 0 12 0 7.37 0 3.29 1.61 1.31 4.75l4.03 3.14c.94-2.8 3.57-4.88 6.66-4.88z"/>
-                    </svg>
-                    Sign In with Custom Gmail
-                </button>
                 
-                <button class="btn btn-clear" onclick="document.getElementById('pyplay-login-modal').style.display = 'none'" style="align-self:center; font-size:0.75rem; margin-top:0.25rem;">Close</button>
+                <button class="btn btn-clear" onclick="document.getElementById('pyplay-login-modal').style.display = 'none'" style="align-self:center; font-size:0.8rem;">Close</button>
             </div>
         `;
         document.body.appendChild(modal);
