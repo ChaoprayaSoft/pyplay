@@ -56,7 +56,7 @@ const lessons = [
         topic: "Video I/O",
         concept: "To save video files, instantiate `cv2.VideoWriter`. To compress video frames, specify a FourCC (Four Character Code) codec like `'MJPG'` or `'XVID'` using <code>cv2.VideoWriter_fourcc(*'MJPG')</code>.",
         example: 'import cv2\nfourcc = cv2.VideoWriter_fourcc(*"MJPG")\nprint(fourcc)',
-        task: 'Initialize the four-character video codec (FourCC) for the `'MJPG'` codec format, and print a check verifying the codec is successfully initialized (e.g. `fourcc > 0`).',
+        task: "Initialize the four-character video codec (FourCC) for the 'MJPG' codec format, and print a check verifying the codec is successfully initialized (e.g. `fourcc > 0`).",
         initialCode: 'import cv2\n# Initialize MJPG fourcc codec and print if successfully generated (value > 0):\n',
         expectedOutput: "True"
     },
