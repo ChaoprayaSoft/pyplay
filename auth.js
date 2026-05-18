@@ -4,10 +4,10 @@
 // ⚙️ GOOGLE CLOUD INTEGRATION VARIABLES
 // ==========================================
 // 1. Paste your deployed Google Apps Script Web App URL here:
-const GOOGLE_SHEETS_SCRIPT_URL = ""; 
+const GOOGLE_SHEETS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbywkBFnCaI9mXEeh833XTeD8lnqO6rn2Zw9_d9hxvF_nBmVGhy9CM4K-ZMESq7PCZLF/exec";
 
 // 2. Paste your Google OAuth Client ID here:
-const GOOGLE_OAUTH_CLIENT_ID = "103949829472-placeholder.apps.googleusercontent.com"; 
+const GOOGLE_OAUTH_CLIENT_ID = "1049203742621-85p09ruvq6kr2m1bnu1kg933ajhbjen3.apps.googleusercontent.com";
 // ==========================================
 
 const DEFAULT_AVATARS = ["🐱", "🐶", "🦊", "🦁", "🐯", "🐼", "🐨", "🐸", "🐙", "🦄"];
@@ -45,13 +45,13 @@ const PyPlayAuth = {
     // --- Google Sheets Sync Methods ---
     async syncFromSheets() {
         if (!this.user || !this.scriptUrl) return;
-        
+
         return new Promise((resolve) => {
             const callbackName = 'pyplay_jsonp_' + Math.round(Math.random() * 1000000);
             window[callbackName] = (data) => {
                 delete window[callbackName];
                 document.getElementById(callbackName)?.remove();
-                
+
                 if (data) {
                     // Update local storage with fresh sheets data
                     this.saveLocalUser({
@@ -93,7 +93,7 @@ const PyPlayAuth = {
 
     async pushUserToSheets(userData) {
         if (!this.scriptUrl) return;
-        
+
         try {
             await fetch(this.scriptUrl, {
                 method: 'POST',
@@ -144,7 +144,7 @@ const PyPlayAuth = {
     async login(email, name, role = "Learner", avatar = null) {
         const randomAvatar = avatar || DEFAULT_AVATARS[Math.floor(Math.random() * DEFAULT_AVATARS.length)];
         const randomColor = DEFAULT_COLORS[Math.floor(Math.random() * DEFAULT_COLORS.length)];
-        
+
         let userData = {
             email,
             name,
@@ -164,7 +164,7 @@ const PyPlayAuth = {
         if (this.scriptUrl) {
             try {
                 // Set temporary user object so syncFromSheets has access to the email for fetching
-                this.user = { email, name }; 
+                this.user = { email, name };
                 const sheetsData = await this.syncFromSheets();
                 if (sheetsData && sheetsData.email) {
                     // Existing user found! Restore their profile and progress
@@ -193,7 +193,7 @@ const PyPlayAuth = {
 
         this.saveLocalUser(userData);
         await this.logToSheets(email, userData.name, "Logged In");
-        
+
         // Refresh page or redirect
         window.location.reload();
     },
@@ -209,7 +209,7 @@ const PyPlayAuth = {
 
     async updateProfile(avatar, color, name) {
         if (!this.user) return;
-        
+
         this.user.avatar = avatar;
         this.user.color = color;
         if (name) this.user.name = name;
@@ -239,15 +239,15 @@ const PyPlayAuth = {
 
         this.user.lastUpdated = new Date().toISOString();
         this.saveLocalUser(this.user);
-        
+
         await this.pushUserToSheets(this.user);
-        
-        const logMsg = isCompleted 
+
+        const logMsg = isCompleted
             ? `Completed Lesson ${lessonIndex + 1} of ${courseId}`
             : `Attempted Lesson ${lessonIndex + 1} of ${courseId}`;
-            
+
         await this.logToSheets(this.user.email, this.user.name, logMsg);
-        
+
         if (courseProgress.completed) {
             await this.logToSheets(this.user.email, this.user.name, `Obtained Badge: ${courseId.toUpperCase()} GRADUATE`);
         }
@@ -263,7 +263,7 @@ const PyPlayAuth = {
         if (existingAuth) {
             existingAuth.remove();
         }
-        
+
         const profileDiv = document.createElement('div');
         profileDiv.className = 'header-auth-controls';
         profileDiv.style.display = 'flex';
@@ -273,7 +273,7 @@ const PyPlayAuth = {
         if (this.user) {
             // Apply custom theme color dynamically
             document.documentElement.style.setProperty('--accent-primary', this.user.color);
-            
+
             profileDiv.innerHTML = `
                 <div class="user-status-widget" onclick="window.location.href='dashboard.html'" style="cursor:pointer; display:flex; align-items:center; gap:0.5rem; background: rgba(255,255,255,0.05); padding: 0.5rem 1rem; border-radius: 99px;">
                     <span class="user-avatar" style="font-size: 1.5rem; cursor:pointer;" title="Click to edit nickname" onclick="event.stopPropagation(); PyPlayAuth.editNicknamePrompt();">${this.user.avatar}</span>
@@ -375,13 +375,13 @@ const PyPlayAuth = {
 
     setupGoogleButton() {
         if (typeof google === 'undefined') return;
-        
+
         try {
             google.accounts.id.initialize({
                 client_id: this.googleClientId,
                 callback: (res) => this.handleGoogleCredentialResponse(res)
             });
-            
+
             const btnContainer = document.getElementById("google-signin-btn-api");
             if (btnContainer) {
                 btnContainer.innerHTML = ''; // Clean container
@@ -405,11 +405,11 @@ const PyPlayAuth = {
                 return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
             }).join(''));
             const payload = JSON.parse(jsonPayload);
-            
+
             const realEmail = payload.email;
             const realName = payload.name;
             const realAvatar = DEFAULT_AVATARS[Math.floor(Math.random() * DEFAULT_AVATARS.length)]; // Custom cute avatar assigned
-            
+
             this.login(realEmail, realName, 'Learner', realAvatar);
             document.getElementById('pyplay-login-modal').style.display = 'none';
         } catch (e) {
