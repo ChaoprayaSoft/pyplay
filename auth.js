@@ -224,12 +224,16 @@ const PyPlayAuth = {
         if (!this.user) return;
 
         if (!this.user.progress[courseId]) {
-            this.user.progress[courseId] = { completed_lessons: [], completed: false };
+            this.user.progress[courseId] = { completed_lessons: [], completed: false, highest_lesson: 0 };
         }
 
         const courseProgress = this.user.progress[courseId];
         if (isCompleted && !courseProgress.completed_lessons.includes(lessonIndex)) {
             courseProgress.completed_lessons.push(lessonIndex);
+        }
+
+        if (isCompleted) {
+            courseProgress.highest_lesson = Math.max(courseProgress.highest_lesson || 0, lessonIndex + 1);
         }
 
         // Check completion based on course total lessons

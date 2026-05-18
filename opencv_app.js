@@ -143,6 +143,7 @@ const lessons = [
 ];
 
 let currentLessonIndex = 0;
+let highestLessonIndex = 0;
 let pyodideReady = false;
 let pyodideInstance = null;
 
@@ -150,7 +151,7 @@ let pyodideInstance = null;
 const dom = {
     lessonNum: document.getElementById('current-lesson-num'),
     totalLessons: document.getElementById('total-lessons'),
-    progressBar: document.getElementById('progress-bar'),
+    progressStepsContainer: document.getElementById('progress-steps-container'),
     prevBtn: document.getElementById('prev-btn'),
     nextBtn: document.getElementById('next-btn'),
 
@@ -188,8 +189,19 @@ async function init() {
         if (!PyPlayAuth.user.progress) {
             PyPlayAuth.user.progress = {};
         }
-        const pyProgress = PyPlayAuth.user.progress.opencv || { completed_lessons: [], completed: false };
+        const pyProgress = PyPlayAuth.user.progress.opencv || { completed_lessons: [], completed: false, highest_lesson: 0 };
         const completed = pyProgress.completed_lessons || [];
+
+        // Find highest lesson unlocked
+        if (pyProgress.highest_lesson !== undefined) {
+            highestLessonIndex = pyProgress.highest_lesson;
+        } else {
+            // Fallback to max completed lesson index + 1 or 0
+            highestLessonIndex = completed.length > 0 ? Math.max(...completed) + 1 : 0;
+        }
+
+        // Cap highestLessonIndex to lessons.length - 1
+        highestLessonIndex = Math.min(highestLessonIndex, lessons.length - 1);
 
         // Find first lesson index not in completed lessons list
         let resumeIndex = 0;
@@ -202,6 +214,7 @@ async function init() {
         // If all are completed, set to last lesson
         if (completed.length === lessons.length) {
             resumeIndex = lessons.length - 1;
+            highestLessonIndex = lessons.length - 1;
         }
         currentLessonIndex = resumeIndex;
     }
@@ -432,6 +445,47 @@ window.updateCanvasPreview = function (winname, url) {
 };
 
 // --- Functions ---
+function renderProgressSteps() {
+    const container = dom.progressStepsContainer;
+    if (!container) return;
+
+    container.innerHTML = '';
+
+    // Retrieve highest lesson index from user progress
+    let highest = highestLessonIndex;
+    if (typeof PyPlayAuth !== 'undefined' && PyPlayAuth.user) {
+        const pyProgress = PyPlayAuth.user.progress.opencv || { completed_lessons: [], completed: false, highest_lesson: 0 };
+        const completed = pyProgress.completed_lessons || [];
+        if (pyProgress.highest_lesson !== undefined) {
+            highest = pyProgress.highest_lesson;
+        } else {
+            highest = completed.length > 0 ? Math.max(...completed) + 1 : 0;
+        }
+        highest = Math.min(highest, lessons.length - 1);
+        highestLessonIndex = highest;
+    }
+
+    for (let i = 0; i < lessons.length; i++) {
+        const pill = document.createElement('div');
+        pill.className = 'progress-step-pill';
+        pill.setAttribute('data-tooltip', `${i + 1}. ${lessons[i].title}`);
+
+        if (i === currentLessonIndex) {
+            pill.classList.add('active');
+        } else if (i <= highest) {
+            pill.classList.add('completed');
+            pill.addEventListener('click', () => {
+                currentLessonIndex = i;
+                loadLesson(i);
+            });
+        } else {
+            pill.classList.add('locked');
+        }
+
+        container.appendChild(pill);
+    }
+}
+
 function loadLesson(index) {
     const lesson = lessons[index];
 
@@ -446,13 +500,23 @@ function loadLesson(index) {
     editor.setValue(lesson.initialCode);
     dom.successMessage.classList.add('hidden');
 
-    // Update progress bar
-    const progress = ((index) / lessons.length) * 100;
-    dom.progressBar.style.width = `${progress}%`;
+    // Update progress steps UI
+    renderProgressSteps();
 
     // Update buttons
     dom.prevBtn.disabled = index === 0;
-    dom.nextBtn.disabled = true; // Disabled until task is passed
+
+    // Enable "Next" button if lesson has already been completed/passed in the past
+    const pyProgress = (typeof PyPlayAuth !== 'undefined' && PyPlayAuth.user)
+        ? (PyPlayAuth.user.progress.opencv || { completed_lessons: [], completed: false })
+        : { completed_lessons: [], completed: false };
+    const completed = pyProgress.completed_lessons || [];
+
+    if (completed.includes(index) || index < highestLessonIndex) {
+        dom.nextBtn.disabled = false;
+    } else {
+        dom.nextBtn.disabled = true; // Disabled until task is passed
+    }
 }
 
 function appendOutput(msg) {
@@ -517,6 +581,8 @@ function checkLessonCompletion() {
         // Save progress to localStorage & Google Sheets
         if (typeof PyPlayAuth !== 'undefined' && PyPlayAuth.user) {
             PyPlayAuth.updateProgress("opencv", currentLessonIndex, true);
+            highestLessonIndex = Math.max(highestLessonIndex, currentLessonIndex + 1);
+            renderProgressSteps();
         }
 
         // If it's the last lesson
@@ -538,7 +604,7 @@ function setupEventListeners() {
             loadLesson(currentLessonIndex);
         } else {
             alert("Congratulations! You've completed the PyPlay OpenCV with Python course! 📷🎉");
-            dom.progressBar.style.width = '100%';
+            renderProgressSteps();
         }
     });
 

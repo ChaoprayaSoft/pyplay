@@ -617,3 +617,65 @@ body {
     transform: translateY(-2px);
     box-shadow: 0 4px 15px rgba(59, 130, 246, 0.15);
 }
+
+/* Premium Stepped Progress Bar Styles */
+.progress-steps-container {
+    display: flex;
+    gap: 6px;
+    width: 100%;
+    align-items: center;
+    margin-top: 4px;
+}
+
+.progress-step-pill {
+    flex: 1;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 4px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    cursor: pointer;
+}
+
+.progress-step-pill.completed {
+    background: var(--success);
+    box-shadow: 0 0 8px rgba(16, 185, 129, 0.3);
+}
+
+.progress-step-pill.active {
+    background: var(--accent-primary);
+    box-shadow: 0 0 12px var(--accent-glow);
+    transform: scaleY(1.2);
+}
+
+.progress-step-pill.locked {
+    background: rgba(255, 255, 255, 0.03);
+    cursor: not-allowed;
+}
+
+/* Tooltip on hover */
+.progress-step-pill::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: -32px;
+    left: 50%;
+    transform: translateX(-50%) translateY(5px);
+    background: rgba(15, 23, 42, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: #fff;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-family: var(--font-ui);
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.2s ease;
+    z-index: 100;
+}
+
+.progress-step-pill:hover::after {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
