@@ -439,5 +439,10 @@ PyPlayAuth.init();
 window.addEventListener('DOMContentLoaded', async () => {
     if (PyPlayAuth.user) {
         await PyPlayAuth.syncFromSheets();
+    } else {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('triggerLogin') === 'true') {
+            PyPlayAuth.openLoginModal();
+        }
     }
 });

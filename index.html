@@ -47,7 +47,7 @@
                             <span>⚡ Beginner</span>
                         </div>
                     </div>
-                    <a href="python.html" class="btn btn-primary" style="justify-content: center; width: 100%; margin-top: 1.5rem;">Start Course</a>
+                    <a href="javascript:void(0)" onclick="startCourse('python.html')" class="btn btn-primary" style="justify-content: center; width: 100%; margin-top: 1.5rem;">Start Course</a>
                 </div>
 
                 <!-- OpenCV Course Card -->
@@ -64,7 +64,7 @@
                             <span>⚡ Intermediate</span>
                         </div>
                     </div>
-                    <a href="opencv.html" class="btn btn-primary" style="justify-content: center; width: 100%; margin-top: 1.5rem;">Start Course</a>
+                    <a href="javascript:void(0)" onclick="startCourse('opencv.html')" class="btn btn-primary" style="justify-content: center; width: 100%; margin-top: 1.5rem;">Start Course</a>
                 </div>
 
                 <!-- JavaScript Card (Locked) -->
@@ -104,5 +104,14 @@
         </section>
     </div>
     <script src="auth.js"></script>
+    <script>
+        function startCourse(page) {
+            if (typeof PyPlayAuth !== 'undefined' && PyPlayAuth.user) {
+                window.location.href = page;
+            } else {
+                PyPlayAuth.openLoginModal();
+            }
+        }
+    </script>
 </body>
 </html>
