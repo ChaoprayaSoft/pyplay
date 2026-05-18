@@ -277,7 +277,7 @@ const PyPlayAuth = {
         modal.style.cssText = `
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);
-            display: flex; align-items: center; justify-content: center; z-index: 10000;
+            display: none; align-items: center; justify-content: center; z-index: 10000;
         `;
         modal.innerHTML = `
             <div class="glass-panel" style="width: 450px; padding: 2rem; display:flex; flex-direction:column; gap:1.5rem;">
@@ -290,7 +290,7 @@ const PyPlayAuth = {
                     <input type="text" id="pyplay-gs-url-input" placeholder="https://script.google.com/macros/s/.../exec" style="background:rgba(0,0,0,0.3); border:1px solid var(--panel-border); color:white; border-radius:8px; padding:0.75rem; font-family:var(--font-ui); font-size:0.9rem; outline:none; width: 100%;" value="${this.scriptUrl}">
                 </div>
                 <div style="display:flex; gap:1rem; margin-top:1rem;">
-                    <button class="btn btn-outline" onclick="document.getElementById('pyplay-settings-modal').classList.add('hidden')" style="flex:1; justify-content:center;">Cancel</button>
+                    <button class="btn btn-outline" onclick="document.getElementById('pyplay-settings-modal').style.display = 'none'" style="flex:1; justify-content:center;">Cancel</button>
                     <button class="btn btn-primary" onclick="PyPlayAuth.saveSettingsUrl()" style="flex:1; justify-content:center;">Save & Sync</button>
                 </div>
             </div>
@@ -305,7 +305,7 @@ const PyPlayAuth = {
         modal.style.cssText = `
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);
-            display: flex; align-items: center; justify-content: center; z-index: 10000;
+            display: none; align-items: center; justify-content: center; z-index: 10000;
         `;
         modal.innerHTML = `
             <div class="glass-panel" style="width: 400px; padding: 2.5rem; display:flex; flex-direction:column; gap:1.75rem; text-align:center;">
@@ -336,18 +336,18 @@ const PyPlayAuth = {
                     </div>
                 </div>
                 
-                <button class="btn btn-clear" onclick="document.getElementById('pyplay-login-modal').classList.add('hidden')" style="align-self:center; font-size:0.8rem;">Close</button>
+                <button class="btn btn-clear" onclick="document.getElementById('pyplay-login-modal').style.display = 'none'" style="align-self:center; font-size:0.8rem;">Close</button>
             </div>
         `;
         document.body.appendChild(modal);
     },
 
     openLoginModal() {
-        document.getElementById('pyplay-login-modal').classList.remove('hidden');
+        document.getElementById('pyplay-login-modal').style.display = 'flex';
     },
 
     openSettingsModal() {
-        document.getElementById('pyplay-settings-modal').classList.remove('hidden');
+        document.getElementById('pyplay-settings-modal').style.display = 'flex';
     },
 
     saveSettingsUrl() {
