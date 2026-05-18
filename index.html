@@ -10,13 +10,24 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="homepage-container">
+    <div class="app-container" style="height: auto; min-height: 100vh; overflow-y: auto;">
+        <!-- Header -->
+        <header class="glass-panel header">
+            <div style="display: flex; align-items: center; gap: 1.5rem;">
+                <a href="index.html" class="logo">
+                    <div class="logo-icon">🐍</div>
+                    <h1>PyPlay</h1>
+                </a>
+            </div>
+            <!-- Auth controls automatically rendered here by auth.js -->
+        </header>
+
         <!-- Hero Section -->
-        <header class="hero-section">
+        <section class="hero-section" style="margin-top: 1.5rem;">
             <div class="hero-badge">Interactive Learning Hub</div>
             <h1>Learn Programming the <span>Fun & Hands-on</span> Way</h1>
             <p>Master coding right inside your browser. No installation, no setup. Solve real challenges with real-time feedback.</p>
-        </header>
+        </section>
 
         <!-- Course List Section -->
         <section class="courses-section">
