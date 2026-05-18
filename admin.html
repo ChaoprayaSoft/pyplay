@@ -161,9 +161,26 @@
 
             <!-- Table of users -->
             <section class="glass-panel user-table-container">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
                     <h3 style="font-size:1.25rem; font-weight:700; color:#fff;">Learner Progression Table</h3>
                     <button class="btn btn-outline" id="force-sync-btn">🔄 Refresh Sheets Data</button>
+                </div>
+
+                <!-- Search and Filter Controls -->
+                <div class="search-filter-controls" style="display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
+                    <input type="text" id="admin-search-input" placeholder="🔍 Search name or email..." style="flex: 1; min-width: 250px; background: rgba(0,0,0,0.3); border: 1px solid var(--panel-border); color: white; border-radius: 8px; padding: 0.6rem 1rem; font-family: var(--font-ui); font-size: 0.9rem; outline: none; transition: border-color 0.2s;" oninput="filterUsersList()">
+                    
+                    <select id="admin-role-filter" style="background: rgba(0,0,0,0.3); border: 1px solid var(--panel-border); color: white; border-radius: 8px; padding: 0.6rem 1rem; font-family: var(--font-ui); font-size: 0.9rem; outline: none; cursor: pointer;" onchange="filterUsersList()">
+                        <option value="all">👥 All Roles</option>
+                        <option value="Learner">Learner</option>
+                        <option value="Admin">Admin</option>
+                    </select>
+
+                    <select id="admin-progress-filter" style="background: rgba(0,0,0,0.3); border: 1px solid var(--panel-border); color: white; border-radius: 8px; padding: 0.6rem 1rem; font-family: var(--font-ui); font-size: 0.9rem; outline: none; cursor: pointer;" onchange="filterUsersList()">
+                        <option value="all">📈 All Progress</option>
+                        <option value="in_progress">In Progress</option>
+                        <option value="completed">🏆 Graduates</option>
+                    </select>
                 </div>
 
                 <table class="admin-table">
@@ -213,14 +230,51 @@
                 const mock = localStorage.getItem('pyplay_mock_users');
                 if (mock) {
                     usersList = JSON.parse(mock);
-                    renderStatistics(usersList);
+                    filterUsersList();
                 }
             }
 
             async function loadLiveUsers() {
                 document.getElementById('users-tbody').innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 3rem;">Syncing user data from Google Sheets...</td></tr>`;
                 usersList = await PyPlayAuth.getAllUsersFromSheets();
-                renderStatistics(usersList);
+                filterUsersList();
+            }
+
+            // Real-time filtering engine
+            window.filterUsersList = function() {
+                const searchVal = document.getElementById('admin-search-input').value.toLowerCase().trim();
+                const roleVal = document.getElementById('admin-role-filter').value;
+                const progressVal = document.getElementById('admin-progress-filter').value;
+
+                const filtered = usersList.filter(u => {
+                    // 1. Search Query filter (matches name or email)
+                    const matchesSearch = !searchVal || 
+                                          (u.name && u.name.toLowerCase().includes(searchVal)) || 
+                                          (u.email && u.email.toLowerCase().includes(searchVal));
+                    
+                    // 2. Role filter
+                    const matchesRole = roleVal === 'all' || u.role === roleVal;
+
+                    // 3. Progress filter
+                    let progress = { python: { completed_lessons: [], completed: false } };
+                    try {
+                        progress = typeof u.progress === 'string' ? JSON.parse(u.progress) : (u.progress || progress);
+                    } catch (e) {
+                        console.error(e);
+                    }
+                    const pyProgress = progress.python || { completed_lessons: [], completed: false };
+                    
+                    let matchesProgress = true;
+                    if (progressVal === 'in_progress') {
+                        matchesProgress = !pyProgress.completed;
+                    } else if (progressVal === 'completed') {
+                        matchesProgress = pyProgress.completed;
+                    }
+
+                    return matchesSearch && matchesRole && matchesProgress;
+                });
+
+                renderStatistics(filtered);
             }
 
             function renderStatistics(users) {
@@ -315,7 +369,7 @@
                             }
                             
                             alert(`Role of ${email} successfully updated to ${newRole}!`);
-                            renderStatistics(usersList);
+                            filterUsersList();
                         }
                     };
                 });
@@ -375,7 +429,7 @@
                     ];
                     localStorage.setItem('pyplay_mock_users', JSON.stringify(mockUsers));
                     usersList = mockUsers;
-                    renderStatistics(usersList);
+                    filterUsersList();
                     alert("Mock user progression generated successfully! You can now analyze sample metrics.");
                 };
             }
