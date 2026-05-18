@@ -239,27 +239,27 @@ const PyPlayAuth = {
             
             profileDiv.innerHTML = `
                 <div class="user-status-widget" onclick="window.location.href='dashboard.html'" style="cursor:pointer; display:flex; align-items:center; gap:0.5rem; background: rgba(255,255,255,0.05); padding: 0.5rem 1rem; border-radius: 99px;">
-                    <span class="user-avatar" style="font-size: 1.5rem;">${this.user.avatar}</span>
+                    <span class="user-avatar" style="font-size: 1.5rem; cursor:pointer;" title="Click to edit nickname" onclick="event.stopPropagation(); PyPlayAuth.editNicknamePrompt();">${this.user.avatar}</span>
                     <span class="user-name" style="font-weight:600; font-size:0.9rem;">${this.user.name}</span>
                     <span class="user-role badge" style="font-size: 0.7rem; background:${this.user.role === 'Admin' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(59, 130, 246, 0.2)'}; color:${this.user.role === 'Admin' ? '#fca5a5' : '#93c5fd'};">${this.user.role}</span>
                 </div>
                 ${this.user.role === 'Admin' ? `<a href="admin.html" class="btn btn-outline" style="border-color: rgba(239, 68, 68, 0.4); color: #fca5a5;">🛡️ Admin</a>` : ''}
                 <button class="btn btn-outline" onclick="PyPlayAuth.logout()">Log Out</button>
             `;
+
+            // Add settings cog (ONLY FOR ADMIN)
+            const settingsBtn = document.createElement('button');
+            settingsBtn.className = 'btn btn-outline';
+            settingsBtn.innerHTML = '⚙️';
+            settingsBtn.title = "Configure Google Sheets Sync";
+            settingsBtn.onclick = () => this.openSettingsModal();
+            profileDiv.appendChild(settingsBtn);
         } else {
             profileDiv.innerHTML = `
                 <button class="btn btn-outline" onclick="PyPlayAuth.openLoginModal()">Join Now</button>
                 <button class="btn btn-primary" onclick="PyPlayAuth.tryDemo()">Try Demo</button>
             `;
         }
-
-        // Add settings cog
-        const settingsBtn = document.createElement('button');
-        settingsBtn.className = 'btn btn-outline';
-        settingsBtn.innerHTML = '⚙️';
-        settingsBtn.title = "Configure Google Sheets Sync";
-        settingsBtn.onclick = () => this.openSettingsModal();
-        profileDiv.appendChild(settingsBtn);
 
         // Put profile controls inside header
         const currentBtnControls = header.querySelector('.controls');
@@ -308,39 +308,39 @@ const PyPlayAuth = {
             display: none; align-items: center; justify-content: center; z-index: 10000;
         `;
         modal.innerHTML = `
-            <div class="glass-panel" style="width: 400px; padding: 2.5rem; display:flex; flex-direction:column; gap:1.75rem; text-align:center;">
+            <div class="glass-panel" style="width: 400px; padding: 2.5rem; display:flex; flex-direction:column; gap:1.5rem; text-align:center;">
                 <div style="font-size:3rem;">🐍</div>
                 <div>
-                    <h3 style="font-size:1.75rem; font-weight:700;">Sign In with Gmail</h3>
-                    <p style="font-size:0.875rem; color:var(--text-muted); margin-top:0.25rem;">Start saving your coding progress</p>
+                    <h3 style="font-size:1.75rem; font-weight:700; color:#fff;">Sign In with Gmail</h3>
+                    <p style="font-size:0.875rem; color:var(--text-muted); margin-top:0.25rem;">Choose a Google account to continue to PyPlay</p>
                 </div>
                 
-                <div style="display:flex; flex-direction:column; gap:1rem; text-align:left;">
-                    <div style="display:flex; flex-direction:column; gap:0.35rem;">
-                        <label style="font-size:0.75rem; font-weight:600; color:var(--text-muted);">Name</label>
-                        <input type="text" id="login-name-input" placeholder="e.g. John Doe" style="background:rgba(0,0,0,0.3); border:1px solid var(--panel-border); color:white; border-radius:8px; padding:0.75rem; font-family:var(--font-ui); font-size:0.9rem; outline:none;">
+                <div style="display:flex; flex-direction:column; gap:0.75rem; text-align:left; margin: 0.5rem 0;">
+                    <!-- Learner Account 1 -->
+                    <div onclick="PyPlayAuth.login('alex.learner@gmail.com', 'Alex Learner', 'Learner')" class="account-card" style="cursor:pointer; display:flex; align-items:center; gap:0.75rem; background:rgba(255,255,255,0.03); border:1px solid var(--panel-border); padding:0.75rem; border-radius:12px; transition:all 0.2s ease;">
+                        <div style="font-size:1.5rem; background:rgba(59,130,246,0.1); width:40px; height:40px; display:flex; align-items:center; justify-content:center; border-radius:50%; color:#60a5fa;">🐱</div>
+                        <div style="display:flex; flex-direction:column;">
+                            <span style="font-weight:600; font-size:0.9rem; color:#fff;">Alex Learner</span>
+                            <span style="font-size:0.75rem; color:var(--text-muted);">alex.learner@gmail.com</span>
+                        </div>
                     </div>
-                    <div style="display:flex; flex-direction:column; gap:0.35rem;">
-                        <label style="font-size:0.75rem; font-weight:600; color:var(--text-muted);">Gmail Address</label>
-                        <input type="email" id="login-email-input" placeholder="e.g. john@gmail.com" style="background:rgba(0,0,0,0.3); border:1px solid var(--panel-border); color:white; border-radius:8px; padding:0.75rem; font-family:var(--font-ui); font-size:0.9rem; outline:none;">
+                    
+                    <!-- Learner Account 2 -->
+                    <div onclick="PyPlayAuth.login('cute.animal@gmail.com', 'Cute Animal', 'Learner')" class="account-card" style="cursor:pointer; display:flex; align-items:center; gap:0.75rem; background:rgba(255,255,255,0.03); border:1px solid var(--panel-border); padding:0.75rem; border-radius:12px; transition:all 0.2s ease;">
+                        <div style="font-size:1.5rem; background:rgba(16,185,129,0.1); width:40px; height:40px; display:flex; align-items:center; justify-content:center; border-radius:50%; color:#34d399;">🦄</div>
+                        <div style="display:flex; flex-direction:column;">
+                            <span style="font-weight:600; font-size:0.9rem; color:#fff;">Cute Animal</span>
+                            <span style="font-size:0.75rem; color:var(--text-muted);">cute.animal@gmail.com</span>
+                        </div>
                     </div>
-                </div>
 
-                <button class="btn" onclick="PyPlayAuth.handleEmailLogin()" style="justify-content:center; width:100%; padding:0.75rem; font-size:0.95rem; border-radius:8px; display:flex; align-items:center; gap:0.75rem; background:#ffffff; color:#1f2937; border:1px solid #e5e7eb; font-weight:700; cursor:pointer;">
-                    <svg width="18" height="18" viewBox="0 0 24 24" style="display:block;">
-                        <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v3.92h6.69c-.29 1.5-1.14 2.77-2.43 3.63v3.02h3.92c2.29-2.11 3.56-5.22 3.56-8.9z"/>
-                        <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.92-3.04c-1.08.72-2.48 1.16-4.01 1.16-3.09 0-5.72-2.08-6.66-4.88H1.31v3.14C3.29 22.39 7.37 24 12 24z"/>
-                        <path fill="#FBBC05" d="M5.34 14.33c-.24-.72-.38-1.49-.38-2.33s.14-1.61.38-2.33V6.53H1.31C.48 8.18 0 10.03 0 12s.48 3.82 1.31 5.47l4.03-3.14z"/>
-                        <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.43-3.43C17.95 1.19 15.24 0 12 0 7.37 0 3.29 1.61 1.31 4.75l4.03 3.14c.94-2.8 3.57-4.88 6.66-4.88z"/>
-                    </svg>
-                    Sign In with Gmail
-                </button>
-                
-                <div style="border-top:1px solid var(--panel-border); padding-top:1.25rem; display:flex; flex-direction:column; gap:0.75rem;">
-                    <span style="font-size:0.75rem; color:var(--text-muted);">Want to instantly test the app?</span>
-                    <div style="display:flex; gap:0.5rem;">
-                        <button class="btn btn-outline" onclick="PyPlayAuth.tryDemo()" style="flex:1; justify-content:center; font-size:0.8rem;">Demo Learner</button>
-                        <button class="btn btn-outline" onclick="PyPlayAuth.tryAdminDemo()" style="flex:1; justify-content:center; font-size:0.8rem; border-color:rgba(239, 68, 68, 0.4); color:#fca5a5;">Demo Admin</button>
+                    <!-- Admin Account -->
+                    <div onclick="PyPlayAuth.login('admin.boss@gmail.com', 'Admin Boss', 'Admin')" class="account-card" style="cursor:pointer; display:flex; align-items:center; gap:0.75rem; background:rgba(255,255,255,0.03); border:1px solid var(--panel-border); padding:0.75rem; border-radius:12px; transition:all 0.2s ease;">
+                        <div style="font-size:1.5rem; background:rgba(239,68,68,0.1); width:40px; height:40px; display:flex; align-items:center; justify-content:center; border-radius:50%; color:#fca5a5;">🦊</div>
+                        <div style="display:flex; flex-direction:column;">
+                            <span style="font-weight:600; font-size:0.9rem; color:#fff;">Admin Boss (Admin)</span>
+                            <span style="font-size:0.75rem; color:var(--text-muted);">admin.boss@gmail.com</span>
+                        </div>
                     </div>
                 </div>
                 
@@ -363,26 +363,21 @@ const PyPlayAuth = {
         this.setScriptUrl(val);
     },
 
-    handleEmailLogin() {
-        const name = document.getElementById('login-name-input').value.trim();
-        const email = document.getElementById('login-email-input').value.trim();
-        if (!name || !email) {
-            alert("Please provide both name and email.");
-            return;
+    async editNicknamePrompt() {
+        if (!this.user) return;
+        const newName = prompt("Enter your new nickname:", this.user.name);
+        if (newName && newName.trim()) {
+            await this.updateProfile(this.user.avatar, this.user.color, newName.trim());
+            window.location.reload();
         }
-        if (!email.toLowerCase().endsWith('@gmail.com') && !email.toLowerCase().endsWith('@googlemail.com')) {
-            alert("Please enter a valid @gmail.com address.");
-            return;
-        }
-        this.login(email, name);
     },
 
     tryDemo() {
-        this.login("demo_learner@pyplay.com", "Demo Learner", "Learner");
+        this.login("learner.student@gmail.com", "Alex Learner", "Learner");
     },
 
     tryAdminDemo() {
-        this.login("admin_boss@pyplay.com", "Admin Boss", "Admin");
+        this.login("admin.boss@gmail.com", "Admin Boss", "Admin");
     },
 
     updateHeaderUI() {

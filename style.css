@@ -610,3 +610,10 @@ body {
         height: 250px;
     }
 }
+
+.account-card:hover {
+    background: rgba(255, 255, 255, 0.08) !important;
+    border-color: var(--accent-primary) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.15);
+}
