@@ -5,10 +5,25 @@
 
 function doPost(e) {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var contents = e.postData.contents;
-  if (!contents) return ContentService.createTextOutput("No data").setMimeType(ContentService.MimeType.TEXT);
+  var contents = e.postData ? e.postData.contents : null;
+  if (!contents) {
+    if (e.parameter && e.parameter.data) {
+      contents = e.parameter.data;
+    } else {
+      return ContentService.createTextOutput("No data").setMimeType(ContentService.MimeType.TEXT);
+    }
+  }
   
-  var data = JSON.parse(contents);
+  var data;
+  try {
+    data = JSON.parse(contents);
+  } catch (err) {
+    try {
+      data = JSON.parse(decodeURIComponent(contents));
+    } catch(err2) {
+      return ContentService.createTextOutput("JSON Parse Error: " + err.toString()).setMimeType(ContentService.MimeType.TEXT);
+    }
+  }
   
   if (data.type === 'user') {
     return handleUserUpdate(ss, data);
@@ -30,11 +45,15 @@ function handleUserUpdate(ss, data) {
   var email = data.email;
   var rows = sheet.getDataRange().getValues();
   var rowIndex = -1;
+  var existingRole = data.role || "Learner"; // default to payload role
 
-  // Find existing user by email
+  // Find existing user by email to preserve manually assigned roles (e.g. Admin)
   for (var i = 1; i < rows.length; i++) {
     if (rows[i][0] === email) {
       rowIndex = i + 1;
+      if (rows[i][4]) {
+        existingRole = rows[i][4]; // Keep manual sheet assignment
+      }
       break;
     }
   }
@@ -44,7 +63,7 @@ function handleUserUpdate(ss, data) {
     data.name,
     data.avatar || "🐱",
     data.color || "#3b82f6",
-    data.role || "Learner",
+    existingRole, // Preserved role (handles manual Google Sheet overrides)
     typeof data.progress === 'object' ? JSON.stringify(data.progress) : data.progress || "{}",
     data.lastUpdated || new Date().toISOString()
   ];
@@ -79,14 +98,13 @@ function handleActivityLog(ss, data) {
 function doGet(e) {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var action = e.parameter.action;
+  var callback = e.parameter.callback;
   
   if (action === 'get_all_users') {
-    return getAllUsers(ss, e.parameter.callback);
+    return getAllUsers(ss, callback);
   }
   
   var email = e.parameter.email;
-  var callback = e.parameter.callback;
-  
   var sheet = ss.getSheetByName("Users");
   if (!sheet || !email) return sendResponse(null, callback);
 
