@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PyPlay - Personal Dashboard</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .dashboard-layout {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 2rem;
+            height: calc(100vh - 120px);
+        }
+        .profile-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
+            padding: 2.5rem;
+            text-align: center;
+        }
+        .avatar-display {
+            font-size: 5rem;
+            background: rgba(255,255,255,0.05);
+            width: 140px;
+            height: 140px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            border: 4px solid var(--accent-primary);
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.2);
+            transition: all 0.3s ease;
+        }
+        .edit-section {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            text-align: left;
+        }
+        .avatar-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 0.5rem;
+        }
+        .avatar-option {
+            font-size: 1.75rem;
+            background: rgba(255,255,255,0.02);
+            border: 1px solid var(--panel-border);
+            border-radius: 8px;
+            padding: 0.5rem;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s ease;
+        }
+        .avatar-option:hover, .avatar-option.selected {
+            background: rgba(255,255,255,0.1);
+            border-color: var(--accent-primary);
+            transform: scale(1.1);
+        }
+        .color-grid {
+            display: flex;
+            gap: 0.75rem;
+        }
+        .color-option {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: transform 0.2s ease;
+        }
+        .color-option:hover, .color-option.selected {
+            transform: scale(1.2);
+            border-color: #fff;
+        }
+        .details-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            overflow-y: auto;
+            padding: 2rem;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.25rem;
+        }
+        .stat-card {
+            background: rgba(0,0,0,0.2);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid var(--panel-border);
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #fff;
+            margin-top: 0.25rem;
+        }
+        .badges-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+        .badge-card {
+            background: rgba(0,0,0,0.2);
+            border: 1px solid var(--panel-border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.75rem;
+            opacity: 0.4;
+            filter: grayscale(100%);
+            transition: all 0.3s ease;
+        }
+        .badge-card.earned {
+            opacity: 1;
+            filter: none;
+            border-color: rgba(16, 185, 129, 0.4);
+            box-shadow: 0 4px 20px rgba(16, 185, 129, 0.15);
+            background: linear-gradient(135deg, rgba(16,185,129,0.05), rgba(0,0,0,0.2));
+        }
+        .badge-icon {
+            font-size: 3rem;
+        }
+        .badge-title {
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: #fff;
+        }
+        .badge-desc {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+        @media (max-width: 900px) {
+            .dashboard-layout {
+                grid-template-columns: 1fr;
+                height: auto;
+                overflow-y: visible;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="glass-panel header">
+            <div style="display: flex; align-items: center; gap: 1.5rem;">
+                <a href="index.html" class="logo">
+                    <div class="logo-icon">🐍</div>
+                    <h1>PyPlay</h1>
+                </a>
+                <a href="index.html" class="btn btn-outline" style="padding: 0.35rem 0.75rem; font-size: 0.8rem;">🏠 Home</a>
+            </div>
+            <div class="controls"></div>
+        </header>
+
+        <!-- Main Workspace: Dashboard Grid -->
+        <main class="dashboard-layout">
+            <!-- Left Card: Profile & Settings -->
+            <section class="glass-panel profile-card">
+                <div class="avatar-display" id="profile-avatar-display">🐱</div>
+                <div>
+                    <h2 id="profile-name" style="font-size: 1.5rem; font-weight:700; color:#fff;">Learner</h2>
+                    <p id="profile-email" style="font-size: 0.875rem; color: var(--text-muted); margin-top: 0.25rem;">learner@pyplay.com</p>
+                </div>
+                
+                <div class="edit-section">
+                    <div>
+                        <h4 style="font-size:0.8rem; font-weight:700; text-transform:uppercase; color:var(--text-muted); margin-bottom:0.5rem;">Choose Avatar</h4>
+                        <div class="avatar-grid" id="avatar-picker-grid"></div>
+                    </div>
+
+                    <div>
+                        <h4 style="font-size:0.8rem; font-weight:700; text-transform:uppercase; color:var(--text-muted); margin-bottom:0.5rem;">Choose Theme Color</h4>
+                        <div class="color-grid" id="color-picker-grid"></div>
+                    </div>
+                    
+                    <button class="btn btn-primary" id="save-profile-btn" style="justify-content:center; width:100%; margin-top: 1rem;">Save Settings</button>
+                </div>
+            </section>
+
+            <!-- Right Card: Progress & Badges -->
+            <section class="glass-panel details-panel">
+                <div>
+                    <h2 style="font-size:1.75rem; font-weight:700; color:#fff; margin-bottom:0.5rem;">Your Achievements</h2>
+                    <p style="font-size:0.9rem; color:var(--text-muted);">Track your progress across courses and unlock standard completion badges.</p>
+                </div>
+
+                <!-- Stats Grid -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div style="font-size:0.75rem; font-weight:600; text-transform:uppercase; color:var(--text-muted);">Python Progress</div>
+                        <div class="stat-value" id="stat-python-completed">0 / 13</div>
+                    </div>
+                    <div class="stat-card">
+                        <div style="font-size:0.75rem; font-weight:600; text-transform:uppercase; color:var(--text-muted);">Total XP</div>
+                        <div class="stat-value" id="stat-xp">0 XP</div>
+                    </div>
+                    <div class="stat-card">
+                        <div style="font-size:0.75rem; font-weight:600; text-transform:uppercase; color:var(--text-muted);">Badges Earned</div>
+                        <div class="stat-value" id="stat-badges-earned">0</div>
+                    </div>
+                </div>
+
+                <!-- Badges Section -->
+                <div>
+                    <h3 style="font-size:1.25rem; font-weight:700; color:#fff; margin-bottom:0.75rem;">🏅 Badges</h3>
+                    <div class="badges-grid">
+                        <!-- Python Badge -->
+                        <div class="badge-card" id="badge-python">
+                            <div class="badge-icon">🏆</div>
+                            <div class="badge-title">Python Graduate</div>
+                            <div class="badge-desc">Complete all 13 Python lessons</div>
+                        </div>
+                        
+                        <!-- Extra Locked Badges for upcoming courses -->
+                        <div class="badge-card" id="badge-js">
+                            <div class="badge-icon">🛡️</div>
+                            <div class="badge-title">JS Explorer</div>
+                            <div class="badge-desc">Complete all JavaScript lessons</div>
+                        </div>
+
+                        <div class="badge-card" id="badge-html">
+                            <div class="badge-icon">🎨</div>
+                            <div class="badge-title">Web Master</div>
+                            <div class="badge-desc">Complete HTML & CSS layout lessons</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="auth.js"></script>
+    <script>
+        // Check authentication state
+        window.addEventListener('DOMContentLoaded', async () => {
+            if (!PyPlayAuth.user) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            // Sync user data to ensure progress is accurate
+            await PyPlayAuth.syncFromSheets();
+
+            const user = PyPlayAuth.user;
+            
+            // Populate profile data
+            document.getElementById('profile-avatar-display').textContent = user.avatar;
+            document.getElementById('profile-name').textContent = user.name;
+            document.getElementById('profile-email').textContent = user.email;
+            
+            // Render Avatar options
+            const avatarGrid = document.getElementById('avatar-picker-grid');
+            let selectedAvatar = user.avatar;
+            
+            DEFAULT_AVATARS.forEach(avatar => {
+                const opt = document.createElement('div');
+                opt.className = `avatar-option ${avatar === selectedAvatar ? 'selected' : ''}`;
+                opt.textContent = avatar;
+                opt.onclick = () => {
+                    document.querySelectorAll('.avatar-option').forEach(el => el.classList.remove('selected'));
+                    opt.classList.add('selected');
+                    selectedAvatar = avatar;
+                    document.getElementById('profile-avatar-display').textContent = avatar;
+                };
+                avatarGrid.appendChild(opt);
+            });
+
+            // Render Color Options
+            const colorGrid = document.getElementById('color-picker-grid');
+            let selectedColor = user.color || "#3b82f6";
+            
+            DEFAULT_COLORS.forEach(color => {
+                const opt = document.createElement('div');
+                opt.className = `color-option ${color === selectedColor ? 'selected' : ''}`;
+                opt.style.backgroundColor = color;
+                opt.onclick = () => {
+                    document.querySelectorAll('.color-option').forEach(el => el.classList.remove('selected'));
+                    opt.classList.add('selected');
+                    selectedColor = color;
+                    document.documentElement.style.setProperty('--accent-primary', color);
+                    document.getElementById('profile-avatar-display').style.borderColor = color;
+                };
+                colorGrid.appendChild(opt);
+            });
+
+            // Populate Stats
+            const pyProgress = user.progress.python || { completed_lessons: [], completed: false };
+            const completedCount = pyProgress.completed_lessons ? pyProgress.completed_lessons.length : 0;
+            document.getElementById('stat-python-completed').textContent = `${completedCount} / 13`;
+            
+            // 100 XP per completed lesson
+            const xp = completedCount * 100;
+            document.getElementById('stat-xp').textContent = `${xp} XP`;
+
+            // Badge Earned Logic
+            let badgesCount = 0;
+            if (pyProgress.completed) {
+                document.getElementById('badge-python').classList.add('earned');
+                badgesCount = 1;
+            }
+            document.getElementById('stat-badges-earned').textContent = badgesCount;
+
+            // Save Action
+            document.getElementById('save-profile-btn').onclick = async () => {
+                document.getElementById('save-profile-btn').disabled = true;
+                document.getElementById('save-profile-btn').textContent = "Saving...";
+                
+                await PyPlayAuth.updateProfile(selectedAvatar, selectedColor, user.name);
+                
+                document.getElementById('save-profile-btn').disabled = false;
+                document.getElementById('save-profile-btn').textContent = "Save Settings";
+                
+                alert("Profile and Sync settings updated successfully! 🚀");
+                window.location.reload();
+            };
+        });
+    </script>
+</body>
+</html>

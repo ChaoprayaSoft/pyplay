@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PyPlay - Premium Interactive Code Learning</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="homepage-container">
+        <!-- Hero Section -->
+        <header class="hero-section">
+            <div class="hero-badge">Interactive Learning Hub</div>
+            <h1>Learn Programming the <span>Fun & Hands-on</span> Way</h1>
+            <p>Master coding right inside your browser. No installation, no setup. Solve real challenges with real-time feedback.</p>
+        </header>
+
+        <!-- Course List Section -->
+        <section class="courses-section">
+            <h2 class="course-grid-title">🚀 Available Courses</h2>
+            <div class="course-grid">
+                <!-- Python Course Card -->
+                <div class="glass-panel course-card">
+                    <div class="course-header">
+                        <div class="course-icon">🐍</div>
+                        <span class="status-badge status-active">Active</span>
+                    </div>
+                    <div class="course-body">
+                        <h3 class="course-title">Python Basics</h3>
+                        <p class="course-description">Start your programming journey with Python. Learn hello world, lists, loops, OOP, and more using a real in-browser Python terminal.</p>
+                        <div class="course-meta">
+                            <span>📚 13 Lessons</span>
+                            <span>⚡ Beginner</span>
+                        </div>
+                    </div>
+                    <a href="python.html" class="btn btn-primary" style="justify-content: center; width: 100%; margin-top: 1.5rem;">Start Course</a>
+                </div>
+
+                <!-- JavaScript Card (Locked) -->
+                <div class="glass-panel course-card locked">
+                    <div class="course-header">
+                        <div class="course-icon">🟨</div>
+                        <span class="status-badge status-locked">Coming Soon</span>
+                    </div>
+                    <div class="course-body">
+                        <h3 class="course-title">JavaScript Essentials</h3>
+                        <p class="course-description">Power up the web. Learn DOM manipulation, asynchronous loops, array methods, and APIs directly in the sandbox.</p>
+                        <div class="course-meta">
+                            <span>📚 10 Lessons</span>
+                            <span>⚡ Beginner</span>
+                        </div>
+                    </div>
+                    <button class="btn btn-outline" style="justify-content: center; width: 100%; margin-top: 1.5rem;" disabled>Locked</button>
+                </div>
+
+                <!-- Web Dev Card (Locked) -->
+                <div class="glass-panel course-card locked">
+                    <div class="course-header">
+                        <div class="course-icon">🌐</div>
+                        <span class="status-badge status-locked">Coming Soon</span>
+                    </div>
+                    <div class="course-body">
+                        <h3 class="course-title">HTML & CSS Crafting</h3>
+                        <p class="course-description">Build beautiful responsive layouts. Learn flexbox, grid, animations, and CSS variables with live code previews.</p>
+                        <div class="course-meta">
+                            <span>📚 12 Lessons</span>
+                            <span>⚡ Beginner</span>
+                        </div>
+                    </div>
+                    <button class="btn btn-outline" style="justify-content: center; width: 100%; margin-top: 1.5rem;" disabled>Locked</button>
+                </div>
+            </div>
+        </section>
+    </div>
+    <script src="auth.js"></script>
+</body>
+</html>
