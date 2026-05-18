@@ -7,12 +7,14 @@ const PyPlayAuth = {
     // Current local state
     user: null,
     scriptUrl: localStorage.getItem('pyplay_gs_url') || '', // Google Apps Script URL
+    googleClientId: localStorage.getItem('pyplay_google_client_id') || '103949829472-placeholder.apps.googleusercontent.com',
 
     init() {
         this.loadLocalUser();
         this.createAppHeader();
         this.createSettingsModal();
         this.createLoginModal();
+        this.initGoogleAuth();
     },
 
     loadLocalUser() {
@@ -223,9 +225,11 @@ const PyPlayAuth = {
         const header = document.querySelector('header');
         if (!header) return;
 
-        // Clean existing right controls
-        const controls = header.querySelector('.controls') || document.createElement('div');
-        controls.className = 'controls';
+        // Clean existing right controls to prevent duplication!
+        const existingAuth = header.querySelector('.header-auth-controls');
+        if (existingAuth) {
+            existingAuth.remove();
+        }
         
         const profileDiv = document.createElement('div');
         profileDiv.className = 'header-auth-controls';
@@ -282,13 +286,19 @@ const PyPlayAuth = {
         `;
         modal.innerHTML = `
             <div class="glass-panel" style="width: 450px; padding: 2rem; display:flex; flex-direction:column; gap:1.5rem;">
-                <h3 style="font-size:1.5rem; font-weight:700;">⚙️ Sync Settings</h3>
+                <h3 style="font-size:1.5rem; font-weight:700;">⚙️ Sync & Auth Settings</h3>
                 <p style="font-size:0.875rem; color:var(--text-muted); line-height:1.4;">
-                    Paste your deployed <strong>Google Apps Script Web App URL</strong> below to automatically sync user profiles, progress logs, and badges to Google Sheets.
+                    Configure your platform cloud integrations below.
                 </p>
-                <div style="display:flex; flex-direction:column; gap:0.5rem;">
-                    <label style="font-size:0.75rem; font-weight:600; text-transform:uppercase; color:var(--text-muted);">Script Web App URL</label>
-                    <input type="text" id="pyplay-gs-url-input" placeholder="https://script.google.com/macros/s/.../exec" style="background:rgba(0,0,0,0.3); border:1px solid var(--panel-border); color:white; border-radius:8px; padding:0.75rem; font-family:var(--font-ui); font-size:0.9rem; outline:none; width: 100%;" value="${this.scriptUrl}">
+                <div style="display:flex; flex-direction:column; gap:1rem;">
+                    <div style="display:flex; flex-direction:column; gap:0.35rem;">
+                        <label style="font-size:0.75rem; font-weight:600; text-transform:uppercase; color:var(--text-muted);">Script Web App URL</label>
+                        <input type="text" id="pyplay-gs-url-input" placeholder="https://script.google.com/macros/s/.../exec" style="background:rgba(0,0,0,0.3); border:1px solid var(--panel-border); color:white; border-radius:8px; padding:0.75rem; font-family:var(--font-ui); font-size:0.9rem; outline:none; width: 100%;" value="${this.scriptUrl}">
+                    </div>
+                    <div style="display:flex; flex-direction:column; gap:0.35rem;">
+                        <label style="font-size:0.75rem; font-weight:600; text-transform:uppercase; color:var(--text-muted);">Google Client ID (OAuth)</label>
+                        <input type="text" id="pyplay-google-client-id-input" placeholder="Client ID from Google Cloud Console" style="background:rgba(0,0,0,0.3); border:1px solid var(--panel-border); color:white; border-radius:8px; padding:0.75rem; font-family:var(--font-ui); font-size:0.9rem; outline:none; width: 100%;" value="${this.googleClientId}">
+                    </div>
                 </div>
                 <div style="display:flex; gap:1rem; margin-top:1rem;">
                     <button class="btn btn-outline" onclick="document.getElementById('pyplay-settings-modal').style.display = 'none'" style="flex:1; justify-content:center;">Cancel</button>
@@ -309,30 +319,17 @@ const PyPlayAuth = {
             display: none; align-items: center; justify-content: center; z-index: 10000;
         `;
         modal.innerHTML = `
-            <div class="glass-panel" style="width: 420px; padding: 2.2rem; display:flex; flex-direction:column; gap:1.25rem; text-align:center;">
+            <div class="glass-panel" style="width: 420px; padding: 2.2rem; display:flex; flex-direction:column; gap:1.15rem; text-align:center;">
                 <div style="font-size:2.5rem;">🐍</div>
                 <div>
                     <h3 style="font-size:1.5rem; font-weight:700; color:#fff;">Sign In with Gmail</h3>
                     <p style="font-size:0.8rem; color:var(--text-muted); margin-top:0.25rem;">Choose an account or register a new one</p>
                 </div>
                 
-                <!-- Quick Selection Cards -->
-                <div style="display:flex; flex-direction:column; gap:0.5rem; text-align:left;">
-                    <span style="font-size:0.75rem; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em;">Quick Selector (For Demo)</span>
-                    <div onclick="PyPlayAuth.login('alex.learner@gmail.com', 'Alex Learner', 'Learner')" class="account-card" style="cursor:pointer; display:flex; align-items:center; gap:0.75rem; background:rgba(255,255,255,0.03); border:1px solid var(--panel-border); padding:0.5rem 0.75rem; border-radius:10px; transition:all 0.2s ease;">
-                        <div style="font-size:1.2rem; background:rgba(59,130,246,0.1); width:32px; height:32px; display:flex; align-items:center; justify-content:center; border-radius:50%; color:#60a5fa;">🐱</div>
-                        <div style="display:flex; flex-direction:column;">
-                            <span style="font-weight:600; font-size:0.85rem; color:#fff;">Alex Learner</span>
-                            <span style="font-size:0.7rem; color:var(--text-muted);">alex.learner@gmail.com</span>
-                        </div>
-                    </div>
-                    <div onclick="PyPlayAuth.login('admin.boss@gmail.com', 'Admin Boss', 'Admin')" class="account-card" style="cursor:pointer; display:flex; align-items:center; gap:0.75rem; background:rgba(255,255,255,0.03); border:1px solid var(--panel-border); padding:0.5rem 0.75rem; border-radius:10px; transition:all 0.2s ease;">
-                        <div style="font-size:1.2rem; background:rgba(239,68,68,0.1); width:32px; height:32px; display:flex; align-items:center; justify-content:center; border-radius:50%; color:#fca5a5;">🦊</div>
-                        <div style="display:flex; flex-direction:column;">
-                            <span style="font-weight:600; font-size:0.85rem; color:#fff;">Admin Boss (Admin)</span>
-                            <span style="font-size:0.7rem; color:var(--text-muted);">admin.boss@gmail.com</span>
-                        </div>
-                    </div>
+                <!-- Google API Button Container -->
+                <div style="display:flex; flex-direction:column; gap:0.5rem; align-items:center; margin-top:0.25rem;">
+                    <span style="font-size:0.75rem; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; align-self:flex-start;">Sign In with Google API</span>
+                    <div id="google-signin-btn-api" style="width:100%; display:flex; justify-content:center;"></div>
                 </div>
 
                 <div style="border-top: 1px solid var(--panel-border); margin: 0.25rem 0; position:relative; text-align:center;">
@@ -358,7 +355,7 @@ const PyPlayAuth = {
                         <path fill="#ffffff" d="M5.34 14.33c-.24-.72-.38-1.49-.38-2.33s.14-1.61.38-2.33V6.53H1.31C.48 8.18 0 10.03 0 12s.48 3.82 1.31 5.47l4.03-3.14z"/>
                         <path fill="#ffffff" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.43-3.43C17.95 1.19 15.24 0 12 0 7.37 0 3.29 1.61 1.31 4.75l4.03 3.14c.94-2.8 3.57-4.88 6.66-4.88z"/>
                     </svg>
-                    Sign In with Gmail
+                    Sign In with Custom Gmail
                 </button>
                 
                 <button class="btn btn-clear" onclick="document.getElementById('pyplay-login-modal').style.display = 'none'" style="align-self:center; font-size:0.75rem; margin-top:0.25rem;">Close</button>
@@ -369,6 +366,8 @@ const PyPlayAuth = {
 
     openLoginModal() {
         document.getElementById('pyplay-login-modal').style.display = 'flex';
+        // Render Google API button
+        this.initGoogleAuth();
     },
 
     openSettingsModal() {
@@ -376,8 +375,19 @@ const PyPlayAuth = {
     },
 
     saveSettingsUrl() {
-        const val = document.getElementById('pyplay-gs-url-input').value.trim();
-        this.setScriptUrl(val);
+        const valUrl = document.getElementById('pyplay-gs-url-input').value.trim();
+        const valClientId = document.getElementById('pyplay-google-client-id-input').value.trim();
+        
+        this.setScriptUrl(valUrl);
+        
+        this.googleClientId = valClientId;
+        localStorage.setItem('pyplay_google_client_id', valClientId);
+        
+        // Re-initialize Google Auth with new Client ID
+        this.initGoogleAuth();
+        
+        document.getElementById('pyplay-settings-modal').style.display = 'none';
+        alert("Sync & Auth settings saved successfully! 🚀");
     },
 
     async editNicknamePrompt() {
@@ -401,6 +411,65 @@ const PyPlayAuth = {
             return;
         }
         this.login(email, name);
+    },
+
+    initGoogleAuth() {
+        // Load the script dynamically if not present
+        if (!document.querySelector('script[src*="accounts.google.com/gsi/client"]')) {
+            const script = document.createElement('script');
+            script.src = "https://accounts.google.com/gsi/client";
+            script.async = true;
+            script.defer = true;
+            script.onload = () => this.setupGoogleButton();
+            document.head.appendChild(script);
+        } else {
+            this.setupGoogleButton();
+        }
+    },
+
+    setupGoogleButton() {
+        if (typeof google === 'undefined') return;
+        
+        try {
+            google.accounts.id.initialize({
+                client_id: this.googleClientId,
+                callback: (res) => this.handleGoogleCredentialResponse(res)
+            });
+            
+            const btnContainer = document.getElementById("google-signin-btn-api");
+            if (btnContainer) {
+                btnContainer.innerHTML = ''; // Clean container
+                google.accounts.id.renderButton(btnContainer, {
+                    theme: "filled_blue",
+                    size: "large",
+                    shape: "pill",
+                    width: 340
+                });
+            }
+        } catch (e) {
+            console.error("Failed to setup Google button", e);
+        }
+    },
+
+    handleGoogleCredentialResponse(response) {
+        try {
+            const base64Url = response.credential.split('.')[1];
+            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(c => {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
+            const payload = JSON.parse(jsonPayload);
+            
+            const realEmail = payload.email;
+            const realName = payload.name;
+            const realAvatar = DEFAULT_AVATARS[Math.floor(Math.random() * DEFAULT_AVATARS.length)]; // Custom cute avatar assigned
+            
+            this.login(realEmail, realName, 'Learner', realAvatar);
+            document.getElementById('pyplay-login-modal').style.display = 'none';
+        } catch (e) {
+            console.error("Failed to parse Google OAuth credential", e);
+            alert("Failed to authenticate with Google API.");
+        }
     },
 
     tryDemo() {
