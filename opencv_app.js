@@ -4,7 +4,7 @@ const lessons = [
         title: "Getting Started With Images",
         difficulty: "Intermediate",
         topic: "OpenCV Basics",
-        concept: "In OpenCV, images are loaded using the <code>cv2.imread()</code> function. Loaded images are represented as standard multi-dimensional NumPy arrays (<code>numpy.ndarray</code>). You can check the shape/dimensions of an image using the <code>.shape</code> attribute, which returns a tuple of <code>(height, width, channels)</code> for color images, or <code>(height, width)</code> for grayscale images. In this sandbox, <code>cv2.imshow()</code> renders the image live in the Live Preview tab!",
+        concept: "In OpenCV, images are loaded using the <code>cv2.imread()</code> function. Loaded images are represented as standard multi-dimensional NumPy arrays (<code>numpy.ndarray</code>). You can check the shape/dimensions of an image using the <code>.shape</code> attribute, which returns a tuple of <code>(height, width, channels)</code> for color images, or <code>(height, width)</code> for grayscale images. In this sandbox, <code>cv2.imshow()</code> renders the image live in the Live Preview tab! [Test image : logo.png, duck.jpg, test.png]",
         example: 'import cv2\n# Load and display sample image\nimg = cv2.imread("logo.png")\nprint(img.shape)\ncv2.imshow("Logo Image", img)',
         task: 'Write a Python script that imports `cv2`, reads the file `logo.png` using `cv2.imread()`, and prints the dimensions (`.shape`) of the image array. The pre-loaded image is size 400x400 with 3 color channels.',
         initialCode: 'import cv2\n# Write code to load "logo.png" and print its shape:\n',
