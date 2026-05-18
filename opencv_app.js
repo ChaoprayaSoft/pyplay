@@ -308,20 +308,10 @@ try:
     # 2. Custom live-canvas preview bridge
     def patch_imshow(winname, mat):
         try:
-            # Display image in RGB color space by default.
-            # Since cv2.imencode assumes BGR input, we convert RGB/RGBA to BGR/BGRA
-            # so that it encodes to an authentic RGB/RGBA PNG for direct browser canvas rendering.
-            if len(mat.shape) == 3:
-                if mat.shape[2] == 3:
-                    mat_bgr = cv2.cvtColor(mat, cv2.COLOR_RGB2BGR)
-                elif mat.shape[2] == 4:
-                    mat_bgr = cv2.cvtColor(mat, cv2.COLOR_RGBA2BGRA)
-                else:
-                    mat_bgr = mat
-            else:
-                mat_bgr = mat
-                
-            success, encoded_img = cv2.imencode('.png', mat_bgr)
+            # Display image in standard BGR color space (default OpenCV behavior).
+            # cv2.imencode natively expects standard BGR format and compiles it to standard RGB PNG
+            # bytes, so passing the matrix directly provides perfect color accuracy in the browser.
+            success, encoded_img = cv2.imencode('.png', mat)
             if success:
                 arr = Uint8Array.new(encoded_img.tobytes())
                 blob = Blob.new([arr], type="image/png")
