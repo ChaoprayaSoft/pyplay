@@ -4,7 +4,7 @@ const lessons = [
         title: "Hello, World!",
         difficulty: "Beginner",
         topic: "Basics",
-        concept: "The `print()` function is used to output text (or any data) directly to the console. In Python, string literals are enclosed in single `'` or double `\"` quotes.",
+        concept: "The `print()` function is used to output text (or any data) directly to the console. In Python, string literals are enclosed in single `'` or double `\"` quotes. In PyPlay, your code runs inside a real, live Python engine directly in your browser!",
         example: 'print("Hello, World!")',
         task: 'Use the `print()` function to output the exact phrase: `Hello, Python!`',
         initialCode: '# Write your code below:\n',
