@@ -194,20 +194,16 @@
                 <!-- Output Wrapper -->
                 <div class="glass-panel output-wrapper" style="display: flex; flex-direction: column;">
                     <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                        <div style="display: flex; gap: 0.5rem;">
-                            <div class="tab active" id="tab-console" onclick="switchOutputTab('console')">Console Output</div>
-                            <div class="tab" id="tab-preview" onclick="switchOutputTab('preview')">📷 Live Preview</div>
+                        <div class="tab active" id="tab-console">Console Output</div>
+                        <div style="display: flex; gap: 0.5rem; align-items: center;">
+                            <button class="btn btn-primary" id="preview-btn" onclick="openPreviewPopupDirect()" style="padding: 0.35rem 0.75rem; font-size: 0.8rem; display: flex; align-items: center; gap: 0.25rem; background: var(--accent-primary); box-shadow: 0 0 10px var(--accent-glow);">
+                                📷 Show Image Preview
+                            </button>
+                            <button class="btn btn-clear" id="clear-btn">Clear</button>
                         </div>
-                        <button class="btn btn-clear" id="clear-btn">Clear</button>
                     </div>
                     <div class="terminal-container" id="console-container" style="flex: 1; overflow-y: auto; width: 100%;">
                         <pre id="output-console" class="terminal-output">Initializing Python Engine (Pyodide)...\nThis may take a moment on first load.</pre>
-                    </div>
-                    <div id="preview-container" class="hidden" style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1rem; background: rgba(0,0,0,0.3); border-top: 1px solid var(--panel-border); overflow: hidden; width: 100%; min-height: 200px;">
-                        <div id="no-preview-placeholder" style="color: var(--text-muted); font-size: 0.9rem; text-align: center; font-family: var(--font-ui);">
-                            No images shown yet. Run a script with <code>cv2.imshow()</code> to render live output preview!
-                        </div>
-                        <canvas id="preview-canvas" style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); display: none;"></canvas>
                     </div>
                 </div>
             </section>

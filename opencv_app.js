@@ -391,22 +391,13 @@ except Exception as e:
 }
 
 // --- Live Preview Helper Functions ---
-window.switchOutputTab = function (tabName) {
-    const tabConsole = document.getElementById('tab-console');
-    const tabPreview = document.getElementById('tab-preview');
-    const consoleContainer = document.getElementById('console-container');
-    const previewContainer = document.getElementById('preview-container');
+window.hasImagePreview = false;
 
-    if (tabName === 'console') {
-        tabConsole.classList.add('active');
-        tabPreview.classList.remove('active');
-        consoleContainer.classList.remove('hidden');
-        previewContainer.classList.add('hidden');
+window.openPreviewPopupDirect = function () {
+    if (window.hasImagePreview) {
+        document.getElementById('opencv-popup-window').classList.add('show');
     } else {
-        tabConsole.classList.remove('active');
-        tabPreview.classList.add('active');
-        consoleContainer.classList.add('hidden');
-        previewContainer.classList.remove('hidden');
+        alert("No image output available yet. Write a script using cv2.imshow() and click 'Run Code' to generate an image preview first!");
     }
 };
 
@@ -417,29 +408,19 @@ window.updateCanvasPreview = function (winname, url) {
         winname = "OpenCV Live Preview";
     }
 
-    // 1. Update standard tab preview
-    const canvas = document.getElementById('preview-canvas');
-    const ctx = canvas.getContext('2d');
-    const placeholder = document.getElementById('no-preview-placeholder');
-
     const img = new Image();
     img.onload = function () {
-        canvas.width = img.width;
-        canvas.height = img.height;
-        ctx.drawImage(img, 0, 0);
-        canvas.style.display = 'block';
-        placeholder.style.display = 'none';
-
-        // 2. Render to Popup Canvas
+        // 1. Render to Popup Canvas
         const popupCanvas = document.getElementById('preview-canvas-popup');
         const popupCtx = popupCanvas.getContext('2d');
         popupCanvas.width = img.width;
         popupCanvas.height = img.height;
         popupCtx.drawImage(img, 0, 0);
 
-        // 3. Show Popup window
+        // 2. Show Popup window & set state
         document.getElementById('opencv-popup-title').textContent = winname;
         document.getElementById('opencv-popup-window').classList.add('show');
+        window.hasImagePreview = true;
     };
     img.src = url;
 };
@@ -534,6 +515,7 @@ function appendError(msg) {
 
 function clearConsole() {
     dom.outputConsole.textContent = "";
+    window.hasImagePreview = false;
 }
 
 async function runCode() {
