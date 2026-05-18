@@ -232,8 +232,9 @@ const PyPlayAuth = {
             courseProgress.completed_lessons.push(lessonIndex);
         }
 
-        // 13 lessons total for Python
-        if (courseProgress.completed_lessons.length === 13) {
+        // Check completion based on course total lessons
+        const totalLessons = courseId === 'opencv' ? 14 : 13;
+        if (courseProgress.completed_lessons.length === totalLessons) {
             courseProgress.completed = true;
         }
 

@@ -204,10 +204,14 @@
                 </div>
 
                 <!-- Stats Grid -->
-                <div class="stats-grid">
+                <div class="stats-grid" style="grid-template-columns: repeat(4, 1fr);">
                     <div class="stat-card">
                         <div style="font-size:0.75rem; font-weight:600; text-transform:uppercase; color:var(--text-muted);">Python Progress</div>
                         <div class="stat-value" id="stat-python-completed">0 / 13</div>
+                    </div>
+                    <div class="stat-card">
+                        <div style="font-size:0.75rem; font-weight:600; text-transform:uppercase; color:var(--text-muted);">OpenCV Progress</div>
+                        <div class="stat-value" id="stat-opencv-completed">0 / 14</div>
                     </div>
                     <div class="stat-card">
                         <div style="font-size:0.75rem; font-weight:600; text-transform:uppercase; color:var(--text-muted);">Total XP</div>
@@ -228,6 +232,13 @@
                             <div class="badge-icon">🏆</div>
                             <div class="badge-title">Python Graduate</div>
                             <div class="badge-desc">Complete all 13 Python lessons</div>
+                        </div>
+
+                        <!-- OpenCV Badge -->
+                        <div class="badge-card" id="badge-opencv">
+                            <div class="badge-icon">📷</div>
+                            <div class="badge-title">OpenCV Visionary</div>
+                            <div class="badge-desc">Complete all 14 OpenCV image processing lessons</div>
                         </div>
                         
                         <!-- Extra Locked Badges for upcoming courses -->
@@ -308,18 +319,27 @@
 
             // Populate Stats
             const pyProgress = user.progress.python || { completed_lessons: [], completed: false };
-            const completedCount = pyProgress.completed_lessons ? pyProgress.completed_lessons.length : 0;
-            document.getElementById('stat-python-completed').textContent = `${completedCount} / 13`;
+            const pyCompletedCount = pyProgress.completed_lessons ? pyProgress.completed_lessons.length : 0;
+            document.getElementById('stat-python-completed').textContent = `${pyCompletedCount} / 13`;
             
-            // 100 XP per completed lesson
-            const xp = completedCount * 100;
+            const cvProgress = user.progress.opencv || { completed_lessons: [], completed: false };
+            const cvCompletedCount = cvProgress.completed_lessons ? cvProgress.completed_lessons.length : 0;
+            document.getElementById('stat-opencv-completed').textContent = `${cvCompletedCount} / 14`;
+            
+            // 100 XP per completed lesson across both courses
+            const totalCompleted = pyCompletedCount + cvCompletedCount;
+            const xp = totalCompleted * 100;
             document.getElementById('stat-xp').textContent = `${xp} XP`;
 
             // Badge Earned Logic
             let badgesCount = 0;
             if (pyProgress.completed) {
                 document.getElementById('badge-python').classList.add('earned');
-                badgesCount = 1;
+                badgesCount++;
+            }
+            if (cvProgress.completed) {
+                document.getElementById('badge-opencv').classList.add('earned');
+                badgesCount++;
             }
             document.getElementById('stat-badges-earned').textContent = badgesCount;
 
