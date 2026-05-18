@@ -220,6 +220,17 @@ async function init() {
         appendOutput("Loading OpenCV WebAssembly library (this may take a few seconds)...\n");
         await pyodideInstance.loadPackage("opencv-python");
         
+        // Fetch and write physical logo.png to Pyodide virtual filesystem
+        try {
+            appendOutput("Fetching course image assets (image/logo.png)...\n");
+            const imgResponse = await fetch('image/logo.png');
+            const arrayBuffer = await imgResponse.arrayBuffer();
+            pyodideInstance.FS.writeFile('logo.png', new Uint8Array(arrayBuffer));
+            appendOutput("Image assets loaded successfully!\n");
+        } catch (e) {
+            console.warn("Could not pre-load physical logo.png into Pyodide FS:", e);
+        }
+        
         // Inject synthetic OpenCV environment overrides
         await pyodideInstance.runPythonAsync(`
 import sys
@@ -231,7 +242,17 @@ try:
     from js import Uint8Array, Blob, URL
     
     # 1. Custom mock image loader returning standard shape/colored gradients
+    original_imread = cv2.imread
     def patch_imread(filename, flags=1):
+        try:
+            # Try to read natively if file preloaded in virtual filesystem
+            mat = original_imread(filename, flags)
+            if mat is not None:
+                return mat
+        except:
+            pass
+            
+        # Mock fallback
         img = np.zeros((400, 400, 3), dtype=np.uint8)
         for y in range(400):
             for x in range(400):
@@ -265,7 +286,7 @@ try:
                 url = URL.createObjectURL(blob)
                 
                 from js import updateCanvasPreview
-                updateCanvasPreview(url)
+                updateCanvasPreview(winname, url)
         except Exception as e:
             print("Error in cv2.imshow: " + str(e))
             
@@ -344,10 +365,14 @@ window.switchOutputTab = function(tabName) {
     }
 };
 
-window.updateCanvasPreview = function(url) {
-    // Switch to preview tab automatically so user sees the image
-    switchOutputTab('preview');
-    
+window.updateCanvasPreview = function(winname, url) {
+    // Support single parameter fallback
+    if (!url) {
+        url = winname;
+        winname = "OpenCV Live Preview";
+    }
+
+    // 1. Update standard tab preview
     const canvas = document.getElementById('preview-canvas');
     const ctx = canvas.getContext('2d');
     const placeholder = document.getElementById('no-preview-placeholder');
@@ -357,9 +382,19 @@ window.updateCanvasPreview = function(url) {
         canvas.width = img.width;
         canvas.height = img.height;
         ctx.drawImage(img, 0, 0);
-        
         canvas.style.display = 'block';
         placeholder.style.display = 'none';
+
+        // 2. Render to Popup Canvas
+        const popupCanvas = document.getElementById('preview-canvas-popup');
+        const popupCtx = popupCanvas.getContext('2d');
+        popupCanvas.width = img.width;
+        popupCanvas.height = img.height;
+        popupCtx.drawImage(img, 0, 0);
+        
+        // 3. Show Popup window
+        document.getElementById('opencv-popup-title').textContent = winname;
+        document.getElementById('opencv-popup-window').classList.add('show');
     };
     img.src = url;
 };
