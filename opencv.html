@@ -228,12 +228,7 @@
         <div class="opencv-popup-content glass-panel">
             <div class="opencv-popup-header" style="display: flex; align-items: center; justify-content: space-between; gap: 1.5rem;">
                 <span class="opencv-popup-title" id="opencv-popup-title">OpenCV Preview</span>
-                <div style="display: flex; align-items: center; gap: 0.75rem;">
-                    <button class="btn btn-outline" style="padding: 0.3rem 0.6rem; font-size: 0.75rem; border-color: rgba(255,255,255,0.15); display: flex; align-items: center; gap: 0.25rem;" onclick="toggleColorSpace()">
-                        🎨 Swap RGB/BGR
-                    </button>
-                    <button class="opencv-popup-close" onclick="closePreviewPopup()">✕</button>
-                </div>
+                <button class="opencv-popup-close" onclick="closePreviewPopup()">✕</button>
             </div>
             <div class="opencv-popup-body">
                 <canvas id="preview-canvas-popup"></canvas>
@@ -244,29 +239,6 @@
     <script>
         function closePreviewPopup() {
             document.getElementById('opencv-popup-window').classList.remove('show');
-        }
-
-        function toggleColorSpace() {
-            const canvas = document.getElementById('preview-canvas-popup');
-            const ctx = canvas.getContext('2d');
-            if (canvas.width === 0 || canvas.height === 0) return;
-
-            const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-            const data = imgData.data;
-            
-            // Swap Red (index 0) and Blue (index 2) channels
-            for (let i = 0; i < data.length; i += 4) {
-                const temp = data[i];
-                data[i] = data[i + 2];
-                data[i + 2] = temp;
-            }
-            
-            ctx.putImageData(imgData, 0, 0);
-            
-            // Also sync back to standard static tab preview canvas
-            const tabCanvas = document.getElementById('preview-canvas');
-            const tabCtx = tabCanvas.getContext('2d');
-            tabCtx.putImageData(imgData, 0, 0);
         }
     </script>
 </body>

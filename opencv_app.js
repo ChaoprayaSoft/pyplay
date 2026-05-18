@@ -153,7 +153,7 @@ const dom = {
     progressBar: document.getElementById('progress-bar'),
     prevBtn: document.getElementById('prev-btn'),
     nextBtn: document.getElementById('next-btn'),
-    
+
     lessonTitle: document.getElementById('lesson-title'),
     lessonDifficulty: document.getElementById('lesson-difficulty'),
     lessonTopic: document.getElementById('lesson-topic'),
@@ -161,7 +161,7 @@ const dom = {
     lessonExample: document.getElementById('lesson-example'),
     lessonTask: document.getElementById('lesson-task'),
     successMessage: document.getElementById('success-message'),
-    
+
     runBtn: document.getElementById('run-btn'),
     clearBtn: document.getElementById('clear-btn'),
     outputConsole: document.getElementById('output-console'),
@@ -172,7 +172,7 @@ let editor;
 
 async function init() {
     dom.totalLessons.textContent = lessons.length;
-    
+
     // Initialize CodeMirror
     editor = CodeMirror.fromTextArea(document.getElementById('code-editor'), {
         mode: 'python',
@@ -182,7 +182,7 @@ async function init() {
         indentUnit: 4,
         matchBrackets: true
     });
-    
+
     // Restore progress/resume from last uncompleted lesson
     if (typeof PyPlayAuth !== 'undefined' && PyPlayAuth.user) {
         if (!PyPlayAuth.user.progress) {
@@ -190,7 +190,7 @@ async function init() {
         }
         const pyProgress = PyPlayAuth.user.progress.opencv || { completed_lessons: [], completed: false };
         const completed = pyProgress.completed_lessons || [];
-        
+
         // Find first lesson index not in completed lessons list
         let resumeIndex = 0;
         for (let i = 0; i < lessons.length; i++) {
@@ -205,10 +205,10 @@ async function init() {
         }
         currentLessonIndex = resumeIndex;
     }
-    
+
     // Load lesson
     loadLesson(currentLessonIndex);
-    
+
     // Load Pyodide
     try {
         dom.outputConsole.textContent = "Initializing Python Engine (Pyodide)...\nThis may take a moment on first load.";
@@ -216,19 +216,19 @@ async function init() {
             stdout: (text) => appendOutput(text + "\n"),
             stderr: (text) => appendError(text + "\n")
         });
-        
+
         appendOutput("Loading OpenCV WebAssembly library (this may take a few seconds)...\n");
         await pyodideInstance.loadPackage("opencv-python");
-        
+
         // Create 'image' folder inside Pyodide's virtual filesystem
         try {
             pyodideInstance.FS.mkdir('image');
-        } catch(e) {
+        } catch (e) {
             console.warn("Folder 'image' already exists or could not be created:", e);
         }
 
         // Fetch and write physical course images dynamically to Pyodide virtual filesystem
-        let courseImages = ["logo.png", "duck.jpg"];
+        let courseImages = ["logo.png", "duck.jpg", "test.png"];
         try {
             appendOutput("Scanning 'image' folder for course assets...\n");
             const listResponse = await fetch('image/');
@@ -239,11 +239,11 @@ async function init() {
                 const links = Array.from(doc.querySelectorAll('a'))
                     .map(a => a.getAttribute('href'))
                     .map(href => {
-                        try { return decodeURIComponent(href); } catch(e) { return href; }
+                        try { return decodeURIComponent(href); } catch (e) { return href; }
                     })
                     .filter(href => href && /\.(png|jpg|jpeg|bmp)$/i.test(href))
                     .map(href => href.substring(href.lastIndexOf('/') + 1));
-                
+
                 if (links.length > 0) {
                     courseImages = [...new Set(links)];
                 }
@@ -259,7 +259,7 @@ async function init() {
                 if (imgResponse.ok) {
                     const arrayBuffer = await imgResponse.arrayBuffer();
                     const uint8Arr = new Uint8Array(arrayBuffer);
-                    
+
                     // Write to both root and image/ folder so both paths resolve!
                     pyodideInstance.FS.writeFile(imgName, uint8Arr);
                     pyodideInstance.FS.writeFile(`image/${imgName}`, uint8Arr);
@@ -269,7 +269,7 @@ async function init() {
             }
         }
         appendOutput("All dynamic image assets loaded successfully!\n");
-        
+
         // Inject synthetic OpenCV environment overrides
         await pyodideInstance.runPythonAsync(`
 import sys
@@ -308,17 +308,20 @@ try:
     # 2. Custom live-canvas preview bridge
     def patch_imshow(winname, mat):
         try:
+            # Display image in RGB color space by default.
+            # Since cv2.imencode assumes BGR input, we convert RGB/RGBA to BGR/BGRA
+            # so that it encodes to an authentic RGB/RGBA PNG for direct browser canvas rendering.
             if len(mat.shape) == 3:
                 if mat.shape[2] == 3:
-                    mat_rgb = cv2.cvtColor(mat, cv2.COLOR_BGR2RGB)
+                    mat_bgr = cv2.cvtColor(mat, cv2.COLOR_RGB2BGR)
                 elif mat.shape[2] == 4:
-                    mat_rgb = cv2.cvtColor(mat, cv2.COLOR_BGRA2RGBA)
+                    mat_bgr = cv2.cvtColor(mat, cv2.COLOR_RGBA2BGRA)
                 else:
-                    mat_rgb = mat
+                    mat_bgr = mat
             else:
-                mat_rgb = mat
+                mat_bgr = mat
                 
-            success, encoded_img = cv2.imencode('.png', mat_rgb)
+            success, encoded_img = cv2.imencode('.png', mat_bgr)
             if success:
                 arr = Uint8Array.new(encoded_img.tobytes())
                 blob = Blob.new([arr], type="image/png")
@@ -371,26 +374,26 @@ try:
 except Exception as e:
     print("Error initializing OpenCV sandbox: " + str(e))
         `);
-        
+
         pyodideReady = true;
-        
+
         dom.outputConsole.textContent = "Python & OpenCV Engine Ready! 📸🐍\n\nYou can write real Python code using 'import cv2' and preview your modifications live with cv2.imshow('Title', image)!\n\n";
         dom.runBtn.disabled = false;
     } catch (err) {
         dom.outputConsole.innerHTML = `<span class="terminal-error">Failed to load Python Engine. Please check your internet connection.</span>`;
         console.error(err);
     }
-    
+
     setupEventListeners();
 }
 
 // --- Live Preview Helper Functions ---
-window.switchOutputTab = function(tabName) {
+window.switchOutputTab = function (tabName) {
     const tabConsole = document.getElementById('tab-console');
     const tabPreview = document.getElementById('tab-preview');
     const consoleContainer = document.getElementById('console-container');
     const previewContainer = document.getElementById('preview-container');
-    
+
     if (tabName === 'console') {
         tabConsole.classList.add('active');
         tabPreview.classList.remove('active');
@@ -404,7 +407,7 @@ window.switchOutputTab = function(tabName) {
     }
 };
 
-window.updateCanvasPreview = function(winname, url) {
+window.updateCanvasPreview = function (winname, url) {
     // Support single parameter fallback
     if (!url) {
         url = winname;
@@ -415,9 +418,9 @@ window.updateCanvasPreview = function(winname, url) {
     const canvas = document.getElementById('preview-canvas');
     const ctx = canvas.getContext('2d');
     const placeholder = document.getElementById('no-preview-placeholder');
-    
+
     const img = new Image();
-    img.onload = function() {
+    img.onload = function () {
         canvas.width = img.width;
         canvas.height = img.height;
         ctx.drawImage(img, 0, 0);
@@ -430,7 +433,7 @@ window.updateCanvasPreview = function(winname, url) {
         popupCanvas.width = img.width;
         popupCanvas.height = img.height;
         popupCtx.drawImage(img, 0, 0);
-        
+
         // 3. Show Popup window
         document.getElementById('opencv-popup-title').textContent = winname;
         document.getElementById('opencv-popup-window').classList.add('show');
@@ -441,7 +444,7 @@ window.updateCanvasPreview = function(winname, url) {
 // --- Functions ---
 function loadLesson(index) {
     const lesson = lessons[index];
-    
+
     dom.lessonNum.textContent = index + 1;
     dom.lessonTitle.textContent = lesson.title;
     dom.lessonDifficulty.textContent = lesson.difficulty;
@@ -449,14 +452,14 @@ function loadLesson(index) {
     dom.lessonConcept.innerHTML = lesson.concept.replace(/`([^`]+)`/g, '<code>$1</code>');
     dom.lessonExample.textContent = lesson.example;
     dom.lessonTask.innerHTML = lesson.task.replace(/`([^`]+)`/g, '<code>$1</code>');
-    
+
     editor.setValue(lesson.initialCode);
     dom.successMessage.classList.add('hidden');
-    
+
     // Update progress bar
     const progress = ((index) / lessons.length) * 100;
     dom.progressBar.style.width = `${progress}%`;
-    
+
     // Update buttons
     dom.prevBtn.disabled = index === 0;
     dom.nextBtn.disabled = true; // Disabled until task is passed
@@ -481,19 +484,19 @@ function clearConsole() {
 
 async function runCode() {
     if (!pyodideReady) return;
-    
+
     const code = editor.getValue();
     clearConsole();
     dom.runBtn.disabled = true;
     dom.runBtn.innerHTML = 'Running...';
-    
+
     try {
         // Run the python code
         await pyodideInstance.runPythonAsync(code);
-        
+
         // After running, check if output matches expected output
         checkLessonCompletion();
-        
+
     } catch (err) {
         // Extract just the Python error message, not the full JS stack trace
         const errorMsg = err.toString().split('PythonError:').pop().trim();
@@ -507,7 +510,7 @@ async function runCode() {
 function checkLessonCompletion() {
     const lesson = lessons[currentLessonIndex];
     const currentOutput = dom.outputConsole.textContent;
-    
+
     // Normalize spaces and quotes to ensure robust validation
     const normalizedOutput = currentOutput.trim().replace(/\s+/g, ' ').replace(/"/g, "'");
     const normalizedExpected = lesson.expectedOutput.trim().replace(/\s+/g, ' ').replace(/"/g, "'");
@@ -515,17 +518,17 @@ function checkLessonCompletion() {
     if (normalizedOutput === normalizedExpected) {
         dom.successMessage.classList.remove('hidden');
         dom.nextBtn.disabled = false;
-        
+
         // Add celebration animation
         dom.successMessage.style.animation = 'none';
         dom.successMessage.offsetHeight; // trigger reflow
         dom.successMessage.style.animation = null;
-        
+
         // Save progress to localStorage & Google Sheets
         if (typeof PyPlayAuth !== 'undefined' && PyPlayAuth.user) {
             PyPlayAuth.updateProgress("opencv", currentLessonIndex, true);
         }
-        
+
         // If it's the last lesson
         if (currentLessonIndex === lessons.length - 1) {
             dom.nextBtn.textContent = "Finish Course";
@@ -538,7 +541,7 @@ function checkLessonCompletion() {
 function setupEventListeners() {
     dom.runBtn.addEventListener('click', runCode);
     dom.clearBtn.addEventListener('click', clearConsole);
-    
+
     dom.nextBtn.addEventListener('click', () => {
         if (currentLessonIndex < lessons.length - 1) {
             currentLessonIndex++;
@@ -548,14 +551,14 @@ function setupEventListeners() {
             dom.progressBar.style.width = '100%';
         }
     });
-    
+
     dom.prevBtn.addEventListener('click', () => {
         if (currentLessonIndex > 0) {
             currentLessonIndex--;
             loadLesson(currentLessonIndex);
         }
     });
-    
+
     // Command/Ctrl + Enter to run
     document.addEventListener('keydown', (e) => {
         if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
