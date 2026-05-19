@@ -126,13 +126,13 @@
             transform: translateY(-50%) scale(1);
         }
 
-        /* Slide-out Left Drawer */
-        .left-drawer {
+        /* Slide-out Drawer Sizing & Styles */
+        .drawer-canvas-panel {
             position: fixed;
             left: 92px;
             top: 100px;
             bottom: 30px;
-            width: 520px;
+            width: 450px;
             background: rgba(15, 23, 42, 0.88);
             backdrop-filter: blur(24px);
             border: 1px solid rgba(255, 255, 255, 0.1);
@@ -146,17 +146,44 @@
             overflow: hidden;
         }
 
-        .left-drawer.open {
+        .drawer-canvas-panel.open {
             transform: translateX(0);
         }
 
-        /* Slide-out Right Drawer */
-        .right-drawer {
+        .drawer-console-panel {
+            position: fixed;
+            left: 92px;
+            top: 100px;
+            bottom: 30px;
+            width: 450px;
+            background: rgba(15, 23, 42, 0.88);
+            backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            z-index: 2000;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.6), 0 0 30px rgba(59, 130, 246, 0.12);
+            transform: translateX(-130%);
+            transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1), left 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .drawer-console-panel.open {
+            transform: translateX(0);
+        }
+
+        .drawer-console-panel.shifted {
+            left: 562px; /* Shifts right when Data Canvas is open! */
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.6), 0 0 30px rgba(16, 185, 129, 0.15);
+        }
+
+        .drawer-csv-panel {
             position: fixed;
             right: 20px;
             top: 100px;
             bottom: 30px;
-            width: 520px;
+            width: 450px;
             background: rgba(15, 23, 42, 0.88);
             backdrop-filter: blur(24px);
             border: 1px solid rgba(255, 255, 255, 0.1);
@@ -170,7 +197,7 @@
             overflow: hidden;
         }
 
-        .right-drawer.open {
+        .drawer-csv-panel.open {
             transform: translateX(0);
         }
 
@@ -491,22 +518,23 @@
                 display: none !important; /* Hide hover tooltips on mobile */
             }
 
-            .left-drawer, .right-drawer {
-                left: 0;
-                top: auto;
-                bottom: 0;
-                height: 75%; /* Sits elegantly as a bottom sheet taking up 75% height! */
-                width: 100%;
-                border-radius: 24px 24px 0 0;
-                transform: translateY(115%); /* Slides out of view below screen */
-                border-left: none;
-                border-right: none;
-                border-top: 1px solid rgba(255, 255, 255, 0.12);
-                box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.6);
+            .drawer-canvas-panel, .drawer-console-panel, .drawer-csv-panel {
+                left: 0 !important;
+                right: 0 !important;
+                top: auto !important;
+                bottom: 0 !important;
+                height: 75% !important;
+                width: 100% !important;
+                border-radius: 24px 24px 0 0 !important;
+                transform: translateY(115%) !important;
+                border-left: none !important;
+                border-right: none !important;
+                border-top: 1px solid rgba(255, 255, 255, 0.12) !important;
+                box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.6) !important;
             }
 
-            .left-drawer.open, .right-drawer.open {
-                transform: translateY(0); /* Slides up smoothly! */
+            .drawer-canvas-panel.open, .drawer-console-panel.open, .drawer-csv-panel.open {
+                transform: translateY(0) !important;
             }
 
             /* Adjust app containers for mobile tap overlay */
@@ -601,59 +629,64 @@
         <button class="dock-button" id="dock-btn-console" data-tooltip="Console Output">📟</button>
     </div>
 
-    <!-- Left Drawer Panel (Data Canvas & Console) -->
-    <div class="left-drawer" id="left-drawer">
+    <!-- Drawer 1: Data Canvas -->
+    <div class="drawer-canvas-panel" id="drawer-canvas">
         <div class="drawer-header">
-            <div class="drawer-title" id="drawer-title">
-                <span id="drawer-title-icon">📊</span>
-                <span id="drawer-title-text">Data Canvas</span>
+            <div class="drawer-title">
+                <span>📊</span>
+                <span>Data Canvas</span>
             </div>
-            <button class="btn-close-drawer" id="close-drawer-btn" title="Close Panel">×</button>
+            <button class="btn-close-drawer" id="close-canvas-btn" title="Close Panel">×</button>
         </div>
         <div class="drawer-body">
-            <!-- Panel 1: Data Canvas -->
-            <div class="drawer-panel-content hidden" id="panel-content-canvas">
-                <div class="canvas-panel-inner">
-                    <div class="canvas-body" id="canvas-body">
-                        <!-- Placeholder text before user plots -->
-                        <div class="chart-placeholder-text" id="chart-placeholder">
-                            Run your code to display visual data graphs here
-                        </div>
-                        
-                        <!-- Chart.js Canvas -->
-                        <div class="chart-wrapper-box hidden" id="chart-wrapper">
-                            <canvas id="chart-canvas"></canvas>
-                        </div>
-                        
-                        <!-- Custom HTML matrix heatmaps (fallback for high aesthetics) -->
-                        <div class="custom-heatmap-grid hidden" id="heatmap-grid-container">
-                            <!-- Dynamic grid will be loaded by javascript -->
-                        </div>
+            <div class="canvas-panel-inner">
+                <div class="canvas-body" id="canvas-body">
+                    <!-- Placeholder text before user plots -->
+                    <div class="chart-placeholder-text" id="chart-placeholder">
+                        Run your code to display visual data graphs here
                     </div>
-                    <div class="canvas-footer-status">
-                        Status: <span id="canvas-status-badge" class="badge" style="background: rgba(255,255,255,0.05); color: var(--text-muted); padding: 0.25rem 0.5rem; font-size: 0.65rem;">No Plot</span>
+                    
+                    <!-- Chart.js Canvas -->
+                    <div class="chart-wrapper-box hidden" id="chart-wrapper">
+                        <canvas id="chart-canvas"></canvas>
+                    </div>
+                    
+                    <!-- Custom HTML matrix heatmaps (fallback for high aesthetics) -->
+                    <div class="custom-heatmap-grid hidden" id="heatmap-grid-container">
+                        <!-- Dynamic grid will be loaded by javascript -->
                     </div>
                 </div>
-            </div>
-
-            <!-- Panel 2: Console Output -->
-            <div class="drawer-panel-content hidden" id="panel-content-console">
-                <div class="console-panel-inner">
-                    <div class="terminal-header">Python Console Output</div>
-                    <div class="terminal-console" id="terminal-console">--- IDE Console Opened ---</div>
+                <div class="canvas-footer-status">
+                    Status: <span id="canvas-status-badge" class="badge" style="background: rgba(255,255,255,0.05); color: var(--text-muted); padding: 0.25rem 0.5rem; font-size: 0.65rem;">No Plot</span>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Right Drawer Panel (CSV Spreadsheet Inspector) -->
-    <div class="right-drawer" id="right-drawer">
+    <!-- Drawer 2: Console Output -->
+    <div class="drawer-console-panel" id="drawer-console">
+        <div class="drawer-header">
+            <div class="drawer-title" style="color: #10b981;">
+                <span>📟</span>
+                <span>Python Console Output</span>
+            </div>
+            <button class="btn-close-drawer" id="close-console-btn" title="Close Panel">×</button>
+        </div>
+        <div class="drawer-body">
+            <div class="console-panel-inner">
+                <div class="terminal-console" id="terminal-console">--- IDE Console Opened ---</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Drawer 3: CSV Spreadsheet Inspector -->
+    <div class="drawer-csv-panel" id="drawer-csv">
         <div class="drawer-header">
             <div class="drawer-title" style="color: var(--accent-primary);">
                 <span>📁</span>
                 <span>CSV Spreadsheet Inspector</span>
             </div>
-            <button class="btn-close-drawer" id="close-right-drawer-btn" title="Close Panel">×</button>
+            <button class="btn-close-drawer" id="close-csv-btn" title="Close Panel">×</button>
         </div>
         <div class="drawer-body">
             <div class="csv-panel-inner">

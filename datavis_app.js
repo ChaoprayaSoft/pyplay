@@ -951,140 +951,84 @@ function setupEventListeners() {
     });
 }
 
-// --- Slide-out Left and Right Drawer Controllers ---
+// --- Slide-out Left, Shifted Left-Center, and Right Drawer Controllers ---
 const drawerState = {
-    left: { isOpen: false, activePanel: null },
-    right: { isOpen: false }
+    canvas: { isOpen: false },
+    console: { isOpen: false },
+    csv: { isOpen: false }
 };
 
 function initDrawerController() {
-    const leftDrawer = document.getElementById('left-drawer');
-    const rightDrawer = document.getElementById('right-drawer');
-    
-    const titleText = document.getElementById('drawer-title-text');
-    const titleIcon = document.getElementById('drawer-title-icon');
-    
-    const closeLeftBtn = document.getElementById('close-drawer-btn');
-    const closeRightBtn = document.getElementById('close-right-drawer-btn');
+    const drawers = {
+        canvas: document.getElementById('drawer-canvas'),
+        console: document.getElementById('drawer-console'),
+        csv: document.getElementById('drawer-csv')
+    };
     
     const buttons = {
         canvas: document.getElementById('dock-btn-canvas'),
-        csv: document.getElementById('dock-btn-csv'),
-        console: document.getElementById('dock-btn-console')
+        console: document.getElementById('dock-btn-console'),
+        csv: document.getElementById('dock-btn-csv')
     };
     
-    const contents = {
-        canvas: document.getElementById('panel-content-canvas'),
-        console: document.getElementById('panel-content-console')
+    const closeButtons = {
+        canvas: document.getElementById('close-canvas-btn'),
+        console: document.getElementById('close-console-btn'),
+        csv: document.getElementById('close-csv-btn')
     };
     
-    const panelMeta = {
-        canvas: { title: "Data Canvas", icon: "📊" },
-        console: { title: "Python Console Output", icon: "📟" }
-    };
-    
-    function showLeftPanel(panelKey) {
-        // Hide all left panel content
-        Object.keys(contents).forEach(k => contents[k].classList.add('hidden'));
-        // Show target panel content
-        contents[panelKey].classList.remove('hidden');
-        
-        // Remove active class from left dock buttons
-        buttons.canvas.classList.remove('active');
-        buttons.console.classList.remove('active');
-        // Add active class to target button
-        buttons[panelKey].classList.add('active');
-        
-        // Update left header title and icon
-        titleText.textContent = panelMeta[panelKey].title;
-        titleIcon.textContent = panelMeta[panelKey].icon;
-        
-        // Open left drawer
-        leftDrawer.classList.add('open');
-        drawerState.left.isOpen = true;
-        drawerState.left.activePanel = panelKey;
+    function updateLayoutShifting() {
+        // Shift Console drawer rightward if Canvas drawer is already open!
+        if (drawerState.canvas.isOpen) {
+            drawers.console.classList.add('shifted');
+        } else {
+            drawers.console.classList.remove('shifted');
+        }
     }
     
-    function closeLeftDrawer() {
-        leftDrawer.classList.remove('open');
-        buttons.canvas.classList.remove('active');
-        buttons.console.classList.remove('active');
-        drawerState.left.isOpen = false;
-        drawerState.left.activePanel = null;
+    function showDrawer(key) {
+        drawers[key].classList.add('open');
+        buttons[key].classList.add('active');
+        drawerState[key].isOpen = true;
+        updateLayoutShifting();
     }
     
-    function showRightDrawer() {
-        rightDrawer.classList.add('open');
-        buttons.csv.classList.add('active');
-        drawerState.right.isOpen = true;
+    function closeDrawer(key) {
+        drawers[key].classList.remove('open');
+        buttons[key].classList.remove('active');
+        drawerState[key].isOpen = false;
+        updateLayoutShifting();
     }
     
-    function closeRightDrawer() {
-        rightDrawer.classList.remove('open');
-        buttons.csv.classList.remove('active');
-        drawerState.right.isOpen = false;
+    function toggleDrawer(key) {
+        if (drawerState[key].isOpen) {
+            closeDrawer(key);
+        } else {
+            showDrawer(key);
+        }
     }
     
     // Wire up dock buttons
-    buttons.canvas.addEventListener('click', () => {
-        if (drawerState.left.isOpen && drawerState.left.activePanel === 'canvas') {
-            closeLeftDrawer();
-        } else {
-            showLeftPanel('canvas');
-        }
-    });
-    
-    buttons.console.addEventListener('click', () => {
-        if (drawerState.left.isOpen && drawerState.left.activePanel === 'console') {
-            closeLeftDrawer();
-        } else {
-            showLeftPanel('console');
-        }
-    });
-    
-    buttons.csv.addEventListener('click', () => {
-        if (drawerState.right.isOpen) {
-            closeRightDrawer();
-        } else {
-            showRightDrawer();
-        }
+    Object.keys(buttons).forEach(key => {
+        buttons[key].addEventListener('click', () => {
+            toggleDrawer(key);
+        });
     });
     
     // Wire up close buttons
-    closeLeftBtn.addEventListener('click', closeLeftDrawer);
-    closeRightBtn.addEventListener('click', closeRightDrawer);
+    Object.keys(closeButtons).forEach(key => {
+        closeButtons[key].addEventListener('click', () => {
+            closeDrawer(key);
+        });
+    });
     
     // Expose helpers globally
     window.PyPlayDrawer = {
-        showPanel: (key) => {
-            if (key === 'csv') {
-                showRightDrawer();
-            } else {
-                showLeftPanel(key);
-            }
-        },
-        closeDrawer: (key) => {
-            if (key === 'csv') {
-                closeRightDrawer();
-            } else {
-                closeLeftDrawer();
-            }
-        },
+        showPanel: (key) => showDrawer(key),
+        closeDrawer: (key) => closeDrawer(key),
+        toggle: (key) => toggleDrawer(key),
         closeAll: () => {
-            closeLeftDrawer();
-            closeRightDrawer();
-        },
-        toggle: (key) => {
-            if (key === 'csv') {
-                if (drawerState.right.isOpen) closeRightDrawer();
-                else showRightDrawer();
-            } else {
-                if (drawerState.left.isOpen && drawerState.left.activePanel === key) {
-                    closeLeftDrawer();
-                } else {
-                    showLeftPanel(key);
-                }
-            }
+            Object.keys(drawers).forEach(closeDrawer);
         }
     };
 }
