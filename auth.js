@@ -237,7 +237,7 @@ const PyPlayAuth = {
         }
 
         // Check completion based on course total lessons
-        const totalLessons = courseId === 'opencv' ? 14 : 13;
+        const totalLessons = courseId === 'opencv' ? 14 : (courseId === 'arduino' ? 10 : 13);
         if (courseProgress.completed_lessons.length === totalLessons) {
             courseProgress.completed = true;
         }

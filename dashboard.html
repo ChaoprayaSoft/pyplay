@@ -204,7 +204,7 @@
                 </div>
 
                 <!-- Stats Grid -->
-                <div class="stats-grid" style="grid-template-columns: repeat(4, 1fr);">
+                <div class="stats-grid" style="grid-template-columns: repeat(5, 1fr);">
                     <div class="stat-card">
                         <div style="font-size:0.75rem; font-weight:600; text-transform:uppercase; color:var(--text-muted);">Python Progress</div>
                         <div class="stat-value" id="stat-python-completed">0 / 13</div>
@@ -212,6 +212,10 @@
                     <div class="stat-card">
                         <div style="font-size:0.75rem; font-weight:600; text-transform:uppercase; color:var(--text-muted);">OpenCV Progress</div>
                         <div class="stat-value" id="stat-opencv-completed">0 / 14</div>
+                    </div>
+                    <div class="stat-card">
+                        <div style="font-size:0.75rem; font-weight:600; text-transform:uppercase; color:var(--text-muted);">Arduino Progress</div>
+                        <div class="stat-value" id="stat-arduino-completed">0 / 10</div>
                     </div>
                     <div class="stat-card">
                         <div style="font-size:0.75rem; font-weight:600; text-transform:uppercase; color:var(--text-muted);">Total XP</div>
@@ -239,6 +243,13 @@
                             <div class="badge-icon">📷</div>
                             <div class="badge-title">OpenCV Visionary</div>
                             <div class="badge-desc">Complete all 14 OpenCV image processing lessons</div>
+                        </div>
+
+                        <!-- Arduino Badge -->
+                        <div class="badge-card" id="badge-arduino">
+                            <div class="badge-icon">🤖</div>
+                            <div class="badge-title">Arduino Creator</div>
+                            <div class="badge-desc">Complete all 10 visual Arduino simulation lessons</div>
                         </div>
                         
                         <!-- Extra Locked Badges for upcoming courses -->
@@ -326,8 +337,12 @@
             const cvCompletedCount = cvProgress.completed_lessons ? cvProgress.completed_lessons.length : 0;
             document.getElementById('stat-opencv-completed').textContent = `${cvCompletedCount} / 14`;
             
-            // 100 XP per completed lesson across both courses
-            const totalCompleted = pyCompletedCount + cvCompletedCount;
+            const ardProgress = user.progress.arduino || { completed_lessons: [], completed: false };
+            const ardCompletedCount = ardProgress.completed_lessons ? ardProgress.completed_lessons.length : 0;
+            document.getElementById('stat-arduino-completed').textContent = `${ardCompletedCount} / 10`;
+            
+            // 100 XP per completed lesson across all courses
+            const totalCompleted = pyCompletedCount + cvCompletedCount + ardCompletedCount;
             const xp = totalCompleted * 100;
             document.getElementById('stat-xp').textContent = `${xp} XP`;
 
@@ -339,6 +354,10 @@
             }
             if (cvProgress.completed) {
                 document.getElementById('badge-opencv').classList.add('earned');
+                badgesCount++;
+            }
+            if (ardProgress.completed) {
+                document.getElementById('badge-arduino').classList.add('earned');
                 badgesCount++;
             }
             document.getElementById('stat-badges-earned').textContent = badgesCount;
