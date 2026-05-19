@@ -977,27 +977,25 @@ function initDrawerController() {
         csv: document.getElementById('close-csv-btn')
     };
     
-    function updateLayoutShifting() {
-        // Shift Console drawer rightward if Canvas drawer is already open!
-        if (drawerState.canvas.isOpen) {
-            drawers.console.classList.add('shifted');
-        } else {
-            drawers.console.classList.remove('shifted');
-        }
-    }
-    
     function showDrawer(key) {
+        // Close other drawers to ensure only one window is open at a time
+        Object.keys(drawers).forEach(k => {
+            if (k !== key && drawerState[k].isOpen) {
+                drawers[k].classList.remove('open');
+                buttons[k].classList.remove('active');
+                drawerState[k].isOpen = false;
+            }
+        });
+
         drawers[key].classList.add('open');
         buttons[key].classList.add('active');
         drawerState[key].isOpen = true;
-        updateLayoutShifting();
     }
     
     function closeDrawer(key) {
         drawers[key].classList.remove('open');
         buttons[key].classList.remove('active');
         drawerState[key].isOpen = false;
-        updateLayoutShifting();
     }
     
     function toggleDrawer(key) {
