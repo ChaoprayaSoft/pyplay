@@ -951,17 +951,21 @@ function setupEventListeners() {
     });
 }
 
-// --- Slide-out Left Drawer Controller ---
+// --- Slide-out Left and Right Drawer Controllers ---
 const drawerState = {
-    activePanel: null, // 'canvas', 'csv', 'console'
-    isOpen: false
+    left: { isOpen: false, activePanel: null },
+    right: { isOpen: false }
 };
 
 function initDrawerController() {
-    const drawer = document.getElementById('left-drawer');
+    const leftDrawer = document.getElementById('left-drawer');
+    const rightDrawer = document.getElementById('right-drawer');
+    
     const titleText = document.getElementById('drawer-title-text');
     const titleIcon = document.getElementById('drawer-title-icon');
-    const closeBtn = document.getElementById('close-drawer-btn');
+    
+    const closeLeftBtn = document.getElementById('close-drawer-btn');
+    const closeRightBtn = document.getElementById('close-right-drawer-btn');
     
     const buttons = {
         canvas: document.getElementById('dock-btn-canvas'),
@@ -971,67 +975,115 @@ function initDrawerController() {
     
     const contents = {
         canvas: document.getElementById('panel-content-canvas'),
-        csv: document.getElementById('panel-content-csv'),
         console: document.getElementById('panel-content-console')
     };
     
     const panelMeta = {
         canvas: { title: "Data Canvas", icon: "📊" },
-        csv: { title: "CSV Spreadsheet", icon: "📁" },
         console: { title: "Python Console Output", icon: "📟" }
     };
     
-    function showPanel(panelKey) {
-        // Hide all panel content
+    function showLeftPanel(panelKey) {
+        // Hide all left panel content
         Object.keys(contents).forEach(k => contents[k].classList.add('hidden'));
         // Show target panel content
         contents[panelKey].classList.remove('hidden');
         
-        // Remove active class from all buttons
-        Object.keys(buttons).forEach(k => buttons[k].classList.remove('active'));
+        // Remove active class from left dock buttons
+        buttons.canvas.classList.remove('active');
+        buttons.console.classList.remove('active');
         // Add active class to target button
         buttons[panelKey].classList.add('active');
         
-        // Update header title and icon
+        // Update left header title and icon
         titleText.textContent = panelMeta[panelKey].title;
         titleIcon.textContent = panelMeta[panelKey].icon;
         
-        // Open drawer
-        drawer.classList.add('open');
-        drawerState.isOpen = true;
-        drawerState.activePanel = panelKey;
+        // Open left drawer
+        leftDrawer.classList.add('open');
+        drawerState.left.isOpen = true;
+        drawerState.left.activePanel = panelKey;
     }
     
-    function closeDrawer() {
-        drawer.classList.remove('open');
-        Object.keys(buttons).forEach(k => buttons[k].classList.remove('active'));
-        drawerState.isOpen = false;
-        drawerState.activePanel = null;
+    function closeLeftDrawer() {
+        leftDrawer.classList.remove('open');
+        buttons.canvas.classList.remove('active');
+        buttons.console.classList.remove('active');
+        drawerState.left.isOpen = false;
+        drawerState.left.activePanel = null;
+    }
+    
+    function showRightDrawer() {
+        rightDrawer.classList.add('open');
+        buttons.csv.classList.add('active');
+        drawerState.right.isOpen = true;
+    }
+    
+    function closeRightDrawer() {
+        rightDrawer.classList.remove('open');
+        buttons.csv.classList.remove('active');
+        drawerState.right.isOpen = false;
     }
     
     // Wire up dock buttons
-    Object.keys(buttons).forEach(key => {
-        buttons[key].addEventListener('click', () => {
-            if (drawerState.isOpen && drawerState.activePanel === key) {
-                closeDrawer();
-            } else {
-                showPanel(key);
-            }
-        });
+    buttons.canvas.addEventListener('click', () => {
+        if (drawerState.left.isOpen && drawerState.left.activePanel === 'canvas') {
+            closeLeftDrawer();
+        } else {
+            showLeftPanel('canvas');
+        }
     });
     
-    // Wire up close button
-    closeBtn.addEventListener('click', closeDrawer);
+    buttons.console.addEventListener('click', () => {
+        if (drawerState.left.isOpen && drawerState.left.activePanel === 'console') {
+            closeLeftDrawer();
+        } else {
+            showLeftPanel('console');
+        }
+    });
+    
+    buttons.csv.addEventListener('click', () => {
+        if (drawerState.right.isOpen) {
+            closeRightDrawer();
+        } else {
+            showRightDrawer();
+        }
+    });
+    
+    // Wire up close buttons
+    closeLeftBtn.addEventListener('click', closeLeftDrawer);
+    closeRightBtn.addEventListener('click', closeRightDrawer);
     
     // Expose helpers globally
     window.PyPlayDrawer = {
-        showPanel,
-        closeDrawer,
-        toggle: (key) => {
-            if (drawerState.isOpen && drawerState.activePanel === key) {
-                closeDrawer();
+        showPanel: (key) => {
+            if (key === 'csv') {
+                showRightDrawer();
             } else {
-                showPanel(key);
+                showLeftPanel(key);
+            }
+        },
+        closeDrawer: (key) => {
+            if (key === 'csv') {
+                closeRightDrawer();
+            } else {
+                closeLeftDrawer();
+            }
+        },
+        closeAll: () => {
+            closeLeftDrawer();
+            closeRightDrawer();
+        },
+        toggle: (key) => {
+            if (key === 'csv') {
+                if (drawerState.right.isOpen) closeRightDrawer();
+                else showRightDrawer();
+            } else {
+                if (drawerState.left.isOpen && drawerState.left.activePanel === key) {
+                    closeLeftDrawer();
+                } else {
+                    showLeftPanel(key);
+                }
             }
         }
     };
