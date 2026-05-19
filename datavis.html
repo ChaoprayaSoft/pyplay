@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PyPlay - Data Visualization & Analytics</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <!-- CodeMirror for Python Editor -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/dracula.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
+    
+    <style>
+        /* Custom DataVis overrides & Workbench styles */
+        :root {
+            --chart-grid: rgba(255, 255, 255, 0.05);
+            --chart-accent: #3b82f6;
+            --table-header: #1e293b;
+            --table-row-alt: rgba(255, 255, 255, 0.02);
+            --table-border: rgba(255, 255, 255, 0.05);
+        }
+
+        .main-workspace {
+            height: calc(100vh - 120px) !important;
+        }
+
+        .editor-panel {
+            flex: 1.2 !important;
+        }
+
+        /* Split view at the bottom of the right side */
+        .workspace-bottom {
+            flex: 1.3;
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 1rem;
+            min-height: 0; /* Critical for container overflow scroll */
+        }
+
+        /* Chart Canvas Workbench Panel */
+        .canvas-panel {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .canvas-header {
+            padding: 0.5rem 1rem;
+            background: rgba(0, 0, 0, 0.3);
+            border-bottom: 1px solid var(--panel-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .canvas-title {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .canvas-title::before {
+            content: "📊";
+        }
+
+        .canvas-body {
+            flex: 1;
+            background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            padding: 1.25rem;
+            overflow: hidden;
+        }
+
+        /* Chart Canvas wrapper */
+        .chart-wrapper-box {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #chart-canvas {
+            max-width: 100%;
+            max-height: 100%;
+            filter: drop-shadow(0 4px 15px rgba(0,0,0,0.3));
+        }
+
+        /* Custom Heatmap Grid overlay since Chart.js heatmap requires complex plugins */
+        .custom-heatmap-grid {
+            display: grid;
+            width: 80%;
+            height: 80%;
+            gap: 4px;
+            padding: 8px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+            border: 1px solid var(--panel-border);
+        }
+
+        .heatmap-cell {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #fff;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .heatmap-cell:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+        }
+
+        .heatmap-label {
+            font-size: 0.6rem;
+            font-weight: 500;
+            opacity: 0.8;
+            margin-top: 2px;
+            text-transform: uppercase;
+        }
+
+        /* Data Inspector & Console Panel */
+        .data-inspector-panel {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            gap: 0.75rem;
+        }
+
+        /* CSV Data Table tab styles */
+        .inspector-tabs {
+            display: flex;
+            background: rgba(0, 0, 0, 0.2);
+            border-bottom: 1px solid var(--panel-border);
+            padding: 0.25rem 0.5rem 0 0.5rem;
+            gap: 0.25rem;
+        }
+
+        .inspector-tab {
+            padding: 0.4rem 0.75rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            border-radius: 6px 6px 0 0;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+            border-bottom: none;
+        }
+
+        .inspector-tab.active {
+            color: var(--accent-primary);
+            background: #101726;
+            border-color: var(--panel-border);
+        }
+
+        /* Table container */
+        .dataset-table-container {
+            flex: 1.1;
+            background: #0d121f;
+            border: 1px solid var(--table-border);
+            border-radius: 8px;
+            overflow: auto;
+            position: relative;
+            min-height: 0;
+        }
+
+        .dataset-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: var(--font-sans);
+            font-size: 0.75rem;
+            color: #cbd5e1;
+            text-align: left;
+        }
+
+        .dataset-table th {
+            background: #1e293b;
+            color: #94a3b8;
+            font-weight: 700;
+            padding: 0.5rem 0.75rem;
+            border-bottom: 1px solid var(--table-border);
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            text-transform: uppercase;
+            font-size: 0.65rem;
+            letter-spacing: 0.05em;
+        }
+
+        .dataset-table td {
+            padding: 0.45rem 0.75rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+        }
+
+        .dataset-table tr:nth-child(even) td {
+            background: rgba(255,255,255,0.01);
+        }
+
+        .dataset-table tr:hover td {
+            background: rgba(59, 130, 246, 0.08);
+            color: #fff;
+        }
+
+        /* Console Output container */
+        .terminal-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #090d16;
+            border: 1px solid var(--panel-border);
+            border-radius: 8px;
+            overflow: hidden;
+            min-height: 0;
+        }
+
+        .terminal-header {
+            padding: 0.35rem 0.75rem;
+            background: rgba(255, 255, 255, 0.03);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .terminal-console {
+            flex: 1;
+            padding: 0.5rem 0.75rem;
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            color: #10b981;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            line-height: 1.4;
+        }
+
+        /* Custom Run Button */
+        .btn-run-code {
+            background: #10b981;
+            color: #fff;
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-run-code:hover {
+            background: #059669;
+        }
+
+        /* Chart status notifications */
+        .chart-placeholder-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .chart-placeholder-text::before {
+            content: "📈";
+            font-size: 2.5rem;
+            opacity: 0.5;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); }
+            100% { transform: translateY(0px); }
+        }
+    </style>
+    <script>
+        // Redirect to index page with login trigger if not authenticated
+        if (!localStorage.getItem('pyplay_user')) {
+            window.location.href = 'index.html?triggerLogin=true';
+        }
+    </script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="glass-panel header">
+            <div style="display: flex; align-items: center; gap: 1.5rem;">
+                <a href="index.html" class="logo">
+                    <div class="logo-icon">📊</div>
+                    <h1>PyPlay</h1>
+                </a>
+                <a href="index.html" class="btn btn-outline" style="padding: 0.35rem 0.75rem; font-size: 0.8rem;">🏠 Home</a>
+            </div>
+            
+            <div class="progress-container" style="width: 380px;">
+                <span class="progress-text">Lesson <span id="current-lesson-num">1</span> of <span id="total-lessons">10</span></span>
+                <div class="progress-steps-container" id="progress-steps-container"></div>
+            </div>
+            <div class="controls">
+                <button class="btn btn-outline" id="prev-btn" disabled>Previous</button>
+                <button class="btn btn-primary" id="next-btn" disabled>Next Lesson</button>
+            </div>
+        </header>
+
+        <!-- Main Workspace -->
+        <main class="main-workspace">
+            <!-- Left Panel: Instructions -->
+            <section class="glass-panel instruction-panel">
+                <div class="lesson-content">
+                    <h2 id="lesson-title" class="lesson-title">Loading...</h2>
+                    <div class="badges">
+                        <span class="badge badge-difficulty" id="lesson-difficulty">Intermediate</span>
+                        <span class="badge badge-topic" id="lesson-topic">Data Analytics</span>
+                    </div>
+                    
+                    <div class="lesson-section">
+                        <h3>📖 Concept</h3>
+                        <p id="lesson-concept">Please wait while the IDE is initializing...</p>
+                    </div>
+
+                    <div class="lesson-section">
+                        <h3>💡 Example</h3>
+                        <pre><code id="lesson-example" class="example-code"></code></pre>
+                    </div>
+
+                    <div class="lesson-section task-section">
+                        <h3>🎯 Your Task</h3>
+                        <p id="lesson-task"></p>
+                    </div>
+                    
+                    <div id="success-message" class="success-message hidden">
+                        🎉 Superb! Data parsed and correct analytical graph successfully plotted!
+                    </div>
+                </div>
+            </section>
+
+            <!-- Right Panel: Editor & Visual Canvas -->
+            <section class="editor-panel">
+                <!-- Editor Wrapper -->
+                <div class="glass-panel editor-wrapper">
+                    <div class="panel-header">
+                        <div class="tab active">main.py</div>
+                        <button class="btn btn-run-code" id="run-btn">
+                            <span class="run-icon">▶</span> Run Code
+                        </button>
+                    </div>
+                    <div class="editor-container">
+                        <textarea id="code-editor"></textarea>
+                    </div>
+                </div>
+
+                <!-- Visual Sandbox (Workspace Bottom) -->
+                <div class="workspace-bottom">
+                    <!-- Visual Chart Panel -->
+                    <div class="glass-panel canvas-panel">
+                        <div class="canvas-header">
+                            <div class="canvas-title">Data Canvas</div>
+                            <span id="canvas-status-badge" class="badge" style="background: rgba(255,255,255,0.05); color: var(--text-muted);">No Plot</span>
+                        </div>
+                        <div class="canvas-body" id="canvas-body">
+                            <!-- Placeholder text before user plots -->
+                            <div class="chart-placeholder-text" id="chart-placeholder">
+                                Run your code to display visual data graphs here
+                            </div>
+                            
+                            <!-- Chart.js Canvas -->
+                            <div class="chart-wrapper-box hidden" id="chart-wrapper">
+                                <canvas id="chart-canvas"></canvas>
+                            </div>
+                            
+                            <!-- Custom HTML matrix heatmaps (fallback for high aesthetics) -->
+                            <div class="custom-heatmap-grid hidden" id="heatmap-grid-container">
+                                <!-- Dynamic grid will be loaded by javascript -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Spreadsheet Inspector & Console -->
+                    <div class="data-inspector-panel">
+                        <!-- Spreadsheet tab headers -->
+                        <div class="glass-panel inspector-tabs" id="inspector-tabs-header">
+                            <div class="inspector-tab active" id="tab-dataset">dataset.csv</div>
+                        </div>
+                        
+                        <!-- SpreadSheet Grid View -->
+                        <div class="dataset-table-container">
+                            <table class="dataset-table" id="dataset-grid">
+                                <thead>
+                                    <!-- Dynamic headers -->
+                                </thead>
+                                <tbody>
+                                    <!-- Dynamic data rows -->
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- Terminal Console -->
+                        <div class="terminal-panel">
+                            <div class="terminal-header">Python Console Output</div>
+                            <div class="terminal-console" id="terminal-console">--- IDE Console Opened ---</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <!-- Chart.js library for drawing interactive charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- CodeMirror & Modes -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/python/python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/edit/closebrackets.min.js"></script>
+    <!-- App progress state -->
+    <script src="auth.js"></script>
+    <!-- Local custom visualization javascript -->
+    <script src="datavis_app.js"></script>
+</body>
+</html>
