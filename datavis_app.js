@@ -331,6 +331,7 @@ function init() {
     
     loadLesson(currentLessonIndex);
     setupEventListeners();
+    initDrawerController();
 }
 
 // --- Load Lesson & Populate Grid ---
@@ -865,8 +866,25 @@ async function runPythonCode() {
         // Trigger verification
         checkLessonCompletion();
         
+        // Auto-slide drawer depending on execution results
+        const hasPlot = /plt\.(bar|plot|pie|scatter|boxplot|show)|sns\.heatmap/.test(pyCode);
+        if (window.PyPlayDrawer) {
+            setTimeout(() => {
+                if (hasPlot) {
+                    window.PyPlayDrawer.showPanel('canvas');
+                } else {
+                    window.PyPlayDrawer.showPanel('console');
+                }
+            }, 100);
+        }
+        
     } catch (e) {
         appendConsoleError("Python Runtime Error:\n" + e.message);
+        if (window.PyPlayDrawer) {
+            setTimeout(() => {
+                window.PyPlayDrawer.showPanel('console');
+            }, 100);
+        }
     }
 }
 
@@ -931,6 +949,92 @@ function setupEventListeners() {
             dom.runBtn.click();
         }
     });
+}
+
+// --- Slide-out Left Drawer Controller ---
+const drawerState = {
+    activePanel: null, // 'canvas', 'csv', 'console'
+    isOpen: false
+};
+
+function initDrawerController() {
+    const drawer = document.getElementById('left-drawer');
+    const titleText = document.getElementById('drawer-title-text');
+    const titleIcon = document.getElementById('drawer-title-icon');
+    const closeBtn = document.getElementById('close-drawer-btn');
+    
+    const buttons = {
+        canvas: document.getElementById('dock-btn-canvas'),
+        csv: document.getElementById('dock-btn-csv'),
+        console: document.getElementById('dock-btn-console')
+    };
+    
+    const contents = {
+        canvas: document.getElementById('panel-content-canvas'),
+        csv: document.getElementById('panel-content-csv'),
+        console: document.getElementById('panel-content-console')
+    };
+    
+    const panelMeta = {
+        canvas: { title: "Data Canvas", icon: "📊" },
+        csv: { title: "CSV Spreadsheet", icon: "📁" },
+        console: { title: "Python Console Output", icon: "📟" }
+    };
+    
+    function showPanel(panelKey) {
+        // Hide all panel content
+        Object.keys(contents).forEach(k => contents[k].classList.add('hidden'));
+        // Show target panel content
+        contents[panelKey].classList.remove('hidden');
+        
+        // Remove active class from all buttons
+        Object.keys(buttons).forEach(k => buttons[k].classList.remove('active'));
+        // Add active class to target button
+        buttons[panelKey].classList.add('active');
+        
+        // Update header title and icon
+        titleText.textContent = panelMeta[panelKey].title;
+        titleIcon.textContent = panelMeta[panelKey].icon;
+        
+        // Open drawer
+        drawer.classList.add('open');
+        drawerState.isOpen = true;
+        drawerState.activePanel = panelKey;
+    }
+    
+    function closeDrawer() {
+        drawer.classList.remove('open');
+        Object.keys(buttons).forEach(k => buttons[k].classList.remove('active'));
+        drawerState.isOpen = false;
+        drawerState.activePanel = null;
+    }
+    
+    // Wire up dock buttons
+    Object.keys(buttons).forEach(key => {
+        buttons[key].addEventListener('click', () => {
+            if (drawerState.isOpen && drawerState.activePanel === key) {
+                closeDrawer();
+            } else {
+                showPanel(key);
+            }
+        });
+    });
+    
+    // Wire up close button
+    closeBtn.addEventListener('click', closeDrawer);
+    
+    // Expose helpers globally
+    window.PyPlayDrawer = {
+        showPanel,
+        closeDrawer,
+        toggle: (key) => {
+            if (drawerState.isOpen && drawerState.activePanel === key) {
+                closeDrawer();
+            } else {
+                showPanel(key);
+            }
+        }
+    };
 }
 
 // Initialize on document ready
