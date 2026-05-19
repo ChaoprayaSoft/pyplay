@@ -279,7 +279,19 @@ const dom = {
     serialSendBtn: document.getElementById('serial-send-btn'),
     statusBadge: document.getElementById('simulator-status-badge'),
     componentsOverlay: document.getElementById('components-overlay'),
-    wiresLayer: document.getElementById('wires-layer')
+    wiresLayer: document.getElementById('wires-layer'),
+    
+    // Floating Dock elements
+    toggleCircuitBtn: document.getElementById('toggle-circuit-btn'),
+    toggleSerialBtn: document.getElementById('toggle-serial-btn'),
+    circuitDock: document.getElementById('circuit-dock'),
+    serialDock: document.getElementById('serial-dock'),
+    circuitDockHeader: document.getElementById('circuit-dock-header'),
+    serialDockHeader: document.getElementById('serial-dock-header'),
+    minimizeCircuitBtn: document.getElementById('minimize-circuit-btn'),
+    closeCircuitBtn: document.getElementById('close-circuit-btn'),
+    minimizeSerialBtn: document.getElementById('minimize-serial-btn'),
+    closeSerialBtn: document.getElementById('close-serial-btn')
 };
 
 // SVG Board Pin Coordinates mapping on screen for organic looking wires
@@ -301,6 +313,201 @@ const pinCoordinates = {
     "5v-bottom": { x: 124, y: 145 },
     "gnd-bottom1": { x: 139, y: 145 }
 };
+
+// --- FLOATING DOCK LOGIC & RESIZE/DRAG ENGINE ---
+function makeElementDraggable(el, headerEl, dockId) {
+    let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+    if (headerEl) {
+        headerEl.onmousedown = dragMouseDown;
+        headerEl.ontouchstart = dragMouseDown;
+    } else {
+        el.onmousedown = dragMouseDown;
+        el.ontouchstart = dragMouseDown;
+    }
+
+    function dragMouseDown(e) {
+        e = e || window.event;
+        // Don't drag if clicking controls or inputs
+        if (e.target.closest('.dock-btn') || e.target.closest('.btn') || e.target.closest('input')) {
+            return;
+        }
+        
+        let clientX = e.clientX;
+        let clientY = e.clientY;
+        if (e.touches) {
+            clientX = e.touches[0].clientX;
+            clientY = e.touches[0].clientY;
+        }
+        
+        pos3 = clientX;
+        pos4 = clientY;
+        
+        document.onmouseup = closeDragElement;
+        document.ontouchend = closeDragElement;
+        
+        document.onmousemove = elementDrag;
+        document.ontouchmove = elementDrag;
+        
+        // Bring clicked window to top
+        el.style.zIndex = "1001";
+        document.querySelectorAll('.floating-dock').forEach(other => {
+            if (other !== el) {
+                other.style.zIndex = "1000";
+            }
+        });
+    }
+
+    function elementDrag(e) {
+        e = e || window.event;
+        let clientX = e.clientX;
+        let clientY = e.clientY;
+        if (e.touches) {
+            clientX = e.touches[0].clientX;
+            clientY = e.touches[0].clientY;
+        }
+        
+        pos1 = pos3 - clientX;
+        pos2 = pos4 - clientY;
+        pos3 = clientX;
+        pos4 = clientY;
+        
+        let newTop = el.offsetTop - pos2;
+        let newLeft = el.offsetLeft - pos1;
+        
+        // Keep header bar in view
+        newTop = Math.max(0, Math.min(window.innerHeight - 40, newTop));
+        newLeft = Math.max(0, Math.min(window.innerWidth - 100, newLeft));
+        
+        el.style.top = newTop + "px";
+        el.style.left = newLeft + "px";
+    }
+
+    function closeDragElement() {
+        document.onmouseup = null;
+        document.onmousemove = null;
+        document.ontouchend = null;
+        document.ontouchmove = null;
+        
+        // Save state on drag end
+        saveDockState(dockId);
+    }
+}
+
+function listenToDockResize(el, dockId) {
+    el.addEventListener('mouseup', () => {
+        saveDockState(dockId);
+    });
+}
+
+function saveDockState(dockId) {
+    const el = document.getElementById(dockId);
+    if (!el) return;
+    
+    const state = {
+        top: el.style.top,
+        left: el.style.left,
+        width: el.style.width,
+        height: el.style.height,
+        isHidden: el.classList.contains('hidden'),
+        isMinimized: el.classList.contains('minimized')
+    };
+    localStorage.setItem(`pyplay_dock_${dockId}`, JSON.stringify(state));
+}
+
+function restoreDockState(dockId, defaultTop, defaultLeft) {
+    const el = document.getElementById(dockId);
+    const toggleBtn = document.getElementById(`toggle-${dockId.split('-')[0]}-btn`);
+    if (!el) return;
+    
+    const saved = localStorage.getItem(`pyplay_dock_${dockId}`);
+    if (saved) {
+        try {
+            const state = JSON.parse(saved);
+            el.style.top = state.top;
+            el.style.left = state.left;
+            if (state.width) el.style.width = state.width;
+            if (state.height) el.style.height = state.height;
+            
+            if (state.isHidden) {
+                el.classList.add('hidden');
+                if (toggleBtn) toggleBtn.classList.remove('active');
+            } else {
+                el.classList.remove('hidden');
+                if (toggleBtn) toggleBtn.classList.add('active');
+            }
+            
+            if (state.isMinimized) {
+                el.classList.add('minimized');
+            } else {
+                el.classList.remove('minimized');
+            }
+        } catch (e) {
+            console.error("Error restoring dock state", e);
+        }
+    } else {
+        el.style.top = defaultTop;
+        el.style.left = defaultLeft;
+        el.classList.remove('hidden');
+        if (toggleBtn) toggleBtn.classList.add('active');
+    }
+}
+
+function initFloatingDocks() {
+    restoreDockState('circuit-dock', '110px', 'calc(50% + 20px)');
+    restoreDockState('serial-dock', '505px', 'calc(50% + 200px)');
+    
+    makeElementDraggable(dom.circuitDock, dom.circuitDockHeader, 'circuit-dock');
+    makeElementDraggable(dom.serialDock, dom.serialDockHeader, 'serial-dock');
+    
+    listenToDockResize(dom.circuitDock, 'circuit-dock');
+    listenToDockResize(dom.serialDock, 'serial-dock');
+    
+    if (dom.toggleCircuitBtn) {
+        dom.toggleCircuitBtn.addEventListener('click', () => {
+            const isHidden = dom.circuitDock.classList.toggle('hidden');
+            dom.toggleCircuitBtn.classList.toggle('active', !isHidden);
+            saveDockState('circuit-dock');
+        });
+    }
+    
+    if (dom.toggleSerialBtn) {
+        dom.toggleSerialBtn.addEventListener('click', () => {
+            const isHidden = dom.serialDock.classList.toggle('hidden');
+            dom.toggleSerialBtn.classList.toggle('active', !isHidden);
+            saveDockState('serial-dock');
+        });
+    }
+    
+    if (dom.closeCircuitBtn) {
+        dom.closeCircuitBtn.addEventListener('click', () => {
+            dom.circuitDock.classList.add('hidden');
+            if (dom.toggleCircuitBtn) dom.toggleCircuitBtn.classList.remove('active');
+            saveDockState('circuit-dock');
+        });
+    }
+    
+    if (dom.closeSerialBtn) {
+        dom.closeSerialBtn.addEventListener('click', () => {
+            dom.serialDock.classList.add('hidden');
+            if (dom.toggleSerialBtn) dom.toggleSerialBtn.classList.remove('active');
+            saveDockState('serial-dock');
+        });
+    }
+    
+    if (dom.minimizeCircuitBtn) {
+        dom.minimizeCircuitBtn.addEventListener('click', () => {
+            dom.circuitDock.classList.toggle('minimized');
+            saveDockState('circuit-dock');
+        });
+    }
+    
+    if (dom.minimizeSerialBtn) {
+        dom.minimizeSerialBtn.addEventListener('click', () => {
+            dom.serialDock.classList.toggle('minimized');
+            saveDockState('serial-dock');
+        });
+    }
+}
 
 // --- Initialization ---
 function init() {
@@ -346,6 +553,7 @@ function init() {
     
     loadLesson(currentLessonIndex);
     setupEventListeners();
+    initFloatingDocks();
 }
 
 // --- Load Lesson & Render Elements ---
