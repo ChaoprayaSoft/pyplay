@@ -16,8 +16,8 @@ const DEFAULT_COLORS = ["#3b82f6", "#10b981", "#ef4444", "#f59e0b", "#8b5cf6", "
 const PyPlayAuth = {
     // Current local state
     user: null,
-    scriptUrl: GOOGLE_SHEETS_SCRIPT_URL, // Configured via GOOGLE_SHEETS_SCRIPT_URL above
-    googleClientId: GOOGLE_OAUTH_CLIENT_ID, // Configured via GOOGLE_OAUTH_CLIENT_ID above
+    scriptUrl: localStorage.getItem('pyplay_script_url') || GOOGLE_SHEETS_SCRIPT_URL, // Configured via GOOGLE_SHEETS_SCRIPT_URL above
+    googleClientId: localStorage.getItem('pyplay_google_client_id') || GOOGLE_OAUTH_CLIENT_ID, // Configured via GOOGLE_OAUTH_CLIENT_ID above
     toastElement: null,
 
     showToast(message, isSuccess = false) {
@@ -96,9 +96,12 @@ const PyPlayAuth = {
     },
 
     init() {
+        this.scriptUrl = localStorage.getItem('pyplay_script_url') || GOOGLE_SHEETS_SCRIPT_URL;
+        this.googleClientId = localStorage.getItem('pyplay_google_client_id') || GOOGLE_OAUTH_CLIENT_ID;
         this.loadLocalUser();
         this.createAppHeader();
         this.createLoginModal();
+        this.createSettingsModal();
         this.initGoogleAuth();
     },
 
@@ -124,52 +127,46 @@ const PyPlayAuth = {
 
         this.showToast("Syncing progress from cloud...");
 
-        return new Promise((resolve) => {
-            const callbackName = 'pyplay_jsonp_' + Math.round(Math.random() * 1000000);
-            window[callbackName] = (data) => {
-                delete window[callbackName];
-                document.getElementById(callbackName)?.remove();
+        try {
+            const response = await fetch(`${this.scriptUrl}?email=${encodeURIComponent(this.user.email)}`);
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            const data = await response.json();
 
-                if (data) {
-                    // Update local storage with fresh sheets data
-                    this.saveLocalUser({
-                        ...this.user,
-                        name: data.name || this.user.name,
-                        avatar: data.avatar || this.user.avatar,
-                        color: data.color || this.user.color,
-                        role: data.role || this.user.role,
-                        progress: typeof data.progress === 'string' ? JSON.parse(data.progress) : (data.progress || this.user.progress)
-                    });
-                    this.showToast("Progress synced with cloud!", true);
-                } else {
-                    this.hideToast();
-                }
-                resolve(data);
-            };
-
-            const script = document.createElement('script');
-            script.id = callbackName;
-            script.src = `${this.scriptUrl}?email=${encodeURIComponent(this.user.email)}&callback=${callbackName}`;
-            document.body.appendChild(script);
-        });
+            if (data) {
+                // Update local storage with fresh sheets data
+                this.saveLocalUser({
+                    ...this.user,
+                    name: data.name || this.user.name,
+                    avatar: data.avatar || this.user.avatar,
+                    color: data.color || this.user.color,
+                    role: data.role || this.user.role,
+                    progress: typeof data.progress === 'string' ? JSON.parse(data.progress) : (data.progress || this.user.progress)
+                });
+                this.showToast("Progress synced with cloud!", true);
+                return data;
+            } else {
+                this.hideToast();
+                return null;
+            }
+        } catch (e) {
+            console.error("Sheets sync failed:", e);
+            this.showToast("Sync failed (Offline)", true);
+            return null;
+        }
     },
 
     async getAllUsersFromSheets() {
         if (!this.scriptUrl) return [];
 
-        return new Promise((resolve) => {
-            const callbackName = 'pyplay_jsonp_all_' + Math.round(Math.random() * 1000000);
-            window[callbackName] = (data) => {
-                delete window[callbackName];
-                document.getElementById(callbackName)?.remove();
-                resolve(data || []);
-            };
-
-            const script = document.createElement('script');
-            script.id = callbackName;
-            script.src = `${this.scriptUrl}?action=get_all_users&callback=${callbackName}`;
-            document.body.appendChild(script);
-        });
+        try {
+            const response = await fetch(`${this.scriptUrl}?action=get_all_users`);
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            const data = await response.json();
+            return data || [];
+        } catch (e) {
+            console.error("Failed to fetch all users from sheets:", e);
+            return [];
+        }
     },
 
     async pushUserToSheets(userData) {
@@ -372,10 +369,12 @@ const PyPlayAuth = {
                 </div>
                 <a href="dashboard.html" class="btn btn-outline" style="border-color: rgba(59, 130, 246, 0.4); color: #93c5fd;">📊 Dashboard</a>
                 ${this.user.role === 'Admin' ? `<a href="admin.html" class="btn btn-outline" style="border-color: rgba(239, 68, 68, 0.4); color: #fca5a5;">🛡️ Admin</a>` : ''}
+                <button class="btn btn-outline" onclick="PyPlayAuth.openSettingsModal()" style="border-color: rgba(255,255,255,0.2); color: #fff;">⚙️ Settings</button>
                 <button class="btn btn-outline" onclick="PyPlayAuth.logout()">Log Out</button>
             `;
         } else {
             profileDiv.innerHTML = `
+                <button class="btn btn-outline" onclick="PyPlayAuth.openSettingsModal()" style="border-color: rgba(255,255,255,0.2); color: #fff;">⚙️ Settings</button>
                 <button class="btn btn-outline" onclick="PyPlayAuth.openLoginModal()">Join Now</button>
                 <button class="btn btn-primary" onclick="PyPlayAuth.tryDemo()">Try Demo</button>
             `;
@@ -422,6 +421,80 @@ const PyPlayAuth = {
         document.getElementById('pyplay-login-modal').style.display = 'flex';
         // Render Google API button
         this.initGoogleAuth();
+    },
+
+    createSettingsModal() {
+        if (document.getElementById('pyplay-settings-modal')) return;
+
+        const modal = document.createElement('div');
+        modal.id = 'pyplay-settings-modal';
+        modal.className = 'pyplay-modal-overlay hidden';
+        modal.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);
+            display: none; align-items: center; justify-content: center; z-index: 10000;
+        `;
+        modal.innerHTML = `
+            <div class="glass-panel" style="width: 500px; padding: 2.5rem; display:flex; flex-direction:column; gap:1.5rem; text-align:left;">
+                <div style="text-align:center; font-size:3rem;">⚙️</div>
+                <div style="text-align:center;">
+                    <h3 style="font-size:1.75rem; font-weight:700; color:#fff;">Integration Settings</h3>
+                    <p style="font-size:0.875rem; color:var(--text-muted); margin-top:0.25rem;">Configure your Google Sheets and OAuth credentials</p>
+                </div>
+                
+                <div style="display:flex; flex-direction:column; gap:1.25rem;">
+                    <div>
+                        <label style="font-size:0.8rem; font-weight:700; text-transform:uppercase; color:var(--text-muted);">Google Apps Script Web App URL</label>
+                        <input type="text" id="settings-script-url" class="edit-input" style="width:100%; margin-top:0.35rem;" placeholder="https://script.google.com/macros/s/.../exec">
+                    </div>
+                    <div>
+                        <label style="font-size:0.8rem; font-weight:700; text-transform:uppercase; color:var(--text-muted);">Google OAuth Client ID</label>
+                        <input type="text" id="settings-client-id" class="edit-input" style="width:100%; margin-top:0.35rem;" placeholder="Client ID string...">
+                    </div>
+                </div>
+                
+                <div style="display:flex; gap:1rem; justify-content:flex-end; margin-top:1rem;">
+                    <button class="btn btn-outline" onclick="document.getElementById('pyplay-settings-modal').style.display = 'none'">Cancel</button>
+                    <button class="btn btn-primary" onclick="PyPlayAuth.saveSettings()">Save Configuration</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    },
+
+    openSettingsModal() {
+        this.createSettingsModal();
+        document.getElementById('pyplay-settings-modal').style.display = 'flex';
+        document.getElementById('settings-script-url').value = this.scriptUrl || '';
+        document.getElementById('settings-client-id').value = this.googleClientId || '';
+    },
+
+    saveSettings() {
+        const scriptUrl = document.getElementById('settings-script-url').value.trim();
+        const clientId = document.getElementById('settings-client-id').value.trim();
+
+        if (scriptUrl) {
+            localStorage.setItem('pyplay_script_url', scriptUrl);
+            this.scriptUrl = scriptUrl;
+        } else {
+            localStorage.removeItem('pyplay_script_url');
+            this.scriptUrl = GOOGLE_SHEETS_SCRIPT_URL;
+        }
+
+        if (clientId) {
+            localStorage.setItem('pyplay_google_client_id', clientId);
+            this.googleClientId = clientId;
+        } else {
+            localStorage.removeItem('pyplay_google_client_id');
+            this.googleClientId = GOOGLE_OAUTH_CLIENT_ID;
+        }
+
+        this.showToast("Settings saved successfully!", true);
+        document.getElementById('pyplay-settings-modal').style.display = 'none';
+        
+        setTimeout(() => {
+            window.location.reload();
+        }, 1000);
     },
 
 

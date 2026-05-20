@@ -219,25 +219,52 @@
 
             // If Sheets URL is set, load users from sheets
             if (PyPlayAuth.scriptUrl) {
-                document.getElementById('sync-status-banner').innerHTML = `
-                    <div style="color: #10b981;">
-                        <strong>🟢 Google Sheets Connected:</strong> Statistical records are actively synchronized from the <strong>Users</strong> sheet!
-                    </div>
-                `;
                 await loadLiveUsers();
             } else {
+                document.getElementById('sync-status-banner').innerHTML = `
+                    <div style="color: #f59e0b;">
+                        <strong>⚠️ Offline Mode:</strong> Google Sheets URL not configured. Using local offline mock records.
+                    </div>
+                `;
                 // Offline demo fallback: load from local mock if it exists
                 const mock = localStorage.getItem('pyplay_mock_users');
                 if (mock) {
                     usersList = JSON.parse(mock);
                     filterUsersList();
+                } else {
+                    document.getElementById('users-tbody').innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 3rem;">No users found. Try generating Mock Data below.</td></tr>`;
                 }
             }
 
             async function loadLiveUsers() {
                 document.getElementById('users-tbody').innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 3rem;">Syncing user data from Google Sheets...</td></tr>`;
-                usersList = await PyPlayAuth.getAllUsersFromSheets();
-                filterUsersList();
+                try {
+                    usersList = await PyPlayAuth.getAllUsersFromSheets();
+                    if (usersList && usersList.length > 0) {
+                        document.getElementById('sync-status-banner').innerHTML = `
+                            <div style="color: #10b981;">
+                                <strong>🟢 Google Sheets Connected:</strong> Successfully synced ${usersList.length} user records from the <strong>Users</strong> sheet!
+                            </div>
+                        `;
+                        filterUsersList();
+                    } else {
+                        throw new Error("No user records retrieved from Google Sheets.");
+                    }
+                } catch (err) {
+                    console.error("Failed to load users from sheets:", err);
+                    document.getElementById('sync-status-banner').innerHTML = `
+                        <div style="color: #ef4444;">
+                            <strong>🔴 Sync Failed:</strong> Google Sheets could not be reached or returned no data. Falling back to local offline mock records.
+                        </div>
+                    `;
+                    const mock = localStorage.getItem('pyplay_mock_users');
+                    if (mock) {
+                        usersList = JSON.parse(mock);
+                        filterUsersList();
+                    } else {
+                        document.getElementById('users-tbody').innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 3rem;">No users found. Try generating Mock Data below.</td></tr>`;
+                    }
+                }
             }
 
             // Real-time filtering engine
