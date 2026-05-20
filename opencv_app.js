@@ -89,70 +89,70 @@ const lessons = [
         hint: "Instantiate ORB using orb = cv2.ORB_create() and detect keypoints with kp = orb.detect(img, None). Then check the keypoints list length and print the result: print(len(kp) > 0)."
     },
     {
-        title: "Panorama",
+        title: "Canny Edge Detection",
         difficulty: "Advanced",
-        topic: "Stitching",
-        concept: "Creating a panorama involves aligning multiple overlapping photos and blending them together. OpenCV features a powerful high-level class creator called <code>cv2.Stitcher_create()</code> which handles feature matching and warping in a single step.",
-        example: 'import cv2\nstitcher = cv2.Stitcher_create()\nprint(type(stitcher))',
-        task: 'Create an OpenCV Stitcher object using `cv2.Stitcher_create()`, and print a boolean check verifying that the text `"Stitcher"` is contained within the string representation of its object type.',
-        initialCode: 'import cv2\n# Create Stitcher and print if "Stitcher" is in type string:\n',
-        expectedOutput: "True",
-        hint: "Create the stitcher using stitcher = cv2.Stitcher_create(). Check if 'Stitcher' is in its type string: print('Stitcher' in str(type(stitcher)))."
+        topic: "Edge Detection",
+        concept: "Edge detection highlights boundaries in an image by analyzing intensity gradients. The Canny edge detector is a popular multi-stage algorithm. In OpenCV, use <code>cv2.Canny(gray, threshold1, threshold2)</code>. Smoothing the image first with a Gaussian Blur helps reduce high-frequency noise and prevents false edges.",
+        example: 'import cv2\nimg = cv2.imread("logo.png")\ngray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)\nblurred = cv2.GaussianBlur(gray, (5, 5), 0)\nedges = cv2.Canny(blurred, 50, 150)\ncv2.imshow("Edges", edges)',
+        task: 'Load `logo.png`, convert it to grayscale, and apply a Gaussian Blur filter with a kernel size of `(5, 5)` and sigma `0`. Run Canny edge detection with threshold parameters `100` and `200`. Count the total number of white edge pixels using `cv2.countNonZero(edges)`. Divide the count by `100` and print the resulting integer value using integer division (`// 100`).',
+        initialCode: 'import cv2\n# Load logo.png, grayscale, blur, Canny (100, 200), and print (non-zero count // 100):\n',
+        expectedOutput: ["59", "58", "60"],
+        hint: "Convert to grayscale: gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY). Apply Gaussian Blur: blurred = cv2.GaussianBlur(gray, (5, 5), 0). Run Canny: edges = cv2.Canny(blurred, 100, 200). Print: print(cv2.countNonZero(edges) // 100)."
     },
     {
-        title: "HDR (High Dynamic Range)",
+        title: "Image Thresholding and Contour Detection",
         difficulty: "Advanced",
-        topic: "Computational",
-        concept: "HDR combines images taken at different exposures. When exposure times are unknown, the Mertens algorithm (<code>cv2.createMergeMertens()</code>) blends the exposures using contrast, saturation, and well-exposedness weights.",
-        example: 'import cv2\nmerge = cv2.createMergeMertens()\nprint(type(merge))',
-        task: 'Create a Mertens exposure merge object using `cv2.createMergeMertens()`, and print a boolean check verifying that `"MergeMertens"` is in the string representation of its object type.',
-        initialCode: 'import cv2\n# Create MergeMertens and print if "MergeMertens" is in type string:\n',
-        expectedOutput: "True",
-        hint: "Create the Mertens merge object with merge = cv2.createMergeMertens(). Print whether 'MergeMertens' is in the string representation of its type: print('MergeMertens' in str(type(merge)))."
+        topic: "Contours",
+        concept: "Contours are curves joining all continuous points along a boundary with the same color or intensity. To find contours, we first convert the image to binary (thresholding) using <code>cv2.threshold()</code>. Then we find contours using <code>cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)</code>.",
+        example: 'import cv2\nimg = cv2.imread("logo.png")\ngray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)\n_, thresh = cv2.threshold(gray, 127, 255, cv2.THRESH_BINARY)\ncontours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)\nprint(len(contours))',
+        task: 'Load `logo.png`, convert it to grayscale, and apply binary thresholding using `cv2.threshold()` with a threshold value of `127` and a max value of `255` (use `cv2.THRESH_BINARY`). Find the contours using `cv2.RETR_EXTERNAL` retrieval mode and `cv2.CHAIN_APPROX_SIMPLE` approximation method, and print the number of outer contours detected.',
+        initialCode: 'import cv2\n# Load logo.png, grayscale, threshold at 127, find RETR_EXTERNAL contours, and print their count:\n',
+        expectedOutput: "1",
+        hint: "Load, grayscale, and threshold: _, thresh = cv2.threshold(gray, 127, 255, cv2.THRESH_BINARY). Find contours: contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE). Print count: print(len(contours))."
     },
     {
-        title: "Object Tracking",
+        title: "Color Space Segmentation (HSV Masking)",
         difficulty: "Advanced",
-        topic: "Tracking",
-        concept: "Object tracking follows a target bounding box across video frames. The CSRT (Channel and Spatial Reliability Tracker) is highly accurate, initialized using <code>cv2.TrackerCSRT_create()</code>.",
-        example: 'import cv2\ntracker = cv2.TrackerCSRT_create()\nprint(type(tracker))',
-        task: 'Instantiate a CSRT object tracker using `cv2.TrackerCSRT_create()`, and print a check verifying that `"TrackerCSRT"` is contained within the string representation of its object type.',
-        initialCode: 'import cv2\n# Create CSRT tracker and print if "TrackerCSRT" is in type string:\n',
-        expectedOutput: "True",
-        hint: "Create the tracker with tracker = cv2.TrackerCSRT_create(). Print whether 'TrackerCSRT' is in the string representation of its type: print('TrackerCSRT' in str(type(tracker)))."
+        topic: "Color Segmentation",
+        concept: "In RGB/BGR color spaces, color values depend on illumination. The HSV (Hue, Saturation, Value) color space is much better for color segmentation. We convert using <code>cv2.cvtColor(img, cv2.COLOR_BGR2HSV)</code> and create a binary mask for pixels within a range using <code>cv2.inRange(hsv, lower_bound, upper_bound)</code>.",
+        example: 'import cv2\nimport numpy as np\nimg = cv2.imread("logo.png")\nhsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)\nmask = cv2.inRange(hsv, np.array([0, 50, 50]), np.array([10, 255, 255]))\ncv2.imshow("Red Color Mask", mask)',
+        task: 'Load `logo.png`, convert it to the HSV color space, and create a mask segmenting dark/shadow pixels. Use lower bound `np.array([0, 0, 0])` and upper bound `np.array([180, 255, 100])` to isolate these pixels. Count the non-zero pixels in the binary mask, divide it by `100`, and print the resulting integer using integer division (`// 100`).',
+        initialCode: 'import cv2\nimport numpy as np\n# Load logo.png, convert to HSV, apply inRange mask, and print (non-zero count // 100):\n',
+        expectedOutput: ["110", "109", "111"],
+        hint: "Convert using hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV). Create the mask: mask = cv2.inRange(hsv, np.array([0, 0, 0]), np.array([180, 255, 100])). Print: print(cv2.countNonZero(mask) // 100)."
     },
     {
-        title: "Face Detection",
+        title: "Morphological Operations (Dilation and Erosion)",
         difficulty: "Advanced",
-        topic: "Object Detection",
-        concept: "OpenCV supports Haar Cascade Classifiers for rapid object/face detection. Detectors are loaded using the <code>cv2.CascadeClassifier()</code> class, reading pre-trained XML models.",
-        example: 'import cv2\nface_cascade = cv2.CascadeClassifier()\nprint(type(face_cascade))',
-        task: 'Instantiate a Haar Cascade XML Classifier using `cv2.CascadeClassifier()`, and print a check verifying that `"CascadeClassifier"` is contained within the string representation of its object type.',
-        initialCode: 'import cv2\n# Create CascadeClassifier and print if "CascadeClassifier" is in type string:\n',
-        expectedOutput: "True",
-        hint: "Instantiate the classifier using face_cascade = cv2.CascadeClassifier(). Print whether 'CascadeClassifier' is in the string representation of its type: print('CascadeClassifier' in str(type(face_cascade)))."
+        topic: "Morphology",
+        concept: "Morphological operations are simple operations based on image shape, applied to binary images. Erosion shrinks white regions (removes white noise), and dilation expands them. We define a kernel using <code>np.ones((height, width), np.uint8)</code> and apply them using <code>cv2.erode(img, kernel, iterations)</code> or <code>cv2.dilate(img, kernel, iterations)</code>.",
+        example: 'import cv2\nimport numpy as np\nimg = cv2.imread("logo.png")\ngray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)\n_, thresh = cv2.threshold(gray, 127, 255, cv2.THRESH_BINARY)\nkernel = np.ones((5, 5), np.uint8)\neroded = cv2.erode(thresh, kernel, iterations=1)\ncv2.imshow("Eroded", eroded)',
+        task: 'Load `logo.png`, convert it to grayscale, and perform binary thresholding with threshold value `127` and max value `255`. Define a `5x5` rectangular structuring kernel of type `np.uint8` using `np.ones((5, 5), np.uint8)`. Apply an erosion operation followed by a dilation operation with `1` iteration each. Print the total number of non-zero pixels in the final image divided by `1000` using integer division (`// 1000`).',
+        initialCode: 'import cv2\nimport numpy as np\n# Load, threshold at 127, define a 5x5 np.uint8 kernel, erode then dilate, and print (non-zero count // 1000):\n',
+        expectedOutput: ["137", "136", "138"],
+        hint: "Perform erosion and dilation with kernel = np.ones((5, 5), np.uint8). Run: eroded = cv2.erode(thresh, kernel, iterations=1) then dilated = cv2.dilate(eroded, kernel, iterations=1). Print: print(cv2.countNonZero(dilated) // 1000)."
     },
     {
-        title: "TensorFlow Object Detection",
+        title: "Geometric Transformations (Image Rotation)",
         difficulty: "Advanced",
-        topic: "Deep Learning",
-        concept: "OpenCV's Deep Learning Module (<code>cv2.dnn</code>) supports importing pre-trained neural networks. Load frozen TensorFlow model graphs (.pb) alongside text configs (.pbtxt) using <code>cv2.dnn.readNetFromTensorflow()</code>.",
-        example: 'import cv2\nprint("dnn" in dir(cv2))',
-        task: 'Write a script that prints a check verifying the availability of the deep learning (`dnn`) module in the imported `cv2` library.',
-        initialCode: 'import cv2\n# Print if "dnn" is in dir(cv2):\n',
-        expectedOutput: "True",
-        hint: "Check if the string 'dnn' is in the directory of attributes of the cv2 module: print('dnn' in dir(cv2))."
+        topic: "Transformations",
+        concept: "Affine transformations preserve parallel lines. Image rotation is achieved by generating a 2D rotation matrix using <code>cv2.getRotationMatrix2D(center, angle, scale)</code> and applying it with <code>cv2.warpAffine(img, M, (width, height))</code>.",
+        example: 'import cv2\nimg = cv2.imread("logo.png")\n(h, w) = img.shape[:2]\nM = cv2.getRotationMatrix2D((w//2, h//2), 30, 1.0)\nrotated = cv2.warpAffine(img, M, (w, h))\ncv2.imshow("Rotated", rotated)',
+        task: 'Load `logo.png` and calculate the center of the image. Compute the rotation matrix to rotate the image by `45` degrees counter-clockwise around its center point with a scale factor of `1.0`. Apply the rotation using `cv2.warpAffine` keeping the original size. Print the rotated center pixel BGR color value as a list of integers: `print([int(x) for x in rotated[200, 200]])`.',
+        initialCode: 'import cv2\n# Load logo.png, rotate around center by 45 degrees, warp, and print BGR pixel list at (200, 200):\n',
+        expectedOutput: ["[122, 237, 255]", "[np.uint8(122), np.uint8(237), np.uint8(255)]"],
+        hint: "Get image shape to compute center (w//2, h//2). Compute rotation matrix: M = cv2.getRotationMatrix2D(center, 45, 1.0). Apply warp: rotated = cv2.warpAffine(img, M, (w, h)). Print the color at index [200, 200]: print([int(x) for x in rotated[200, 200]])."
     },
     {
-        title: "Pose Estimation using OpenPose",
+        title: "Template Matching",
         difficulty: "Advanced",
-        topic: "Deep Learning",
-        concept: "Human Pose Estimation models (like OpenPose) predict skeletal joint coordinates. Input frames are converted into multi-scale image blobs using <code>cv2.dnn.blobFromImage()</code>, which handles subtraction, scaling, and channel swapping before feeding the network.",
-        example: 'import cv2\nimg = cv2.imread("logo.png")\nblob = cv2.dnn.blobFromImage(img, 1.0/255.0, (224, 224))\nprint(blob.shape)',
-        task: 'Load `logo.png`, convert it into a normalized 4D deep learning input blob using `cv2.dnn.blobFromImage()` with a scale factor of `1.0/255.0`, and dimensions of `(224, 224)`. Print the shape of the generated output blob.',
-        initialCode: 'import cv2\n# Load logo, convert to a 4D blob of (224, 224) and print blob shape:\n',
-        expectedOutput: "(1, 3, 224, 224)",
-        hint: "First read logo.png. Call cv2.dnn.blobFromImage(img, 1.0/255.0, (224, 224)) to generate the blob, then print its shape with print(blob.shape)."
+        topic: "Template Matching",
+        concept: "Template matching searches for a template image inside a larger source image. We slide the template over the source and compare them using <code>cv2.matchTemplate(source, template, method)</code>. We get the location of the best match using <code>cv2.minMaxLoc(result)</code>.",
+        example: 'import cv2\nimg = cv2.imread("logo.png")\ntemplate = img[100:200, 100:200]\nres = cv2.matchTemplate(img, template, cv2.TM_CCOEFF_NORMED)\nmin_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)\nprint(max_loc)',
+        task: 'Load the source image `logo.png`. Crop a template region representing a portion of the logo from y=`150` to `250` and x=`150` to `250`. Run `cv2.matchTemplate` with the source image, the cropped template, and the `cv2.TM_CCOEFF_NORMED` method. Locate the maximum coefficient position using `cv2.minMaxLoc()`, and print the top-left coordinate `(x, y)` of the best matching location.',
+        initialCode: 'import cv2\n# Load logo.png, crop template from y:150-250, x:150-250, run matchTemplate, find best match, and print (x, y) location:\n',
+        expectedOutput: ["(150, 150)", "(150,150)"],
+        hint: "Crop the template: template = img[150:250, 150:250]. Match template: res = cv2.matchTemplate(img, template, cv2.TM_CCOEFF_NORMED). Find location: min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res). Print max_loc: print(max_loc)."
     }
 ];
 
