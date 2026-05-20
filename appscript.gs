@@ -104,6 +104,10 @@ function doGet(e) {
     return getAllUsers(ss, callback);
   }
   
+  if (action === 'get_all_logs') {
+    return getAllLogs(ss, callback);
+  }
+  
   var email = e.parameter.email;
   var sheet = ss.getSheetByName("Users");
   if (!sheet || !email) return sendResponse(null, callback);
@@ -149,6 +153,25 @@ function getAllUsers(ss, callback) {
   }
   
   return sendResponse(users, callback);
+}
+
+function getAllLogs(ss, callback) {
+  var sheet = ss.getSheetByName("Logs");
+  if (!sheet) return sendResponse([], callback);
+  
+  var rows = sheet.getDataRange().getValues();
+  var logs = [];
+  
+  for (var i = 1; i < rows.length; i++) {
+    logs.push({
+      timestamp: rows[i][0],
+      email: rows[i][1],
+      name: rows[i][2],
+      status: rows[i][3]
+    });
+  }
+  
+  return sendResponse(logs, callback);
 }
 
 function sendResponse(data, callback) {

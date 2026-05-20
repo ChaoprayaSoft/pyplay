@@ -169,6 +169,20 @@ const PyPlayAuth = {
         }
     },
 
+    async getAllLogsFromSheets() {
+        if (!this.scriptUrl) return [];
+
+        try {
+            const response = await fetch(`${this.scriptUrl}?action=get_all_logs`);
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            const data = await response.json();
+            return data || [];
+        } catch (e) {
+            console.error("Failed to fetch all logs from sheets:", e);
+            return [];
+        }
+    },
+
     async pushUserToSheets(userData) {
         if (!this.scriptUrl) return;
 

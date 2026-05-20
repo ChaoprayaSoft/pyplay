@@ -139,68 +139,256 @@
                 <button class="btn btn-primary" id="generate-mock-users-btn" style="padding:0.4rem 0.8rem; font-size:0.75rem;">Generate Mock Data</button>
             </div>
 
-            <!-- Stats grid -->
-            <section class="stats-summary">
-                <div class="admin-stat-card">
-                    <span class="stat-label">Total Users</span>
-                    <div class="stat-number" id="stat-total-users">0</div>
-                </div>
-                <div class="admin-stat-card">
-                    <span class="stat-label">Python Graduates</span>
-                    <div class="stat-number" id="stat-total-graduates">0</div>
-                </div>
-                <div class="admin-stat-card">
-                    <span class="stat-label">Avg. Progress</span>
-                    <div class="stat-number" id="stat-avg-progress">0%</div>
-                </div>
-                <div class="admin-stat-card">
-                    <span class="stat-label">Total System XP</span>
-                    <div class="stat-number" id="stat-total-xp">0 XP</div>
-                </div>
-            </section>
+            <!-- Premium Navigation Tabs -->
+            <div class="tabs-container" style="display: flex; gap: 1rem; border-bottom: 1px solid var(--panel-border); padding-bottom: 1rem; margin-bottom: 0.5rem; flex-wrap: wrap;">
+                <button class="btn btn-primary tab-btn" id="tab-learners-btn" onclick="switchTab('learners')" style="display: flex; align-items: center; gap: 0.5rem;">👥 Learners & Accounts</button>
+                <button class="btn btn-outline tab-btn" id="tab-courses-btn" onclick="switchTab('courses')" style="display: flex; align-items: center; gap: 0.5rem;">📊 Course Analytics</button>
+                <button class="btn btn-outline tab-btn" id="tab-logs-btn" onclick="switchTab('logs')" style="display: flex; align-items: center; gap: 0.5rem;">📜 System Activity Logs</button>
+            </div>
 
-            <!-- Table of users -->
-            <section class="glass-panel user-table-container">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
-                    <h3 style="font-size:1.25rem; font-weight:700; color:#fff;">Learner Progression Table</h3>
-                    <button class="btn btn-outline" id="force-sync-btn">🔄 Refresh Sheets Data</button>
+            <!-- Tab 1 Content: Learners & Accounts -->
+            <div id="tab-content-learners" class="tab-content" style="display: flex; flex-direction: column; gap: 2rem;">
+                <!-- Stats grid -->
+                <section class="stats-summary">
+                    <div class="admin-stat-card">
+                        <span class="stat-label">Total Users</span>
+                        <div class="stat-number" id="stat-total-users">0</div>
+                    </div>
+                    <div class="admin-stat-card">
+                        <span class="stat-label">Python Graduates</span>
+                        <div class="stat-number" id="stat-total-graduates">0</div>
+                    </div>
+                    <div class="admin-stat-card">
+                        <span class="stat-label">Avg. Progress</span>
+                        <div class="stat-number" id="stat-avg-progress">0%</div>
+                    </div>
+                    <div class="admin-stat-card">
+                        <span class="stat-label">Total System XP</span>
+                        <div class="stat-number" id="stat-total-xp">0 XP</div>
+                    </div>
+                </section>
+
+                <!-- Table of users -->
+                <section class="glass-panel user-table-container">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                        <h3 style="font-size:1.25rem; font-weight:700; color:#fff;">Learner Progression Table</h3>
+                        <button class="btn btn-outline" id="force-sync-btn">🔄 Refresh Sheets Data</button>
+                    </div>
+
+                    <!-- Search and Filter Controls -->
+                    <div class="search-filter-controls" style="display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
+                        <input type="text" id="admin-search-input" placeholder="🔍 Search name or email..." style="flex: 1; min-width: 250px; background: rgba(0,0,0,0.3); border: 1px solid var(--panel-border); color: white; border-radius: 8px; padding: 0.6rem 1rem; font-family: var(--font-ui); font-size: 0.9rem; outline: none; transition: border-color 0.2s;" oninput="filterUsersList()">
+                        
+                        <select id="admin-role-filter" style="background: rgba(0,0,0,0.3); border: 1px solid var(--panel-border); color: white; border-radius: 8px; padding: 0.6rem 1rem; font-family: var(--font-ui); font-size: 0.9rem; outline: none; cursor: pointer;" onchange="filterUsersList()">
+                            <option value="all">👥 All Roles</option>
+                            <option value="Learner">Learner</option>
+                            <option value="Admin">Admin</option>
+                        </select>
+
+                        <select id="admin-progress-filter" style="background: rgba(0,0,0,0.3); border: 1px solid var(--panel-border); color: white; border-radius: 8px; padding: 0.6rem 1rem; font-family: var(--font-ui); font-size: 0.9rem; outline: none; cursor: pointer;" onchange="filterUsersList()">
+                            <option value="all">📈 All Progress</option>
+                            <option value="in_progress">In Progress</option>
+                            <option value="completed">🏆 Graduates</option>
+                        </select>
+                    </div>
+
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Python Completed</th>
+                                <th>Badges</th>
+                                <th>Last Active</th>
+                            </tr>
+                        </thead>
+                        <tbody id="users-tbody">
+                            <tr>
+                                <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 3rem;">No users loaded yet. Add a Google Script URL or generate Mock Data.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </section>
+            </div>
+
+            <!-- Tab 2 Content: Course Analytics -->
+            <div id="tab-content-courses" class="tab-content" style="display: none; flex-direction: column; gap: 2rem;">
+                <div class="course-analytics-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem;">
+                    <!-- Python Basics Card -->
+                    <div class="glass-panel course-stat-card" style="padding: 2rem; position: relative; overflow: hidden; border-left: 4px solid #10b981;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <span style="font-size: 2.5rem;">🐍</span>
+                                <div>
+                                    <h4 style="font-size: 1.25rem; font-weight: 700; color: #fff;">Python Basics</h4>
+                                    <span style="font-size: 0.75rem; color: var(--text-muted);">13 Lessons • Beginner</span>
+                                </div>
+                            </div>
+                            <span class="badge" style="background: rgba(16, 185, 129, 0.1); color: #10b981;">Active</span>
+                        </div>
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.5rem;">
+                            <div>
+                                <span style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Enrolled</span>
+                                <div id="course-python-enrolled" style="font-size: 1.75rem; font-weight: 800; color: #fff; margin-top: 0.25rem;">0</div>
+                            </div>
+                            <div>
+                                <span style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Graduates</span>
+                                <div id="course-python-graduates" style="font-size: 1.75rem; font-weight: 800; color: #fff; margin-top: 0.25rem;">0</div>
+                            </div>
+                            <div>
+                                <span style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Avg Progress</span>
+                                <div id="course-python-avg-progress" style="font-size: 1.75rem; font-weight: 800; color: #fff; margin-top: 0.25rem;">0%</div>
+                            </div>
+                        </div>
+                        <div>
+                            <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 0.35rem; color: var(--text-muted);">
+                                <span>Overall Syllabus Progress</span>
+                                <span id="course-python-progress-text">0%</span>
+                            </div>
+                            <div class="progress-bar-bg" style="width: 100%; height: 8px;">
+                                <div id="course-python-progress-bar" class="progress-bar-fill" style="width: 0%; background: #10b981;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- OpenCV Card -->
+                    <div class="glass-panel course-stat-card" style="padding: 2rem; position: relative; overflow: hidden; border-left: 4px solid #3b82f6;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <span style="font-size: 2.5rem;">📷</span>
+                                <div>
+                                    <h4 style="font-size: 1.25rem; font-weight: 700; color: #fff;">OpenCV with Python</h4>
+                                    <span style="font-size: 0.75rem; color: var(--text-muted);">14 Lessons • Intermediate</span>
+                                </div>
+                            </div>
+                            <span class="badge" style="background: rgba(59, 130, 246, 0.1); color: #3b82f6;">Active</span>
+                        </div>
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.5rem;">
+                            <div>
+                                <span style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Enrolled</span>
+                                <div id="course-opencv-enrolled" style="font-size: 1.75rem; font-weight: 800; color: #fff; margin-top: 0.25rem;">0</div>
+                            </div>
+                            <div>
+                                <span style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Graduates</span>
+                                <div id="course-opencv-graduates" style="font-size: 1.75rem; font-weight: 800; color: #fff; margin-top: 0.25rem;">0</div>
+                            </div>
+                            <div>
+                                <span style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Avg Progress</span>
+                                <div id="course-opencv-avg-progress" style="font-size: 1.75rem; font-weight: 800; color: #fff; margin-top: 0.25rem;">0%</div>
+                            </div>
+                        </div>
+                        <div>
+                            <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 0.35rem; color: var(--text-muted);">
+                                <span>Overall Syllabus Progress</span>
+                                <span id="course-opencv-progress-text">0%</span>
+                            </div>
+                            <div class="progress-bar-bg" style="width: 100%; height: 8px;">
+                                <div id="course-opencv-progress-bar" class="progress-bar-fill" style="width: 0%; background: #3b82f6;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Arduino Card -->
+                    <div class="glass-panel course-stat-card" style="padding: 2rem; position: relative; overflow: hidden; border-left: 4px solid #ef4444;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <span style="font-size: 2.5rem;">🤖</span>
+                                <div>
+                                    <h4 style="font-size: 1.25rem; font-weight: 700; color: #fff;">Arduino & Electronics</h4>
+                                    <span style="font-size: 0.75rem; color: var(--text-muted);">10 Lessons • Beginner</span>
+                                </div>
+                            </div>
+                            <span class="badge" style="background: rgba(239, 68, 68, 0.1); color: #ef4444;">Active</span>
+                        </div>
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.5rem;">
+                            <div>
+                                <span style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Enrolled</span>
+                                <div id="course-arduino-enrolled" style="font-size: 1.75rem; font-weight: 800; color: #fff; margin-top: 0.25rem;">0</div>
+                            </div>
+                            <div>
+                                <span style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Graduates</span>
+                                <div id="course-arduino-graduates" style="font-size: 1.75rem; font-weight: 800; color: #fff; margin-top: 0.25rem;">0</div>
+                            </div>
+                            <div>
+                                <span style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Avg Progress</span>
+                                <div id="course-arduino-avg-progress" style="font-size: 1.75rem; font-weight: 800; color: #fff; margin-top: 0.25rem;">0%</div>
+                            </div>
+                        </div>
+                        <div>
+                            <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 0.35rem; color: var(--text-muted);">
+                                <span>Overall Syllabus Progress</span>
+                                <span id="course-arduino-progress-text">0%</span>
+                            </div>
+                            <div class="progress-bar-bg" style="width: 100%; height: 8px;">
+                                <div id="course-arduino-progress-bar" class="progress-bar-fill" style="width: 0%; background: #ef4444;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Data Vis Card -->
+                    <div class="glass-panel course-stat-card" style="padding: 2rem; position: relative; overflow: hidden; border-left: 4px solid #f59e0b;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <span style="font-size: 2.5rem;">📊</span>
+                                <div>
+                                    <h4 style="font-size: 1.25rem; font-weight: 700; color: #fff;">Data Vis & Analytics</h4>
+                                    <span style="font-size: 0.75rem; color: var(--text-muted);">10 Lessons • Intermediate</span>
+                                </div>
+                            </div>
+                            <span class="badge" style="background: rgba(245, 158, 11, 0.1); color: #f59e0b;">Active</span>
+                        </div>
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.5rem;">
+                            <div>
+                                <span style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Enrolled</span>
+                                <div id="course-datavis-enrolled" style="font-size: 1.75rem; font-weight: 800; color: #fff; margin-top: 0.25rem;">0</div>
+                            </div>
+                            <div>
+                                <span style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Graduates</span>
+                                <div id="course-datavis-graduates" style="font-size: 1.75rem; font-weight: 800; color: #fff; margin-top: 0.25rem;">0</div>
+                            </div>
+                            <div>
+                                <span style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Avg Progress</span>
+                                <div id="course-datavis-avg-progress" style="font-size: 1.75rem; font-weight: 800; color: #fff; margin-top: 0.25rem;">0%</div>
+                            </div>
+                        </div>
+                        <div>
+                            <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 0.35rem; color: var(--text-muted);">
+                                <span>Overall Syllabus Progress</span>
+                                <span id="course-datavis-progress-text">0%</span>
+                            </div>
+                            <div class="progress-bar-bg" style="width: 100%; height: 8px;">
+                                <div id="course-datavis-progress-bar" class="progress-bar-fill" style="width: 0%; background: #f59e0b;"></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
+            </div>
 
-                <!-- Search and Filter Controls -->
-                <div class="search-filter-controls" style="display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
-                    <input type="text" id="admin-search-input" placeholder="🔍 Search name or email..." style="flex: 1; min-width: 250px; background: rgba(0,0,0,0.3); border: 1px solid var(--panel-border); color: white; border-radius: 8px; padding: 0.6rem 1rem; font-family: var(--font-ui); font-size: 0.9rem; outline: none; transition: border-color 0.2s;" oninput="filterUsersList()">
-                    
-                    <select id="admin-role-filter" style="background: rgba(0,0,0,0.3); border: 1px solid var(--panel-border); color: white; border-radius: 8px; padding: 0.6rem 1rem; font-family: var(--font-ui); font-size: 0.9rem; outline: none; cursor: pointer;" onchange="filterUsersList()">
-                        <option value="all">👥 All Roles</option>
-                        <option value="Learner">Learner</option>
-                        <option value="Admin">Admin</option>
-                    </select>
-
-                    <select id="admin-progress-filter" style="background: rgba(0,0,0,0.3); border: 1px solid var(--panel-border); color: white; border-radius: 8px; padding: 0.6rem 1rem; font-family: var(--font-ui); font-size: 0.9rem; outline: none; cursor: pointer;" onchange="filterUsersList()">
-                        <option value="all">📈 All Progress</option>
-                        <option value="in_progress">In Progress</option>
-                        <option value="completed">🏆 Graduates</option>
-                    </select>
+            <!-- Tab 3 Content: System Logs -->
+            <div id="tab-content-logs" class="tab-content" style="display: none; flex-direction: column; gap: 1.5rem;">
+                <div class="glass-panel user-table-container">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                        <h3 style="font-size:1.25rem; font-weight:700; color:#fff;">System Activity Logs</h3>
+                        <input type="text" id="admin-logs-search" placeholder="🔍 Filter logs by details, email, name..." style="width: 300px; background: rgba(0,0,0,0.3); border: 1px solid var(--panel-border); color: white; border-radius: 8px; padding: 0.6rem 1rem; font-family: var(--font-ui); font-size: 0.9rem; outline: none;" oninput="filterLogsList()">
+                    </div>
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 20%;">Timestamp</th>
+                                <th style="width: 25%;">User</th>
+                                <th style="width: 25%;">Email</th>
+                                <th style="width: 30%;">Activity Details</th>
+                            </tr>
+                        </thead>
+                        <tbody id="logs-tbody">
+                            <tr>
+                                <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 3rem;">No activity logs found.</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
-
-                <table class="admin-table">
-                    <thead>
-                        <tr>
-                            <th>User</th>
-                            <th>Email</th>
-                            <th>Role</th>
-                            <th>Python Completed</th>
-                            <th>Badges</th>
-                            <th>Last Active</th>
-                        </tr>
-                    </thead>
-                    <tbody id="users-tbody">
-                        <tr>
-                            <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 3rem;">No users loaded yet. Add a Google Script URL or generate Mock Data.</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </section>
+            </div>
         </main>
     </div>
 
@@ -216,8 +404,26 @@
             }
 
             let usersList = [];
+            let logsList = [];
 
-            // If Sheets URL is set, load users from sheets
+            // Tab switching system
+            window.switchTab = function(tabName) {
+                document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+                const targetContent = document.getElementById(`tab-content-${tabName}`);
+                if (targetContent) {
+                    targetContent.style.display = tabName === 'courses' ? 'grid' : 'flex';
+                }
+                
+                document.querySelectorAll('.tab-btn').forEach(btn => {
+                    btn.className = 'btn btn-outline tab-btn';
+                });
+                const activeBtn = document.getElementById(`tab-${tabName}-btn`);
+                if (activeBtn) {
+                    activeBtn.className = 'btn btn-primary tab-btn';
+                }
+            };
+
+            // If Sheets URL is set, load users and logs
             if (PyPlayAuth.scriptUrl) {
                 await loadLiveUsers();
             } else {
@@ -226,66 +432,63 @@
                         <strong>⚠️ Offline Mode:</strong> Google Sheets URL not configured. Using local offline mock records.
                     </div>
                 `;
-                // Offline demo fallback: load from local mock if it exists
-                const mock = localStorage.getItem('pyplay_mock_users');
-                if (mock) {
-                    usersList = JSON.parse(mock);
-                    filterUsersList();
-                } else {
-                    document.getElementById('users-tbody').innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 3rem;">No users found. Try generating Mock Data below.</td></tr>`;
-                }
+                const mockU = localStorage.getItem('pyplay_mock_users');
+                const mockL = localStorage.getItem('pyplay_mock_logs');
+                usersList = mockU ? JSON.parse(mockU) : [];
+                logsList = mockL ? JSON.parse(mockL) : [];
+                filterUsersList();
+                filterLogsList();
             }
 
             async function loadLiveUsers() {
                 document.getElementById('users-tbody').innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 3rem;">Syncing user data from Google Sheets...</td></tr>`;
+                document.getElementById('logs-tbody').innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 3rem;">Syncing system logs from Google Sheets...</td></tr>`;
                 try {
                     usersList = await PyPlayAuth.getAllUsersFromSheets();
-                    if (usersList && usersList.length > 0) {
+                    logsList = await PyPlayAuth.getAllLogsFromSheets();
+                    if ((usersList && usersList.length > 0) || (logsList && logsList.length > 0)) {
                         document.getElementById('sync-status-banner').innerHTML = `
                             <div style="color: #10b981;">
-                                <strong>🟢 Google Sheets Connected:</strong> Successfully synced ${usersList.length} user records from the <strong>Users</strong> sheet!
+                                <strong>🟢 Google Sheets Connected:</strong> Successfully synced ${usersList.length} users and ${logsList.length} activity logs from the Google Sheet!
                             </div>
                         `;
                         filterUsersList();
+                        filterLogsList();
                     } else {
-                        throw new Error("No user records retrieved from Google Sheets.");
+                        throw new Error("No data retrieved from Google Sheets.");
                     }
                 } catch (err) {
-                    console.error("Failed to load users from sheets:", err);
+                    console.error("Failed to load data from sheets:", err);
                     document.getElementById('sync-status-banner').innerHTML = `
                         <div style="color: #ef4444;">
-                            <strong>🔴 Sync Failed:</strong> Google Sheets could not be reached or returned no data. Falling back to local offline mock records.
+                            <strong>🔴 Sync Failed:</strong> Google Sheets could not be reached or returned no data. Falling back to local offline records.
                         </div>
                     `;
-                    const mock = localStorage.getItem('pyplay_mock_users');
-                    if (mock) {
-                        usersList = JSON.parse(mock);
-                        filterUsersList();
-                    } else {
-                        document.getElementById('users-tbody').innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 3rem;">No users found. Try generating Mock Data below.</td></tr>`;
-                    }
+                    const mockU = localStorage.getItem('pyplay_mock_users');
+                    const mockL = localStorage.getItem('pyplay_mock_logs');
+                    usersList = mockU ? JSON.parse(mockU) : [];
+                    logsList = mockL ? JSON.parse(mockL) : [];
+                    filterUsersList();
+                    filterLogsList();
                 }
             }
 
-            // Real-time filtering engine
+            // Real-time filtering engine for Learners
             window.filterUsersList = function() {
                 const searchVal = document.getElementById('admin-search-input').value.toLowerCase().trim();
                 const roleVal = document.getElementById('admin-role-filter').value;
                 const progressVal = document.getElementById('admin-progress-filter').value;
 
                 const filtered = usersList.filter(u => {
-                    // 1. Search Query filter (matches name or email)
                     const matchesSearch = !searchVal || 
                                           (u.name && u.name.toLowerCase().includes(searchVal)) || 
                                           (u.email && u.email.toLowerCase().includes(searchVal));
                     
-                    // 2. Role filter
                     const matchesRole = roleVal === 'all' || u.role === roleVal;
 
-                    // 3. Progress filter
-                    let progress = { python: { completed_lessons: [], completed: false } };
+                    let progress = {};
                     try {
-                        progress = typeof u.progress === 'string' ? JSON.parse(u.progress) : (u.progress || progress);
+                        progress = typeof u.progress === 'string' ? JSON.parse(u.progress) : (u.progress || {});
                     } catch (e) {
                         console.error(e);
                     }
@@ -304,6 +507,93 @@
                 renderStatistics(filtered);
             }
 
+            // Real-time filtering engine for Logs
+            window.filterLogsList = function() {
+                const searchVal = document.getElementById('admin-logs-search').value.toLowerCase().trim();
+                const filtered = logsList.filter(l => {
+                    const matchesSearch = !searchVal || 
+                                          (l.name && l.name.toLowerCase().includes(searchVal)) || 
+                                          (l.email && l.email.toLowerCase().includes(searchVal)) ||
+                                          (l.status && l.status.toLowerCase().includes(searchVal)) ||
+                                          (l.timestamp && l.timestamp.toLowerCase().includes(searchVal));
+                    return matchesSearch;
+                });
+                renderLogs(filtered);
+            };
+
+            function calculateCourseMetrics() {
+                const courses = {
+                    python: { totalLessons: 13, enrolled: 0, graduates: 0, totalCompletedLessons: 0 },
+                    opencv: { totalLessons: 14, enrolled: 0, graduates: 0, totalCompletedLessons: 0 },
+                    arduino: { totalLessons: 10, enrolled: 0, graduates: 0, totalCompletedLessons: 0 },
+                    datavis: { totalLessons: 10, enrolled: 0, graduates: 0, totalCompletedLessons: 0 }
+                };
+
+                usersList.forEach(u => {
+                    let progress = {};
+                    try {
+                        progress = typeof u.progress === 'string' ? JSON.parse(u.progress) : (u.progress || {});
+                    } catch (e) {
+                        console.error("Error parsing progress for metrics:", e);
+                    }
+
+                    Object.keys(courses).forEach(courseKey => {
+                        const courseData = progress[courseKey] || {};
+                        const completedLessons = courseData.completed_lessons || [];
+                        
+                        if (completedLessons.length > 0 || courseData.completed) {
+                            courses[courseKey].enrolled++;
+                            courses[courseKey].totalCompletedLessons += completedLessons.length;
+                        }
+                        if (courseData.completed) {
+                            courses[courseKey].graduates++;
+                        }
+                    });
+                });
+
+                Object.keys(courses).forEach(courseKey => {
+                    const c = courses[courseKey];
+                    const enrolledEl = document.getElementById(`course-${courseKey}-enrolled`);
+                    const gradsEl = document.getElementById(`course-${courseKey}-graduates`);
+                    const avgProgEl = document.getElementById(`course-${courseKey}-avg-progress`);
+                    const textEl = document.getElementById(`course-${courseKey}-progress-text`);
+                    const barEl = document.getElementById(`course-${courseKey}-progress-bar`);
+
+                    if (enrolledEl) enrolledEl.textContent = c.enrolled;
+                    if (gradsEl) gradsEl.textContent = c.graduates;
+
+                    const avgProg = c.enrolled > 0 ? Math.round((c.totalCompletedLessons / (c.enrolled * c.totalLessons)) * 100) : 0;
+                    if (avgProgEl) avgProgEl.textContent = `${avgProg}%`;
+                    if (textEl) textEl.textContent = `${avgProg}%`;
+                    if (barEl) barEl.style.width = `${avgProg}%`;
+                });
+            }
+
+            function renderLogs(logs) {
+                const tbody = document.getElementById('logs-tbody');
+                tbody.innerHTML = '';
+                
+                if (logs.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 3rem;">No activity logs found.</td></tr>`;
+                    return;
+                }
+
+                // Sort descending by timestamp
+                const sortedLogs = [...logs].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+                sortedLogs.forEach(l => {
+                    const tr = document.createElement('tr');
+                    const timeStr = l.timestamp ? new Date(l.timestamp).toLocaleString() : 'N/A';
+                    tr.innerHTML = `
+                        <td style="color: var(--text-muted); font-size: 0.85rem;">${timeStr}</td>
+                        <td style="font-weight: 600;">${l.name || 'Unknown'}</td>
+                        <td>${l.email || 'N/A'}</td>
+                        <td style="color: #93c5fd; font-family: monospace;">${l.status || 'N/A'}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+
             function renderStatistics(users) {
                 const tbody = document.getElementById('users-tbody');
                 tbody.innerHTML = '';
@@ -318,9 +608,9 @@
                 let totalLessonsCompleted = 0;
 
                 users.forEach(u => {
-                    let progress = { python: { completed_lessons: [], completed: false } };
+                    let progress = {};
                     try {
-                        progress = typeof u.progress === 'string' ? JSON.parse(u.progress) : (u.progress || progress);
+                        progress = typeof u.progress === 'string' ? JSON.parse(u.progress) : (u.progress || {});
                     } catch (e) {
                         console.error("Error parsing user progress", e);
                     }
@@ -329,7 +619,15 @@
                     const completedLessonsCount = pyProgress.completed_lessons ? pyProgress.completed_lessons.length : 0;
                     
                     if (pyProgress.completed) totalGraduates++;
-                    totalXp += (completedLessonsCount * 100);
+                    
+                    // Sum all XP from all courses
+                    let userTotalCompletedLessons = 0;
+                    Object.keys(progress).forEach(courseKey => {
+                        const cl = progress[courseKey]?.completed_lessons || [];
+                        userTotalCompletedLessons += cl.length;
+                    });
+
+                    totalXp += (userTotalCompletedLessons * 100);
                     totalLessonsCompleted += completedLessonsCount;
 
                     const badgesText = pyProgress.completed ? '🏆 Python Graduate' : 'None';
@@ -371,23 +669,23 @@
                 const avgProgressVal = users.length > 0 ? Math.round(((totalLessonsCompleted / (users.length * 13)) * 100)) : 0;
                 document.getElementById('stat-avg-progress').textContent = `${avgProgressVal}%`;
 
+                // Recalculate per-course metrics
+                calculateCourseMetrics();
+
                 // Add event listeners to role updates
                 document.querySelectorAll('.select-role').forEach(select => {
                     select.onchange = async (e) => {
                         const email = e.target.getAttribute('data-email');
                         const newRole = e.target.value;
                         
-                        // Find user
                         const targetUserIndex = usersList.findIndex(u => u.email === email);
                         if (targetUserIndex !== -1) {
                             usersList[targetUserIndex].role = newRole;
                             
-                            // If this is the logged in admin updating their own role, warn them
                             if (email === PyPlayAuth.user.email) {
                                 alert("Warning: You are modifying your own role. Demoting yourself will lock you out of this dashboard!");
                             }
                             
-                            // If live, push update
                             if (PyPlayAuth.scriptUrl) {
                                 await PyPlayAuth.pushUserToSheets(usersList[targetUserIndex]);
                                 await PyPlayAuth.logToSheets(PyPlayAuth.user.email, PyPlayAuth.user.name, `Manually updated role of ${email} to ${newRole}`);
@@ -423,7 +721,10 @@
                             avatar: "🐼",
                             color: "#10b981",
                             role: "Learner",
-                            progress: { python: { completed_lessons: [0, 1, 2, 3, 4, 5], completed: false } },
+                            progress: { 
+                                python: { completed_lessons: [0, 1, 2, 3, 4, 5], completed: false },
+                                opencv: { completed_lessons: [0, 1, 2], completed: false }
+                            },
                             lastUpdated: new Date(Date.now() - 3600000).toISOString()
                         },
                         {
@@ -432,7 +733,11 @@
                             avatar: "🦄",
                             color: "#8b5cf6",
                             role: "Learner",
-                            progress: { python: { completed_lessons: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], completed: true } },
+                            progress: { 
+                                python: { completed_lessons: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], completed: true },
+                                opencv: { completed_lessons: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13], completed: true },
+                                datavis: { completed_lessons: [0, 1, 2, 3], completed: false }
+                            },
                             lastUpdated: new Date(Date.now() - 7200000).toISOString()
                         },
                         {
@@ -441,7 +746,10 @@
                             avatar: "🦊",
                             color: "#ef4444",
                             role: "Learner",
-                            progress: { python: { completed_lessons: [0, 1], completed: false } },
+                            progress: { 
+                                python: { completed_lessons: [0, 1], completed: false },
+                                arduino: { completed_lessons: [0, 1, 2, 3, 4], completed: false }
+                            },
                             lastUpdated: new Date().toISOString()
                         },
                         {
@@ -454,10 +762,22 @@
                             lastUpdated: new Date().toISOString()
                         }
                     ];
+                    
+                    const mockLogs = [
+                        { timestamp: new Date(Date.now() - 600000).toISOString(), email: "panda_coder@pyplay.com", name: "Panda Coder", status: "Completed Lesson 3 in Python Basics" },
+                        { timestamp: new Date(Date.now() - 1200000).toISOString(), email: "unicorn_dev@pyplay.com", name: "Unicorn Dev", status: "Joined OpenCV with Python" },
+                        { timestamp: new Date(Date.now() - 1800000).toISOString(), email: "fox_master@pyplay.com", name: "Fox Master", status: "Logged In" },
+                        { timestamp: new Date(Date.now() - 2400000).toISOString(), email: "admin_boss@pyplay.com", name: "Admin Boss", status: "Manually updated role of panda_coder@pyplay.com to Learner" }
+                    ];
+
                     localStorage.setItem('pyplay_mock_users', JSON.stringify(mockUsers));
+                    localStorage.setItem('pyplay_mock_logs', JSON.stringify(mockLogs));
                     usersList = mockUsers;
+                    logsList = mockLogs;
+                    
                     filterUsersList();
-                    alert("Mock user progression generated successfully! You can now analyze sample metrics.");
+                    filterLogsList();
+                    alert("Mock user and log database generated successfully! You can now analyze course statistics and logs.");
                 };
             }
         });
