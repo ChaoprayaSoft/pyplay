@@ -4,7 +4,7 @@
 // ⚙️ GOOGLE CLOUD INTEGRATION VARIABLES
 // ==========================================
 // 1. Paste your deployed Google Apps Script Web App URL here:
-const GOOGLE_SHEETS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbywkBFnCaI9mXEeh833XTeD8lnqO6rn2Zw9_d9hxvF_nBmVGhy9CM4K-ZMESq7PCZLF/exe";
+const GOOGLE_SHEETS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbywkBFnCaI9mXEeh833XTeD8lnqO6rn2Zw9_d9hxvF_nBmVGhy9CM4K-ZMESq7PCZLF/exec";
 
 
 // 2. Paste your Google OAuth Client ID here:
@@ -407,12 +407,10 @@ const PyPlayAuth = {
                 </div>
                 <a href="dashboard.html" class="btn btn-outline" style="border-color: rgba(59, 130, 246, 0.4); color: #93c5fd;">📊 Dashboard</a>
                 ${this.user.role === 'Admin' ? `<a href="admin.html" class="btn btn-outline" style="border-color: rgba(239, 68, 68, 0.4); color: #fca5a5;">🛡️ Admin</a>` : ''}
-                <button class="btn btn-outline" onclick="PyPlayAuth.openSettingsModal()" style="border-color: rgba(255,255,255,0.2); color: #fff;">⚙️ Settings</button>
                 <button class="btn btn-outline" onclick="PyPlayAuth.logout()">Log Out</button>
             `;
         } else {
             profileDiv.innerHTML = `
-                <button class="btn btn-outline" onclick="PyPlayAuth.openSettingsModal()" style="border-color: rgba(255,255,255,0.2); color: #fff;">⚙️ Settings</button>
                 <button class="btn btn-outline" onclick="PyPlayAuth.openLoginModal()">Join Now</button>
                 <button class="btn btn-primary" onclick="PyPlayAuth.tryDemo()">Try Demo</button>
             `;

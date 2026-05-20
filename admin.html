@@ -118,7 +118,7 @@
 <body>
     <div class="app-container">
         <!-- Header -->
-        <header class="glass-panel header" id="admin-app-header">
+        <header class="glass-panel header">
             <div style="display: flex; align-items: center; gap: 1.5rem;">
                 <a href="index.html" class="logo">
                     <div class="logo-icon">🐍</div>
@@ -127,7 +127,7 @@
                 <a href="index.html" class="btn btn-outline" style="padding: 0.35rem 0.75rem; font-size: 0.8rem;">🏠 Home</a>
                 <span style="font-size:0.8rem; font-weight:700; background:rgba(239,68,68,0.15); color:#fca5a5; border:1px solid rgba(239,68,68,0.3); padding:0.2rem 0.6rem; border-radius:99px;">🛡️ Admin Panel</span>
             </div>
-            <div id="admin-header-auth" style="display:flex; align-items:center; gap:1rem;"></div>
+            <div class="controls"></div>
         </header>
 
         <!-- Main Workspace: Admin Layout -->
@@ -404,23 +404,6 @@
                 return;
             }
 
-            // Explicitly inject auth controls into the admin header's dedicated slot
-            (function renderAdminHeaderAuth() {
-                const slot = document.getElementById('admin-header-auth');
-                if (!slot || !PyPlayAuth.user) return;
-                const u = PyPlayAuth.user;
-                document.documentElement.style.setProperty('--accent-primary', u.color);
-                slot.innerHTML = `
-                    <div class="user-status-widget" onclick="window.location.href='dashboard.html'" style="cursor:pointer; display:flex; align-items:center; gap:0.5rem; background: rgba(255,255,255,0.05); padding: 0.5rem 1rem; border-radius: 99px;">
-                        <span style="font-size: 1.5rem; cursor:pointer;" title="Click to edit nickname" onclick="event.stopPropagation(); PyPlayAuth.editNicknamePrompt();">${u.avatar}</span>
-                        <span style="font-weight:600; font-size:0.9rem;">${u.name}</span>
-                        <span style="font-size: 0.7rem; background:rgba(239, 68, 68, 0.2); color:#fca5a5; padding:0.2rem 0.5rem; border-radius:4px;">Admin</span>
-                    </div>
-                    <a href="dashboard.html" class="btn btn-outline" style="border-color: rgba(59, 130, 246, 0.4); color: #93c5fd;">📊 Dashboard</a>
-                    <button class="btn btn-outline" onclick="PyPlayAuth.openSettingsModal()" style="border-color: rgba(255,255,255,0.2); color: #fff;">⚙️ Settings</button>
-                    <button class="btn btn-outline" onclick="PyPlayAuth.logout()">Log Out</button>
-                `;
-            })();
 
             let usersList = [];
             let logsList = [];
