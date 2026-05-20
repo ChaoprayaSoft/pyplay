@@ -633,14 +633,13 @@ const PyPlayAuth = {
 // Initialize
 PyPlayAuth.init();
 
-// Sync automatically at open page if user is logged in
-window.addEventListener('DOMContentLoaded', async () => {
-    if (PyPlayAuth.user) {
-        await PyPlayAuth.syncFromSheets();
-    } else {
+// Handle ?triggerLogin=true URL parameter (for pages that redirect unauthenticated users)
+window.addEventListener('DOMContentLoaded', () => {
+    if (!PyPlayAuth.user) {
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('triggerLogin') === 'true') {
             PyPlayAuth.openLoginModal();
         }
     }
 });
+

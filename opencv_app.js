@@ -199,8 +199,14 @@ async function init() {
         matchBrackets: true
     });
 
+    // SYNC FIRST: Pull latest progress from Google Sheets before reading progress
+    if (typeof PyPlayAuth !== 'undefined' && PyPlayAuth.user && PyPlayAuth.scriptUrl) {
+        await PyPlayAuth.syncFromSheets();
+    }
+
     // Restore progress/resume from last uncompleted lesson
     if (typeof PyPlayAuth !== 'undefined' && PyPlayAuth.user) {
+
         if (!PyPlayAuth.user.progress) {
             PyPlayAuth.user.progress = {};
         }

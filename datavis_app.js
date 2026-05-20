@@ -288,7 +288,7 @@ const dom = {
 };
 
 // --- Initialization ---
-function init() {
+async function init() {
     dom.totalLessons.textContent = lessons.length;
     
     // Initialize CodeMirror (Python mode)
@@ -301,8 +301,14 @@ function init() {
         matchBrackets: true
     });
     
+    // SYNC FIRST: Pull latest progress from Google Sheets before reading progress
+    if (typeof PyPlayAuth !== 'undefined' && PyPlayAuth.user && PyPlayAuth.scriptUrl) {
+        await PyPlayAuth.syncFromSheets();
+    }
+    
     // Restore Progress
     if (typeof PyPlayAuth !== 'undefined' && PyPlayAuth.user) {
+
         const dvProgress = PyPlayAuth.user.progress.datavis || { completed_lessons: [], completed: false, highest_lesson: 0 };
         const completed = dvProgress.completed_lessons || [];
         

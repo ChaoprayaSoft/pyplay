@@ -174,6 +174,11 @@ async function init() {
         matchBrackets: true
     });
     
+    // SYNC FIRST: Pull latest progress from Google Sheets before reading progress
+    if (typeof PyPlayAuth !== 'undefined' && PyPlayAuth.user && PyPlayAuth.scriptUrl) {
+        await PyPlayAuth.syncFromSheets();
+    }
+    
     // Restore progress/resume from last uncompleted lesson
     if (typeof PyPlayAuth !== 'undefined' && PyPlayAuth.user) {
         const pyProgress = PyPlayAuth.user.progress.python || { completed_lessons: [], completed: false, highest_lesson: 0 };
@@ -226,9 +231,9 @@ async function init() {
     }
     
     setupEventListeners();
-}
 
 // --- Functions ---
+
 function renderProgressSteps() {
     const container = dom.progressStepsContainer;
     if (!container) return;

@@ -510,7 +510,7 @@ function initFloatingDocks() {
 }
 
 // --- Initialization ---
-function init() {
+async function init() {
     dom.totalLessons.textContent = lessons.length;
     
     // Initialize CodeMirror (C++ clike mode)
@@ -523,8 +523,14 @@ function init() {
         matchBrackets: true
     });
     
+    // SYNC FIRST: Pull latest progress from Google Sheets before reading progress
+    if (typeof PyPlayAuth !== 'undefined' && PyPlayAuth.user && PyPlayAuth.scriptUrl) {
+        await PyPlayAuth.syncFromSheets();
+    }
+    
     // Restore Progress
     if (typeof PyPlayAuth !== 'undefined' && PyPlayAuth.user) {
+
         const ardProgress = PyPlayAuth.user.progress.arduino || { completed_lessons: [], completed: false, highest_lesson: 0 };
         const completed = ardProgress.completed_lessons || [];
         
