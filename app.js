@@ -231,6 +231,7 @@ async function init() {
     }
     
     setupEventListeners();
+}
 
 // --- Functions ---
 
