@@ -38,7 +38,7 @@ const lessons = [
         example: 'import cv2\nimg = cv2.imread("logo.png")\ngray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)\neq = cv2.equalizeHist(gray)\ncv2.imshow("Grayscale Equalized", eq)',
         task: 'Load `logo.png`, convert it to grayscale, equalize its histogram using `cv2.equalizeHist()`, and print the intensity value of the center pixel at coordinates `(200, 200)`.',
         initialCode: 'import cv2\n# Convert to grayscale, equalize, and print pixel (200, 200) value:\n',
-        expectedOutput: "255"
+        expectedOutput: "251"
     },
     {
         title: "Accessing the Camera",
