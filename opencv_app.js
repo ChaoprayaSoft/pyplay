@@ -141,6 +141,7 @@ const lessons = [
         task: 'Load `logo.png` and calculate the center of the image. Compute the rotation matrix to rotate the image by `45` degrees counter-clockwise around its center point with a scale factor of `1.0`. Apply the rotation using `cv2.warpAffine` keeping the original size. Print the rotated center pixel BGR color value as a list of integers: `print([int(x) for x in rotated[200, 200]])`.',
         initialCode: 'import cv2\n# Load logo.png, rotate around center by 45 degrees, warp, and print BGR pixel list at (200, 200):\n',
         expectedOutput: "[126, 237, 255]",
+        requiredCodeSubstrings: ["M = cv2.getRotationMatrix2D((w//2, h//2), 45, 1.0)"],
         hint: "Get image shape to compute center (w//2, h//2). Compute rotation matrix: M = cv2.getRotationMatrix2D(center, 45, 1.0). Apply warp: rotated = cv2.warpAffine(img, M, (w, h)). Print the color at index [200, 200]: print([int(x) for x in rotated[200, 200]])."
     },
     {
@@ -586,6 +587,19 @@ function checkLessonCompletion() {
     });
 
     if (match) {
+        // Check code requirements if specified (case & space insensitive check)
+        if (lesson.requiredCodeSubstrings) {
+            const studentCode = editor.getValue();
+            const normalizeCode = (c) => c.replace(/\s+/g, '');
+            const missing = lesson.requiredCodeSubstrings.filter(sub => {
+                return !normalizeCode(studentCode).includes(normalizeCode(sub));
+            });
+            if (missing.length > 0) {
+                dom.outputConsole.innerHTML += `\n<span class="terminal-error" style="color: #f87171; font-weight: bold;">[Code Requirement Failed]: Your code must contain exactly: "${missing.join('", "')}"</span>`;
+                return;
+            }
+        }
+
         dom.successMessage.classList.remove('hidden');
         dom.nextBtn.disabled = false;
 
