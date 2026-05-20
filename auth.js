@@ -18,6 +18,82 @@ const PyPlayAuth = {
     user: null,
     scriptUrl: GOOGLE_SHEETS_SCRIPT_URL, // Configured via GOOGLE_SHEETS_SCRIPT_URL above
     googleClientId: GOOGLE_OAUTH_CLIENT_ID, // Configured via GOOGLE_OAUTH_CLIENT_ID above
+    toastElement: null,
+
+    showToast(message, isSuccess = false) {
+        if (!document.getElementById('pyplay-toast-style')) {
+            const style = document.createElement('style');
+            style.id = 'pyplay-toast-style';
+            style.textContent = `
+                .pyplay-toast {
+                    position: fixed;
+                    bottom: 24px;
+                    right: 24px;
+                    background: rgba(15, 17, 26, 0.95);
+                    border: 1px solid rgba(59, 130, 246, 0.3);
+                    color: #fff;
+                    padding: 0.75rem 1.25rem;
+                    border-radius: 12px;
+                    display: flex;
+                    align-items: center;
+                    gap: 0.75rem;
+                    font-family: 'Inter', sans-serif;
+                    font-size: 0.875rem;
+                    font-weight: 500;
+                    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(59, 130, 246, 0.15);
+                    z-index: 100000;
+                    transform: translateY(100px);
+                    opacity: 0;
+                    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+                    pointer-events: none;
+                }
+                .pyplay-toast.show {
+                    transform: translateY(0);
+                    opacity: 1;
+                }
+                .pyplay-toast.success {
+                    border-color: rgba(16, 185, 129, 0.4);
+                    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(16, 185, 129, 0.15);
+                }
+                .pyplay-toast .spinner {
+                    width: 16px;
+                    height: 16px;
+                    border: 2px solid rgba(255,255,255,0.3);
+                    border-top-color: #3b82f6;
+                    border-radius: 50%;
+                    animation: pyplay-spin 0.8s linear infinite;
+                }
+                @keyframes pyplay-spin {
+                    to { transform: rotate(360deg); }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        if (!this.toastElement) {
+            this.toastElement = document.createElement('div');
+            this.toastElement.className = 'pyplay-toast';
+            document.body.appendChild(this.toastElement);
+        }
+
+        if (isSuccess) {
+            this.toastElement.classList.add('success');
+            this.toastElement.innerHTML = `<span>✅</span> <span>${message}</span>`;
+            setTimeout(() => {
+                this.toastElement.classList.remove('show');
+            }, 2500);
+        } else {
+            this.toastElement.classList.remove('success');
+            this.toastElement.innerHTML = `<div class="spinner"></div> <span>${message}</span>`;
+            this.toastElement.classList.add('show');
+        }
+    },
+
+    hideToast() {
+        if (this.toastElement) {
+            this.toastElement.classList.remove('show');
+        }
+    },
 
     init() {
         this.loadLocalUser();
@@ -46,6 +122,8 @@ const PyPlayAuth = {
     async syncFromSheets() {
         if (!this.user || !this.scriptUrl) return;
 
+        this.showToast("Syncing progress from cloud...");
+
         return new Promise((resolve) => {
             const callbackName = 'pyplay_jsonp_' + Math.round(Math.random() * 1000000);
             window[callbackName] = (data) => {
@@ -62,6 +140,9 @@ const PyPlayAuth = {
                         role: data.role || this.user.role,
                         progress: typeof data.progress === 'string' ? JSON.parse(data.progress) : (data.progress || this.user.progress)
                     });
+                    this.showToast("Progress synced with cloud!", true);
+                } else {
+                    this.hideToast();
                 }
                 resolve(data);
             };
@@ -94,6 +175,8 @@ const PyPlayAuth = {
     async pushUserToSheets(userData) {
         if (!this.scriptUrl) return;
 
+        this.showToast("Syncing settings to cloud...");
+
         try {
             await fetch(this.scriptUrl, {
                 method: 'POST',
@@ -112,8 +195,10 @@ const PyPlayAuth = {
                     lastUpdated: new Date().toISOString()
                 })
             });
+            this.showToast("Settings synced with cloud!", true);
         } catch (e) {
             console.error("Sheets push failed:", e);
+            this.showToast("Sync failed (Offline)", true);
         }
     },
 

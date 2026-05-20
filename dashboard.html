@@ -422,8 +422,10 @@
                 document.getElementById('save-profile-btn').disabled = false;
                 document.getElementById('save-profile-btn').textContent = "Save Settings";
                 
-                alert("Profile and Sync settings updated successfully! 🚀");
-                window.location.reload();
+                // Let the user see the success toast before reloading
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500);
             };
         });
     </script>
