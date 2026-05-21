@@ -34,11 +34,11 @@ const lessons = [
         task: "Write a program to set the brightness of the external LED connected to PWM **Pin 9** to a medium intensity of exactly **100** using <code>analogWrite()</code>, then print the exact phrase <code>\"Fading Active\"</code> to the Serial Monitor inside <code>setup()</code>.",
         initialCode: "void setup() {\n  // Configure Pin 9 as output & initialize Serial at 9600 baud:\n  pinMode(9, OUTPUT);\n  Serial.begin(9600);\n  \n  // Print \"Fading Active\" below:\n\n}\n\nvoid loop() {\n  // Write analogWrite code below to fade Pin 9 to 100:\n  \n}",
         wires: [
-            { from: "pin-9", to: "led-anode", color: "#10b981", d: "M 224,15 C 224,-20, 160,-20, 160,30" },
-            { from: "gnd-top", to: "led-cathode", color: "#1e293b", d: "M 116,15 C 116,-5, 125,-5, 125,30" }
+            { from: "pin-9", to: "ext-led-box-anode", color: "#10b981" },
+            { from: "gnd-top", to: "ext-led-box-cathode", color: "#64748b" }
         ],
         components: [
-            { id: "ext-led-box", type: "led", label: "Green LED", style: "top: 15px; left: 120px;", pin: 9, color: "green" }
+            { id: "ext-led-box", type: "led", label: "Green LED", style: "top: 15px; left: 200px;", pin: 9, color: "green", ports: ["cathode", "anode"] }
         ],
         validate: (state, logs) => {
             const pin9Val = state.pins[9] || 0;
@@ -55,11 +55,11 @@ const lessons = [
         task: "Read the state of the Pushbutton on **Pin 2**. If the button is pressed (HIGH), turn **on** the onboard Pin 13 LED. If the button is released (LOW), turn **off** the Pin 13 LED. Press the button in the simulator to test your circuit!",
         initialCode: "void setup() {\n  pinMode(13, OUTPUT);\n  pinMode(2, INPUT);\n}\n\nvoid loop() {\n  // Write your pushbutton-to-LED logic below:\n  \n}",
         wires: [
-            { from: "pin-2", to: "button-sig", color: "#fbbf24", d: "M 278,15 C 278,-10, 180,-10, 180,60" },
-            { from: "gnd-top", to: "button-gnd", color: "#1e293b", d: "M 116,15 C 116,0, 140,0, 140,60" }
+            { from: "pin-2", to: "pushbutton-box-sig", color: "#fbbf24" },
+            { from: "gnd-top", to: "pushbutton-box-gnd", color: "#64748b" }
         ],
         components: [
-            { id: "pushbutton-box", type: "button", label: "Pushbutton", style: "top: 45px; left: 130px;", pin: 2 }
+            { id: "pushbutton-box", type: "button", label: "Pushbutton", style: "top: 10px; left: 260px;", pin: 2, ports: ["gnd", "sig"] }
         ],
         validate: (state) => {
             // Evaluates interaction! The validator will check if the user toggled the button 
@@ -90,12 +90,12 @@ const lessons = [
         task: "Read the potentiometer value from Analog Pin **A0**, print the reading to the Serial Monitor prefixed by <code>\"Value: \"</code> (e.g. <code>\"Value: 512\"</code>), and wait **500 milliseconds** between readings.",
         initialCode: "void setup() {\n  Serial.begin(9600);\n}\n\nvoid loop() {\n  // 1. Read Analog Pin A0:\n  \n  // 2. Print \"Value: [reading]\" below:\n  \n  // 3. Add a 500ms delay:\n  \n}",
         wires: [
-            { from: "pin-a0", to: "pot-wiper", color: "#3b82f6", d: "M 215,200 C 215,240, 180,240, 180,105" },
-            { from: "5v-bottom", to: "pot-vcc", color: "#ef4444", d: "M 152,200 C 152,230, 150,230, 140,105" },
-            { from: "gnd-bottom1", to: "pot-gnd", color: "#1e293b", d: "M 172,200 C 172,235, 205,235, 210,105" }
+            { from: "pin-a0", to: "potentiometer-box-sig", color: "#3b82f6" },
+            { from: "5v-bottom", to: "potentiometer-box-vcc", color: "#ef4444" },
+            { from: "gnd-bottom1", to: "potentiometer-box-gnd", color: "#64748b" }
         ],
         components: [
-            { id: "potentiometer-box", type: "pot", label: "Potentiometer (A0)", style: "top: 85px; left: 140px;", pin: "A0" }
+            { id: "potentiometer-box", type: "pot", label: "Pot (A0)", style: "top: 210px; left: 50px;", pin: "A0", ports: ["gnd", "sig", "vcc"] }
         ],
         validate: (state, logs) => {
             // Verify there is a log like "Value: 512" and that it reflects the current pot value
@@ -114,14 +114,14 @@ const lessons = [
         task: "Read the LDR sensor on Pin **A1**. If the light level drops **below 300**, turn **on** the LED on **Pin 8**. Otherwise, turn the LED **off**.",
         initialCode: "void setup() {\n  pinMode(8, OUTPUT);\n  // A1 is automatically an input, but good practice:\n  pinMode(A1, INPUT);\n}\n\nvoid loop() {\n  // Write your night light logic below:\n  \n}",
         wires: [
-            { from: "pin-a1", to: "ldr-sig", color: "#fbbf24", d: "M 228,200 C 228,230, 120,230, 120,110" },
-            { from: "pin-8", to: "led-anode", color: "#10b981", d: "M 210,15 C 210,-15, 175,-15, 175,20" },
-            { from: "gnd-bottom1", to: "ldr-gnd", color: "#1e293b", d: "M 172,200 C 172,250, 85,250, 85,110" },
-            { from: "gnd-top", to: "led-cathode", color: "#1e293b", d: "M 116,15 C 116,-5, 140,-5, 140,20" }
+            { from: "pin-a1", to: "ldr-box-sig", color: "#fbbf24" },
+            { from: "gnd-bottom2", to: "ldr-box-gnd", color: "#64748b" },
+            { from: "pin-8", to: "night-led-box-anode", color: "#ef4444" },
+            { from: "gnd-top", to: "night-led-box-cathode", color: "#64748b" }
         ],
         components: [
-            { id: "ldr-box", type: "ldr", label: "Light Sensor (A1)", style: "top: 85px; left: 75px;", pin: "A1" },
-            { id: "night-led-box", type: "led", label: "Night LED", style: "top: 5px; left: 135px;", pin: 8, color: "red" }
+            { id: "ldr-box", type: "ldr", label: "Light Sensor", style: "top: 200px; left: 340px;", pin: "A1", ports: ["gnd", "sig"] },
+            { id: "night-led-box", type: "led", label: "Night LED", style: "top: 15px; left: 160px;", pin: 8, color: "red", ports: ["cathode", "anode"] }
         ],
         validate: (state) => {
             return state.ldrInteractionSuccess === true;
@@ -136,11 +136,11 @@ const lessons = [
         task: "Play a two-tone startup chime inside <code>setup()</code>: First play a **440 Hz** tone on Pin **7** for **200 milliseconds**, then wait **250 milliseconds**, then play a **880 Hz** tone on Pin **7** for **300 milliseconds**, and then turn the buzzer **off**.",
         initialCode: "void setup() {\n  // Play startup chime below:\n  \n}\n\nvoid loop() {\n  // Leave empty\n}",
         wires: [
-            { from: "pin-7", to: "buzzer-pos", color: "#fbbf24", d: "M 195,15 C 195,-20, 160,-20, 160,50" },
-            { from: "gnd-top", to: "buzzer-neg", color: "#1e293b", d: "M 116,15 C 116,-5, 110,-5, 110,50" }
+            { from: "pin-7", to: "buzzer-box-pos", color: "#fbbf24" },
+            { from: "gnd-top", to: "buzzer-box-neg", color: "#64748b" }
         ],
         components: [
-            { id: "buzzer-box", type: "buzzer", label: "Piezo Buzzer (7)", style: "top: 35px; left: 100px;", pin: 7 }
+            { id: "buzzer-box", type: "buzzer", label: "Buzzer (7)", style: "top: 10px; left: 120px;", pin: 7, ports: ["neg", "pos"] }
         ],
         validate: (state) => {
             const tones = state.buzzerHistory || [];
@@ -160,12 +160,12 @@ const lessons = [
         task: "Write a program that sweeps a Servomotor attached to Pin **6**: Rotate it to **90 degrees**, print <code>\"Servo Center\"</code>, wait **1 second**, then rotate it to **180 degrees**, print <code>\"Servo Max\"</code>, and wait **1 second**.",
         initialCode: "#include <Servo.h>\n\nServo myservo;\n\nvoid setup() {\n  Serial.begin(9600);\n  // Attach servo to Pin 6:\n  \n}\n\nvoid loop() {\n  // Sweep servo inside loop:\n  \n}",
         wires: [
-            { from: "pin-6", to: "servo-sig", color: "#f97316", d: "M 180,15 C 180,-20, 110,-20, 110,65" },
-            { from: "5v-bottom", to: "servo-vcc", color: "#ef4444", d: "M 152,200 C 152,240, 75,240, 60,65" },
-            { from: "gnd-bottom1", to: "servo-gnd", color: "#1e293b", d: "M 172,200 C 172,245, 80,245, 75,65" }
+            { from: "pin-6", to: "servo-box-sig", color: "#f97316" },
+            { from: "5v-bottom", to: "servo-box-vcc", color: "#ef4444" },
+            { from: "gnd-bottom1", to: "servo-box-gnd", color: "#64748b" }
         ],
         components: [
-            { id: "servo-box", type: "servo", label: "Servomotor (Pin 6)", style: "top: 50px; left: 50px;", pin: 6 }
+            { id: "servo-box", type: "servo", label: "Servo (6)", style: "top: 150px; left: 10px;", pin: 6, ports: ["gnd", "vcc", "sig"] }
         ],
         validate: (state, logs) => {
             const servoHistory = state.servoPositions[6] || [];
@@ -188,15 +188,15 @@ const lessons = [
         task: "Measure the ultrasonic distance sensor value on Pin **4**. If a virtual obstacle is closer than **20 cm**, turn **on** a red Warning LED connected to **Pin 3**. Otherwise, turn the LED **off**. Adjust the distance slider to test!",
         initialCode: "void setup() {\n  pinMode(3, OUTPUT);\n  pinMode(4, INPUT);\n}\n\nvoid loop() {\n  // Read the echo pulse duration on Pin 4 (in microseconds):\n  long duration = pulseIn(4, HIGH);\n  \n  // Convert duration to centimeters:\n  long distance = duration / 58;\n  \n  // Write logic to light Pin 3 LED if distance < 20:\n  \n}",
         wires: [
-            { from: "pin-4", to: "sonar-sig", color: "#3b82f6", d: "M 248,15 C 248,-20, 110,-20, 110,95" },
-            { from: "pin-3", to: "led-anode", color: "#10b981", d: "M 264,15 C 264,-10, 195,-10, 195,30" },
-            { from: "gnd-top", to: "led-cathode", color: "#1e293b", d: "M 116,15 C 116,-5, 160,-5, 160,30" },
-            { from: "5v-bottom", to: "sonar-vcc", color: "#ef4444", d: "M 152,200 C 152,230, 60,230, 50,95" },
-            { from: "gnd-bottom1", to: "sonar-gnd", color: "#1e293b", d: "M 172,200 C 172,235, 75,235, 75,95" }
+            { from: "pin-4", to: "sonar-box-sig", color: "#3b82f6" },
+            { from: "5v-bottom", to: "sonar-box-vcc", color: "#ef4444" },
+            { from: "gnd-bottom1", to: "sonar-box-gnd", color: "#64748b" },
+            { from: "pin-3", to: "warn-led-box-anode", color: "#ef4444" },
+            { from: "gnd-top", to: "warn-led-box-cathode", color: "#64748b" }
         ],
         components: [
-            { id: "sonar-box", type: "sonar", label: "Sonar HC-SR04 (4)", style: "top: 75px; left: 40px;", pin: 4 },
-            { id: "warn-led-box", type: "led", label: "Warning LED", style: "top: 15px; left: 155px;", pin: 3, color: "red" }
+            { id: "sonar-box", type: "sonar", label: "Sonar HC-SR04", style: "top: 190px; left: 20px;", pin: 4, ports: ["vcc", "sig", "gnd"] },
+            { id: "warn-led-box", type: "led", label: "Warning", style: "top: 10px; left: 320px;", pin: 3, color: "red", ports: ["cathode", "anode"] }
         ],
         validate: (state) => {
             return state.sonarInteractionSuccess === true;
@@ -211,15 +211,15 @@ const lessons = [
         task: "Initialize the LCD screen inside <code>setup()</code>. Write the exact string <code>\"PyPlay Arduino\"</code> on the first row (row 0) starting at column 0, and write <code>\"Final Grade: A\"</code> on the second row (row 1) starting at column 0.",
         initialCode: "#include <LiquidCrystal.h>\n\n// Initialize LCD pins (rs, en, d4, d5, d6, d7):\nLiquidCrystal lcd(12, 11, 5, 4, 3, 2);\n\nvoid setup() {\n  // 1. Begin LCD 16x2 screen:\n  \n  // 2. Set cursor to (0,0) and print \"PyPlay Arduino\":\n  \n  // 3. Set cursor to (0,1) and print \"Final Grade: A\":\n  \n}\n\nvoid loop() {\n  // Leave empty\n}",
         wires: [
-            { from: "pin-12", to: "lcd-rs", color: "#3b82f6", d: "M 132,15 C 132,-25, 40,-25, 40,80" },
-            { from: "pin-11", to: "lcd-en", color: "#fbbf24", d: "M 148,15 C 148,-20, 55,-20, 55,80" },
-            { from: "pin-5", to: "lcd-d4", color: "#10b981", d: "M 230,15 C 230,-15, 70,-15, 70,80" },
-            { from: "pin-4", to: "lcd-d5", color: "#ec4899", d: "M 248,15 C 248,-10, 85,-10, 85,80" },
-            { from: "pin-3", to: "lcd-d6", color: "#a855f7", d: "M 264,15 C 264,-5, 100,-5, 100,80" },
-            { from: "pin-2", to: "lcd-d7", color: "#f97316", d: "M 278,15 C 278,0, 115,0, 115,80" }
+            { from: "pin-12", to: "lcd-box-rs", color: "#3b82f6" },
+            { from: "pin-11", to: "lcd-box-en", color: "#fbbf24" },
+            { from: "pin-5", to: "lcd-box-d4", color: "#10b981" },
+            { from: "pin-4", to: "lcd-box-d5", color: "#ec4899" },
+            { from: "pin-3", to: "lcd-box-d6", color: "#a855f7" },
+            { from: "pin-2", to: "lcd-box-d7", color: "#f97316" }
         ],
         components: [
-            { id: "lcd-box", type: "lcd", label: "LCD Screen 16x2", style: "top: 75px; left: 35px;" }
+            { id: "lcd-box", type: "lcd", label: "LCD Screen 16x2", style: "top: 5px; left: 50px;", ports: ["rs", "en", "d4", "d5", "d6", "d7"] }
         ],
         validate: (state) => {
             const r0 = (state.lcdContent[0] || "").trim();
@@ -297,21 +297,25 @@ const dom = {
 // SVG Board Pin Coordinates mapping on screen for organic looking wires
 // Relative to board-panel coordinates or absolute offset mapping
 const pinCoordinates = {
-    "pin-9": { x: 130, y: 35 },
-    "pin-8": { x: 120, y: 35 },
-    "pin-7": { x: 110, y: 35 },
-    "pin-6": { x: 100, y: 35 },
-    "pin-4": { x: 80, y: 35 },
-    "pin-3": { x: 70, y: 35 },
-    "pin-2": { x: 60, y: 35 },
-    "pin-12": { x: 153, y: 35 },
-    "pin-11": { x: 165, y: 35 },
-    "gnd-top": { x: 175, y: 35 },
+    "pin-13": { x: 217, y: 89 },
+    "pin-12": { x: 226, y: 89 },
+    "pin-11": { x: 235, y: 89 },
+    "pin-10": { x: 244, y: 89 },
+    "pin-9": { x: 253, y: 89 },
+    "pin-8": { x: 263, y: 89 },
+    "pin-7": { x: 272, y: 89 },
+    "pin-6": { x: 281, y: 89 },
+    "pin-5": { x: 290, y: 89 },
+    "pin-4": { x: 300, y: 89 },
+    "pin-3": { x: 309, y: 89 },
+    "pin-2": { x: 318, y: 89 },
+    "gnd-top": { x: 208, y: 89 },
     
-    "pin-a0": { x: 162, y: 145 },
-    "pin-a1": { x: 170, y: 145 },
-    "5v-bottom": { x: 124, y: 145 },
-    "gnd-bottom1": { x: 139, y: 145 }
+    "5v-bottom": { x: 235, y: 251 },
+    "gnd-bottom1": { x: 246, y: 251 },
+    "gnd-bottom2": { x: 256, y: 251 },
+    "pin-a0": { x: 278, y: 251 },
+    "pin-a1": { x: 289, y: 251 }
 };
 
 // --- FLOATING DOCK LOGIC & RESIZE/DRAG ENGINE ---
@@ -638,21 +642,6 @@ function renderWiresAndComponents(lesson) {
     dom.componentsOverlay.innerHTML = '';
     dom.wiresLayer.innerHTML = '';
     
-    // 1. Draw organic curved SVG wires
-    const wires = lesson.wires || [];
-    wires.forEach(wire => {
-        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-        path.setAttribute("d", wire.d);
-        path.setAttribute("class", "wire-line");
-        path.setAttribute("stroke", wire.color);
-        path.setAttribute("stroke-width", "3.5");
-        
-        // Add subtle neon glow
-        path.style.filter = `drop-shadow(0 0 2px ${wire.color}) drop-shadow(0 2px 3px rgba(0,0,0,0.5))`;
-        dom.wiresLayer.appendChild(path);
-    });
-    
-    // 2. Append interactive component nodes
     const comps = lesson.components || [];
     comps.forEach(comp => {
         const div = document.createElement('div');
@@ -728,12 +717,55 @@ function renderWiresAndComponents(lesson) {
             `;
         }
         
+        if (comp.ports) {
+            content += `<div style="display: flex; gap: 12px; margin-top: 8px; width: 100%; justify-content: center;">`;
+            comp.ports.forEach(port => {
+                content += `<div id="${comp.id}-${port}" style="width: 8px; height: 8px; border-radius: 50%; background: #0f172a; border: 1px solid #334155; box-shadow: inset 0 1px 2px rgba(0,0,0,0.8);"></div>`;
+            });
+            content += `</div>`;
+        }
+        
         div.innerHTML = content;
         dom.componentsOverlay.appendChild(div);
         
-        // Bind event listeners for user interaction
         setupComponentListeners(comp);
     });
+    
+    setTimeout(() => {
+        const wires = lesson.wires || [];
+        const canvasRect = dom.wiresLayer.getBoundingClientRect();
+        
+        wires.forEach(wire => {
+            const startPin = pinCoordinates[wire.from];
+            const endEl = document.getElementById(wire.to);
+            if (!startPin || !endEl) return;
+            
+            const endRect = endEl.getBoundingClientRect();
+            const endX = endRect.left - canvasRect.left + endRect.width / 2;
+            const endY = endRect.top - canvasRect.top + endRect.height / 2;
+            
+            const startX = startPin.x;
+            const startY = startPin.y;
+            
+            let cp1y = startY - 40; 
+            if (startY > 170) cp1y = startY + 40; 
+            
+            let cp2y = endY + 40;
+            if (endY > startY) cp2y = endY - 40;
+            
+            const d = `M ${startX},${startY} C ${startX},${cp1y} ${endX},${cp2y} ${endX},${endY}`;
+            
+            const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+            path.setAttribute("d", d);
+            path.setAttribute("class", "wire-line");
+            path.setAttribute("stroke", wire.color);
+            path.setAttribute("stroke-width", "4");
+            path.style.fill = "none";
+            path.style.strokeLinecap = "round";
+            path.style.filter = `drop-shadow(0 0 3px ${wire.color}) drop-shadow(0 3px 5px rgba(0,0,0,0.5))`;
+            dom.wiresLayer.appendChild(path);
+        });
+    }, 50);
 }
 
 // Set up event interactions
