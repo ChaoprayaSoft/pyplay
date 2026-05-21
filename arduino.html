@@ -690,8 +690,9 @@
             </div>
         </div>
         <div class="dock-body workbench-body" id="workbench-body">
-            <!-- Visual Arduino Uno Board SVG -->
-            <svg class="uno-board" width="230" height="170" viewBox="0 0 300 220" xmlns="http://www.w3.org/2000/svg">
+            <div class="circuit-canvas" style="position: relative; width: 480px; height: 340px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                <!-- Visual Arduino Uno Board SVG -->
+                <svg class="uno-board" width="230" height="170" viewBox="0 0 300 220" xmlns="http://www.w3.org/2000/svg">
                 <!-- PCB Blue Board -->
                 <rect x="0" y="0" width="300" height="220" rx="12" fill="#1e3a8a" stroke="#1d4ed8" stroke-width="3" />
                 
@@ -778,6 +779,7 @@
             <!-- Components Overlay: Renders visual components matching the lesson -->
             <div class="components-overlay" id="components-overlay">
                 <!-- Elements will be appended dynamically by arduino_app.js -->
+            </div>
             </div>
         </div>
     </div>
