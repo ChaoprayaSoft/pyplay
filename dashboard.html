@@ -315,8 +315,14 @@
             }
 
             // Sync user data to ensure progress is accurate
-            await PyPlayAuth.syncFromSheets();
-
+            if (PyPlayAuth.user && PyPlayAuth.scriptUrl) {
+                try {
+                    await PyPlayAuth.syncFromSheets();
+                } catch (e) {
+                    console.warn("Init sync failed, using local progress.", e);
+                }
+            }
+            
             const user = PyPlayAuth.user;
             
             // Populate profile data

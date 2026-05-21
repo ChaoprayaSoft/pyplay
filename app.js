@@ -176,7 +176,11 @@ async function init() {
     
     // SYNC FIRST: Pull latest progress from Google Sheets before reading progress
     if (typeof PyPlayAuth !== 'undefined' && PyPlayAuth.user && PyPlayAuth.scriptUrl) {
-        await PyPlayAuth.syncFromSheets();
+        try {
+            await PyPlayAuth.syncFromSheets();
+        } catch (e) {
+            console.warn("Init sync failed, using local progress.", e);
+        }
     }
     
     // Restore progress/resume from last uncompleted lesson
