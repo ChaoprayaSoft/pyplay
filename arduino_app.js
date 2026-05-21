@@ -1052,6 +1052,7 @@ async function startSimulation() {
             INPUT_PULLUP: 2,
             
             isSimulationRunning: () => isSimulationRunning,
+            checkValidation: () => checkLessonCompletion(),
             
             pinMode: (pin, mode) => {
                 simulationState.pinModes[pin] = mode;
@@ -1274,6 +1275,10 @@ async function startSimulation() {
                 const r1 = document.getElementById("lcd-row-1");
                 if (r0) r0.textContent = simulationState.lcdContent[0];
                 if (r1) r1.textContent = simulationState.lcdContent[1];
+            },
+
+            checkValidation: () => {
+                checkLessonCompletion();
             }
         };
         
@@ -1294,10 +1299,12 @@ async function startSimulation() {
                 
                 // Initialize circuit
                 await setup();
+                sandbox.checkValidation();
                 
                 // Run loops continuously until simulation stops
                 while (sandbox.isSimulationRunning()) {
                     await loop();
+                    sandbox.checkValidation();
                     await sandbox.delay(30); // Prevent CPU tight locks
                 }
             }
@@ -1335,6 +1342,9 @@ function stopSimulation() {
 
 // --- TASK COMPLETION VALIDATOR ---
 function checkLessonCompletion() {
+    // Prevent continuous re-triggering if already passed
+    if (!dom.successMessage.classList.contains('hidden')) return;
+
     const lesson = lessons[currentLessonIndex];
     
     const passed = lesson.validate(simulationState, simulationState.serialHistory);
