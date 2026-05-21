@@ -59,7 +59,7 @@ const lessons = [
             { from: "gnd-top", to: "pushbutton-box-gnd", color: "#64748b" }
         ],
         components: [
-            { id: "pushbutton-box", type: "button", label: "Pushbutton", style: "top: 10px; left: 260px;", pin: 2, ports: ["gnd", "sig"] }
+            { id: "pushbutton-box", type: "button", label: "Pushbutton", style: "top: 10px; left: 10px;", pin: 2, ports: ["gnd", "sig"] }
         ],
         validate: (state) => {
             // Evaluates interaction! The validator will check if the user toggled the button 
