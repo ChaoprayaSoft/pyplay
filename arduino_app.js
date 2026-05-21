@@ -1008,30 +1008,46 @@ function transpileArduinoCode(cppCode) {
     code = code.replace(/Serial\.println\s*\(\s*([^)]*)\s*\)/g, 'await Serial_println($1)');
     code = code.replace(/Serial\.print\s*\(\s*([^)]*)\s*\)/g, 'await Serial_print($1)');
     
-    // 8. Extract setup() and loop() function bodies
-    const setupRegex = /void\s+setup\s*\(\s*\)\s*\{([\s\S]*?)\}/;
-    const loopRegex = /void\s+loop\s*\(\s*\)\s*\{([\s\S]*?)\}/;
+    // 8. Extract setup() and loop() function bodies using brace matching
+    function extractFunctionBody(src, funcName) {
+        const regex = new RegExp(\`void\\\\s+\${funcName}\\\\s*\\\\(\\\\s*\\\\)\\\\s*\\\\{\`);
+        const match = regex.exec(src);
+        if (!match) return null;
+        
+        const startIndex = match.index + match[0].length;
+        let braceCount = 1;
+        let endIndex = startIndex;
+        
+        for (let i = startIndex; i < src.length; i++) {
+            if (src[i] === '{') braceCount++;
+            else if (src[i] === '}') braceCount--;
+            
+            if (braceCount === 0) {
+                endIndex = i;
+                break;
+            }
+        }
+        
+        return {
+            body: src.substring(startIndex, endIndex),
+            fullMatch: src.substring(match.index, endIndex + 1)
+        };
+    }
     
-    let setupBody = "";
-    let loopBody = "";
-    
-    const setupMatch = setupRegex.exec(code);
-    if (setupMatch) {
-        setupBody = setupMatch[1];
-    } else {
+    const setupExtract = extractFunctionBody(code, "setup");
+    if (!setupExtract) {
         throw new Error("Missing void setup() function.");
     }
+    const setupBody = setupExtract.body;
     
-    const loopMatch = loopRegex.exec(code);
-    if (loopMatch) {
-        loopBody = loopMatch[1];
-    }
+    const loopExtract = extractFunctionBody(code, "loop");
+    const loopBody = loopExtract ? loopExtract.body : "";
     
     // Clean code outside setup/loop (globals)
-    let globalsBody = code
-        .replace(setupRegex, '')
-        .replace(loopRegex, '')
-        .trim();
+    let globalsBody = code;
+    if (setupExtract) globalsBody = globalsBody.replace(setupExtract.fullMatch, '');
+    if (loopExtract) globalsBody = globalsBody.replace(loopExtract.fullMatch, '');
+    globalsBody = globalsBody.trim();
         
     return {
         globals: globalsBody,
