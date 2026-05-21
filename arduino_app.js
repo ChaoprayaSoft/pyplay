@@ -972,8 +972,13 @@ function stopBuzzerTone() {
 
 // --- C++ TO JAVASCRIPT TRANSPILER ---
 function transpileArduinoCode(cppCode) {
+    // 0. Auto-heal beginner copy-paste mistakes (nested setup/loop)
+    // If they pasted a whole loop inside the existing loop boilerplate:
+    let code = cppCode.replace(/void\s+loop\s*\(\s*\)\s*\{[\s\S]*?void\s+loop\s*\(\s*\)\s*\{/g, "void loop() {");
+    code = code.replace(/void\s+setup\s*\(\s*\)\s*\{[\s\S]*?void\s+setup\s*\(\s*\)\s*\{/g, "void setup() {");
+
     // 1. Strip comments
-    let code = cppCode.replace(/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, '$1');
+    code = code.replace(/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, '$1');
     
     // 2. Extract and replace Servo global variables
     let servoInstances = [];
@@ -1026,6 +1031,10 @@ function transpileArduinoCode(cppCode) {
                 endIndex = i;
                 break;
             }
+        }
+        
+        if (braceCount !== 0) {
+            throw new Error(`Syntax Error: Mismatched braces in ${funcName}() function. Make sure every '{' has a matching '}'.`);
         }
         
         return {

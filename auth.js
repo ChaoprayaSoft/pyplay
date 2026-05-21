@@ -145,6 +145,18 @@ const PyPlayAuth = {
             const data = JSON.parse(text);
 
             if (data && data.email) {
+                // Safely parse progress
+                let parsedProgress = this.user.progress;
+                try {
+                    if (typeof data.progress === 'string' && data.progress.trim()) {
+                        parsedProgress = JSON.parse(data.progress);
+                    } else if (typeof data.progress === 'object' && data.progress) {
+                        parsedProgress = data.progress;
+                    }
+                } catch (e) {
+                    console.warn("Failed to parse progress from Sheets:", e);
+                }
+
                 // Update local storage with fresh sheets data
                 this.saveLocalUser({
                     ...this.user,
@@ -152,7 +164,7 @@ const PyPlayAuth = {
                     avatar: data.avatar || this.user.avatar,
                     color: data.color || this.user.color,
                     role: data.role || this.user.role,
-                    progress: typeof data.progress === 'string' ? JSON.parse(data.progress) : (data.progress || this.user.progress)
+                    progress: parsedProgress
                 });
                 this.showToast("Progress synced! ☁️", true);
                 return data;
@@ -163,7 +175,7 @@ const PyPlayAuth = {
         } catch (e) {
             console.warn("Cloud sync skipped (offline or script unreachable):", e.message);
             this.hideToast();
-            return null;
+            throw e; // Rethrow to let login() handle the failure appropriately
         }
     },
 
@@ -288,13 +300,24 @@ const PyPlayAuth = {
                 const sheetsData = await this.syncFromSheets();
                 if (sheetsData && sheetsData.email) {
                     // Existing user found! Restore their profile and progress
+                    let restoredProgress = userData.progress;
+                    try {
+                        if (typeof sheetsData.progress === 'string' && sheetsData.progress.trim()) {
+                            restoredProgress = JSON.parse(sheetsData.progress);
+                        } else if (typeof sheetsData.progress === 'object' && sheetsData.progress) {
+                            restoredProgress = sheetsData.progress;
+                        }
+                    } catch (e) {
+                        console.warn("Could not parse sheetsData progress", e);
+                    }
+                    
                     userData = {
                         email: sheetsData.email,
                         name: sheetsData.name || name,
                         avatar: sheetsData.avatar || randomAvatar,
                         color: sheetsData.color || randomColor,
                         role: sheetsData.role || role,
-                        progress: typeof sheetsData.progress === 'string' ? JSON.parse(sheetsData.progress) : (sheetsData.progress || userData.progress),
+                        progress: restoredProgress,
                         lastUpdated: sheetsData.lastUpdated || new Date().toISOString()
                     };
                 } else {
@@ -302,9 +325,10 @@ const PyPlayAuth = {
                     await this.pushUserToSheets(userData);
                 }
             } catch (err) {
-                console.warn("Could not sync with Google Sheets during login, falling back to local initial setup.", err);
-                // Fallback to pushing newly created user
-                await this.pushUserToSheets(userData);
+                console.warn("Could not sync with Google Sheets during login.", err);
+                // DO NOT push newly created user if sync failed due to network/CORS error,
+                // as that would overwrite their cloud data with blank progress.
+                // Just log them in locally.
             }
         } else {
             // Push locally if no scriptUrl is set yet
