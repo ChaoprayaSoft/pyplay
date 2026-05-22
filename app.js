@@ -185,7 +185,8 @@ async function init() {
     
     // Restore progress/resume from last uncompleted lesson
     if (typeof PyPlayAuth !== 'undefined' && PyPlayAuth.user) {
-        const pyProgress = PyPlayAuth.user.progress.python || { completed_lessons: [], completed: false, highest_lesson: 0 };
+        const progressObj = PyPlayAuth.user.progress || {};
+        const pyProgress = progressObj.python || { completed_lessons: [], completed: false, highest_lesson: 0 };
         const completed = pyProgress.completed_lessons || [];
         
         // Find highest lesson unlocked
@@ -248,7 +249,8 @@ function renderProgressSteps() {
     // Retrieve highest lesson index from user progress
     let highest = highestLessonIndex;
     if (typeof PyPlayAuth !== 'undefined' && PyPlayAuth.user) {
-        const pyProgress = PyPlayAuth.user.progress.python || { completed_lessons: [], completed: false, highest_lesson: 0 };
+        const progressObj = PyPlayAuth.user.progress || {};
+        const pyProgress = progressObj.python || { completed_lessons: [], completed: false, highest_lesson: 0 };
         const completed = pyProgress.completed_lessons || [];
         if (pyProgress.highest_lesson !== undefined) {
             highest = pyProgress.highest_lesson;
@@ -301,9 +303,10 @@ function loadLesson(index) {
     dom.prevBtn.disabled = index === 0;
     
     // Enable "Next" button if lesson has already been completed/passed in the past
-    const pyProgress = (typeof PyPlayAuth !== 'undefined' && PyPlayAuth.user)
-        ? (PyPlayAuth.user.progress.python || { completed_lessons: [], completed: false })
-        : { completed_lessons: [], completed: false };
+    const progressObj = (typeof PyPlayAuth !== 'undefined' && PyPlayAuth.user) 
+        ? (PyPlayAuth.user.progress || {}) 
+        : {};
+    const pyProgress = progressObj.python || { completed_lessons: [], completed: false };
     const completed = pyProgress.completed_lessons || [];
     
     if (completed.includes(index) || index < highestLessonIndex) {

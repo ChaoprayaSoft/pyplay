@@ -214,7 +214,8 @@ async function init() {
         if (!PyPlayAuth.user.progress) {
             PyPlayAuth.user.progress = {};
         }
-        const pyProgress = PyPlayAuth.user.progress.opencv || { completed_lessons: [], completed: false, highest_lesson: 0 };
+        const progressObj = PyPlayAuth.user.progress || {};
+        const pyProgress = progressObj.opencv || { completed_lessons: [], completed: false, highest_lesson: 0 };
         const completed = pyProgress.completed_lessons || [];
 
         // Find highest lesson unlocked
@@ -460,10 +461,11 @@ function renderProgressSteps() {
     // Retrieve highest lesson index from user progress
     let highest = highestLessonIndex;
     if (typeof PyPlayAuth !== 'undefined' && PyPlayAuth.user) {
-        const pyProgress = PyPlayAuth.user.progress.opencv || { completed_lessons: [], completed: false, highest_lesson: 0 };
-        const completed = pyProgress.completed_lessons || [];
-        if (pyProgress.highest_lesson !== undefined) {
-            highest = pyProgress.highest_lesson;
+        const progressObj = PyPlayAuth.user.progress || {};
+        const cvProgress = progressObj.opencv || { completed_lessons: [], completed: false, highest_lesson: 0 };
+        const completed = cvProgress.completed_lessons || [];
+        if (cvProgress.highest_lesson !== undefined) {
+            highest = cvProgress.highest_lesson;
         } else {
             highest = completed.length > 0 ? Math.max(...completed) + 1 : 0;
         }
@@ -528,10 +530,11 @@ function loadLesson(index) {
     dom.prevBtn.disabled = index === 0;
 
     // Enable "Next" button if lesson has already been completed/passed in the past
-    const pyProgress = (typeof PyPlayAuth !== 'undefined' && PyPlayAuth.user)
-        ? (PyPlayAuth.user.progress.opencv || { completed_lessons: [], completed: false })
-        : { completed_lessons: [], completed: false };
-    const completed = pyProgress.completed_lessons || [];
+    const progressObj = (typeof PyPlayAuth !== 'undefined' && PyPlayAuth.user) 
+        ? (PyPlayAuth.user.progress || {}) 
+        : {};
+    const cvProgress = progressObj.opencv || { completed_lessons: [], completed: false };
+    const completed = cvProgress.completed_lessons || [];
 
     if (completed.includes(index) || index < highestLessonIndex) {
         dom.nextBtn.disabled = false;

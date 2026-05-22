@@ -539,7 +539,8 @@ async function init() {
     // Restore Progress
     if (typeof PyPlayAuth !== 'undefined' && PyPlayAuth.user) {
 
-        const ardProgress = PyPlayAuth.user.progress.arduino || { completed_lessons: [], completed: false, highest_lesson: 0 };
+        const progressObj = PyPlayAuth.user.progress || {};
+        const ardProgress = progressObj.arduino || { completed_lessons: [], completed: false, highest_lesson: 0 };
         const completed = ardProgress.completed_lessons || [];
         
         if (ardProgress.highest_lesson !== undefined) {
@@ -593,9 +594,10 @@ function loadLesson(index) {
     // Enable/disable buttons
     dom.prevBtn.disabled = index === 0;
     
-    const ardProgress = (typeof PyPlayAuth !== 'undefined' && PyPlayAuth.user)
-        ? (PyPlayAuth.user.progress.arduino || { completed_lessons: [], completed: false })
-        : { completed_lessons: [], completed: false };
+    const progressObj = (typeof PyPlayAuth !== 'undefined' && PyPlayAuth.user) 
+        ? (PyPlayAuth.user.progress || {}) 
+        : {};
+    const ardProgress = progressObj.arduino || { completed_lessons: [], completed: false };
     const completed = ardProgress.completed_lessons || [];
     
     if (completed.includes(index) || index < highestLessonIndex) {
@@ -613,7 +615,8 @@ function renderProgressSteps() {
     
     let highest = highestLessonIndex;
     if (typeof PyPlayAuth !== 'undefined' && PyPlayAuth.user) {
-        const ardProgress = PyPlayAuth.user.progress.arduino || { completed_lessons: [], completed: false, highest_lesson: 0 };
+        const progressObj = PyPlayAuth.user.progress || {};
+        const ardProgress = progressObj.arduino || { completed_lessons: [], completed: false, highest_lesson: 0 };
         const completed = ardProgress.completed_lessons || [];
         highest = ardProgress.highest_lesson !== undefined ? ardProgress.highest_lesson : (completed.length > 0 ? Math.max(...completed) + 1 : 0);
         highest = Math.min(highest, lessons.length - 1);

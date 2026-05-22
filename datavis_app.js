@@ -390,7 +390,8 @@ function renderProgressSteps() {
     
     let highest = highestLessonIndex;
     if (typeof PyPlayAuth !== 'undefined' && PyPlayAuth.user) {
-        const dvProgress = PyPlayAuth.user.progress.datavis || { completed_lessons: [], completed: false, highest_lesson: 0 };
+        const progressObj = PyPlayAuth.user.progress || {};
+        const dvProgress = progressObj.datavis || { completed_lessons: [], completed: false, highest_lesson: 0 };
         const completed = dvProgress.completed_lessons || [];
         highest = dvProgress.highest_lesson !== undefined ? dvProgress.highest_lesson : (completed.length > 0 ? Math.max(...completed) + 1 : 0);
         highest = Math.min(highest, lessons.length - 1);

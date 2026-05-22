@@ -111,7 +111,14 @@ const PyPlayAuth = {
         if (stored) {
             this.user = JSON.parse(stored);
             if (typeof this.user.progress === 'string') {
-                this.user.progress = JSON.parse(this.user.progress);
+                try {
+                    this.user.progress = JSON.parse(this.user.progress);
+                } catch(e) {
+                    this.user.progress = {};
+                }
+            }
+            if (!this.user.progress || typeof this.user.progress !== 'object') {
+                this.user.progress = {};
             }
         }
     },
@@ -129,7 +136,11 @@ const PyPlayAuth = {
         this.showToast("Syncing progress from cloud...");
 
         try {
-            const response = await fetch(`${this.scriptUrl}?email=${encodeURIComponent(this.user.email)}`);
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 5000);
+            const response = await fetch(`${this.scriptUrl}?email=${encodeURIComponent(this.user.email)}`, { signal: controller.signal });
+            clearTimeout(timeoutId);
+
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             // Guard against Google Apps Script returning an HTML error page instead of JSON
             const contentType = response.headers.get('content-type') || '';
@@ -146,7 +157,7 @@ const PyPlayAuth = {
 
             if (data && data.email) {
                 // Safely parse progress
-                let parsedProgress = this.user.progress;
+                let parsedProgress = this.user.progress || {};
                 try {
                     if (typeof data.progress === 'string' && data.progress.trim()) {
                         parsedProgress = JSON.parse(data.progress);
@@ -300,7 +311,7 @@ const PyPlayAuth = {
                 const sheetsData = await this.syncFromSheets();
                 if (sheetsData && sheetsData.email) {
                     // Existing user found! Restore their profile and progress
-                    let restoredProgress = userData.progress;
+                    let restoredProgress = userData.progress || {};
                     try {
                         if (typeof sheetsData.progress === 'string' && sheetsData.progress.trim()) {
                             restoredProgress = JSON.parse(sheetsData.progress);
@@ -366,6 +377,10 @@ const PyPlayAuth = {
 
     async updateProgress(courseId, lessonIndex, isCompleted) {
         if (!this.user) return;
+
+        if (!this.user.progress) {
+            this.user.progress = {};
+        }
 
         if (!this.user.progress[courseId]) {
             this.user.progress[courseId] = { completed_lessons: [], completed: false, highest_lesson: 0 };
