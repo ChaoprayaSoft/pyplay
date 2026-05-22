@@ -537,63 +537,58 @@ async function init() {
             matchBrackets: true
         });
         
-        // Load lesson 0 immediately so the user sees content right away (not "Loading...")
-        // We'll reload with the correct resume index after syncing progress below.
-        loadLesson(0);
-
-        // SYNC: Pull latest progress from Google Sheets
-        if (typeof PyPlayAuth !== 'undefined' && PyPlayAuth.user && PyPlayAuth.scriptUrl) {
-            try {
-                await PyPlayAuth.syncFromSheets();
-            } catch (e) {
-                console.warn("Init sync failed, using local progress.", e);
-            }
-        }
-        
-        // Restore Progress
-        if (typeof PyPlayAuth !== 'undefined' && PyPlayAuth.user) {
-            const progressObj = PyPlayAuth.user.progress || {};
-            const ardProgress = progressObj.arduino || { completed_lessons: [], completed: false, highest_lesson: 0 };
-            let completed = ardProgress.completed_lessons;
-            if (!Array.isArray(completed)) {
-                completed = [];
-            }
-            
-            if (ardProgress.highest_lesson !== undefined && !isNaN(ardProgress.highest_lesson)) {
-                highestLessonIndex = Number(ardProgress.highest_lesson);
-            } else {
-                highestLessonIndex = completed.length > 0 ? Math.max(...completed) + 1 : 0;
-            }
-            
-            if (isNaN(highestLessonIndex)) {
-                highestLessonIndex = 0;
-            }
-            highestLessonIndex = Math.min(highestLessonIndex, lessons.length - 1);
-            
-            let resumeIndex = 0;
-            for (let i = 0; i < lessons.length; i++) {
-                if (!completed.includes(i)) {
-                    resumeIndex = i;
-                    break;
+        // --- Step 1: Restore progress from LOCAL STORAGE immediately (no network) ---
+        function restoreProgressAndLoad() {
+            if (typeof PyPlayAuth !== 'undefined' && PyPlayAuth.user) {
+                const progressObj = PyPlayAuth.user.progress || {};
+                const ardProgress = progressObj.arduino || { completed_lessons: [], completed: false, highest_lesson: 0 };
+                let completed = ardProgress.completed_lessons;
+                if (!Array.isArray(completed)) {
+                    completed = [];
                 }
+                
+                if (ardProgress.highest_lesson !== undefined && !isNaN(ardProgress.highest_lesson)) {
+                    highestLessonIndex = Number(ardProgress.highest_lesson);
+                } else {
+                    highestLessonIndex = completed.length > 0 ? Math.max(...completed) + 1 : 0;
+                }
+                if (isNaN(highestLessonIndex)) highestLessonIndex = 0;
+                highestLessonIndex = Math.min(highestLessonIndex, lessons.length - 1);
+                
+                let resumeIndex = 0;
+                for (let i = 0; i < lessons.length; i++) {
+                    if (!completed.includes(i)) { resumeIndex = i; break; }
+                }
+                if (completed.length === lessons.length) {
+                    resumeIndex = lessons.length - 1;
+                    highestLessonIndex = lessons.length - 1;
+                }
+                currentLessonIndex = resumeIndex;
             }
-            
-            if (completed.length === lessons.length) {
-                resumeIndex = lessons.length - 1;
-                highestLessonIndex = lessons.length - 1;
-            }
-            currentLessonIndex = resumeIndex;
+            loadLesson(currentLessonIndex);
         }
         
-        // Reload with correct resume index after progress is restored
-        loadLesson(currentLessonIndex);
+        // Load lesson immediately from local progress
+        restoreProgressAndLoad();
+        
+        // Set up event listeners and docks right away
         setupEventListeners();
         initFloatingDocks();
+
+        // --- Step 2: Sync from Google Sheets in background, then refresh lesson/progress ---
+        if (typeof PyPlayAuth !== 'undefined' && PyPlayAuth.user && PyPlayAuth.scriptUrl) {
+            PyPlayAuth.syncFromSheets().then(() => {
+                restoreProgressAndLoad();
+            }).catch(e => {
+                console.warn("Background sync failed, keeping local progress.", e);
+            });
+        }
+
     } catch (err) {
         console.error("Initialization failed:", err);
         const conceptEl = document.getElementById('lesson-concept') || (dom && dom.lessonConcept);
         if (conceptEl) {
-            conceptEl.innerHTML = `<div class="terminal-error" style="color: #ef4444; background: rgba(239, 68, 68, 0.1); padding: 1rem; border-radius: 8px; border: 1px solid rgba(239, 68, 68, 0.2); font-family: 'Inter', sans-serif;">
+            conceptEl.innerHTML = `<div style="color: #ef4444; background: rgba(239, 68, 68, 0.1); padding: 1rem; border-radius: 8px; border: 1px solid rgba(239, 68, 68, 0.2); font-family: 'Inter', sans-serif;">
                 <strong>⚠️ App Initialization Failed</strong><br>
                 ${err.message || err}<br><br>
                 Please ensure you are connected to the internet (or that CDN resources loaded correctly) and refresh the page.
@@ -601,6 +596,7 @@ async function init() {
         }
     }
 }
+
 
 // --- Load Lesson & Render Elements ---
 function loadLesson(index) {

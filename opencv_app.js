@@ -209,128 +209,97 @@ async function init() {
             matchBrackets: true
         });
 
-        // Load lesson immediately so the user sees content right away (not "Loading...")
-        // We'll reload with the correct resume index after syncing progress below.
-        loadLesson(0);
+        // --- Step 1: Restore progress from LOCAL STORAGE immediately (no network) ---
+        function restoreProgressAndLoad() {
+            if (typeof PyPlayAuth !== 'undefined' && PyPlayAuth.user) {
+                if (!PyPlayAuth.user.progress) {
+                    PyPlayAuth.user.progress = {};
+                }
+                const progressObj = PyPlayAuth.user.progress || {};
+                const pyProgress = progressObj.opencv || { completed_lessons: [], completed: false, highest_lesson: 0 };
+                let completed = pyProgress.completed_lessons;
+                if (!Array.isArray(completed)) {
+                    completed = [];
+                }
 
-        // SYNC: Pull latest progress from Google Sheets
-        if (typeof PyPlayAuth !== 'undefined' && PyPlayAuth.user && PyPlayAuth.scriptUrl) {
-            try {
-                await PyPlayAuth.syncFromSheets();
-            } catch (e) {
-                console.warn("Init sync failed, using local progress.", e);
+                if (pyProgress.highest_lesson !== undefined && pyProgress.highest_lesson !== null) {
+                    const parsedHighest = Number(pyProgress.highest_lesson);
+                    highestLessonIndex = isNaN(parsedHighest) ? 0 : parsedHighest;
+                } else {
+                    highestLessonIndex = completed.length > 0 ? Math.max(...completed) + 1 : 0;
+                }
+                if (isNaN(highestLessonIndex)) highestLessonIndex = 0;
+                highestLessonIndex = Math.min(highestLessonIndex, lessons.length - 1);
+
+                let resumeIndex = 0;
+                for (let i = 0; i < lessons.length; i++) {
+                    if (!completed.includes(i)) { resumeIndex = i; break; }
+                }
+                if (completed.length === lessons.length) {
+                    resumeIndex = lessons.length - 1;
+                    highestLessonIndex = lessons.length - 1;
+                }
+                currentLessonIndex = resumeIndex;
             }
+            loadLesson(currentLessonIndex);
         }
 
-        // Restore progress/resume from last uncompleted lesson
-        if (typeof PyPlayAuth !== 'undefined' && PyPlayAuth.user) {
-            if (!PyPlayAuth.user.progress) {
-                PyPlayAuth.user.progress = {};
-            }
-            const progressObj = PyPlayAuth.user.progress || {};
-            const pyProgress = progressObj.opencv || { completed_lessons: [], completed: false, highest_lesson: 0 };
-            let completed = pyProgress.completed_lessons;
-            if (!Array.isArray(completed)) {
-                completed = [];
-            }
+        // Load lesson from local progress immediately
+        restoreProgressAndLoad();
 
-            // Find highest lesson unlocked
-            if (pyProgress.highest_lesson !== undefined && pyProgress.highest_lesson !== null) {
-                const parsedHighest = Number(pyProgress.highest_lesson);
-                highestLessonIndex = isNaN(parsedHighest) ? 0 : parsedHighest;
-            } else {
-                // Fallback to max completed lesson index + 1 or 0
-                highestLessonIndex = completed.length > 0 ? Math.max(...completed) + 1 : 0;
-            }
+        // Set up event listeners right away so buttons work
+        setupEventListeners();
 
-            if (isNaN(highestLessonIndex)) {
-                highestLessonIndex = 0;
-            }
-            // Cap highestLessonIndex to lessons.length - 1
-            highestLessonIndex = Math.min(highestLessonIndex, lessons.length - 1);
-
-            // Find first lesson index not in completed lessons list
-            let resumeIndex = 0;
-            for (let i = 0; i < lessons.length; i++) {
-                if (!completed.includes(i)) {
-                    resumeIndex = i;
-                    break;
-                }
-            }
-            // If all are completed, set to last lesson
-            if (completed.length === lessons.length) {
-                resumeIndex = lessons.length - 1;
-                highestLessonIndex = lessons.length - 1;
-            }
-            currentLessonIndex = resumeIndex;
-        }
-
-        // Reload lesson with correct resume index after progress is restored
-        loadLesson(currentLessonIndex);
-
-        // Load Pyodide
-        try {
-            dom.outputConsole.textContent = "Initializing Python Engine (Pyodide)...\nThis may take a moment on first load.";
-            pyodideInstance = await loadPyodide({
-                stdout: (text) => appendOutput(text + "\n"),
-                stderr: (text) => appendError(text + "\n")
-            });
-
-            appendOutput("Loading OpenCV WebAssembly library (this may take a few seconds)...\n");
-            await pyodideInstance.loadPackage("opencv-python");
-
-            // Create 'image' folder inside Pyodide's virtual filesystem
+        // --- Step 2: Start Pyodide loading in background ---
+        (async () => {
             try {
-                pyodideInstance.FS.mkdir('image');
-            } catch (e) {
-                console.warn("Folder 'image' already exists or could not be created:", e);
-            }
+                dom.outputConsole.textContent = "Initializing Python Engine (Pyodide)...\nThis may take a moment on first load.";
+                pyodideInstance = await loadPyodide({
+                    stdout: (text) => appendOutput(text + "\n"),
+                    stderr: (text) => appendError(text + "\n")
+                });
 
-            // Fetch and write physical course images dynamically to Pyodide virtual filesystem
-            let courseImages = ["logo.png", "duck.jpg", "test.png"];
-            try {
-                appendOutput("Scanning 'image' folder for course assets...\n");
-                const listResponse = await fetch('image/');
-                if (listResponse.ok) {
-                    const htmlText = await listResponse.text();
-                    const parser = new DOMParser();
-                    const doc = parser.parseFromString(htmlText, 'text/html');
-                    const links = Array.from(doc.querySelectorAll('a'))
-                        .map(a => a.getAttribute('href'))
-                        .map(href => {
-                            try { return decodeURIComponent(href); } catch (e) { return href; }
-                        })
-                        .filter(href => href && /\.(png|jpg|jpeg|bmp)$/i.test(href))
-                        .map(href => href.substring(href.lastIndexOf('/') + 1));
+                appendOutput("Loading OpenCV WebAssembly library (this may take a few seconds)...\n");
+                await pyodideInstance.loadPackage("opencv-python");
 
-                    if (links.length > 0) {
-                        courseImages = [...new Set(links)];
-                    }
-                }
-            } catch (e) {
-                console.warn("Could not dynamically parse image/ directory index, using Fallbacks:", e);
-            }
+                try { pyodideInstance.FS.mkdir('image'); } catch (e) {}
 
-            for (const imgName of courseImages) {
+                let courseImages = ["logo.png", "duck.jpg", "test.png"];
                 try {
-                    appendOutput(`Preloading course image: ${imgName}...\n`);
-                    const imgResponse = await fetch(`image/${imgName}`);
-                    if (imgResponse.ok) {
-                        const arrayBuffer = await imgResponse.arrayBuffer();
-                        const uint8Arr = new Uint8Array(arrayBuffer);
-
-                        // Write to both root and image/ folder so both paths resolve!
-                        pyodideInstance.FS.writeFile(imgName, uint8Arr);
-                        pyodideInstance.FS.writeFile(`image/${imgName}`, uint8Arr);
+                    appendOutput("Scanning 'image' folder for course assets...\n");
+                    const listResponse = await fetch('image/');
+                    if (listResponse.ok) {
+                        const htmlText = await listResponse.text();
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(htmlText, 'text/html');
+                        const links = Array.from(doc.querySelectorAll('a'))
+                            .map(a => a.getAttribute('href'))
+                            .map(href => { try { return decodeURIComponent(href); } catch (e) { return href; } })
+                            .filter(href => href && /\.(png|jpg|jpeg|bmp)$/i.test(href))
+                            .map(href => href.substring(href.lastIndexOf('/') + 1));
+                        if (links.length > 0) courseImages = [...new Set(links)];
                     }
                 } catch (e) {
-                    console.warn(`Could not preload image asset ${imgName} into Pyodide FS:`, e);
+                    console.warn("Could not dynamically parse image/ directory index, using Fallbacks:", e);
                 }
-            }
-            appendOutput("All dynamic image assets loaded successfully!\n");
 
-            // Inject synthetic OpenCV environment overrides
-            await pyodideInstance.runPythonAsync(`
+                for (const imgName of courseImages) {
+                    try {
+                        appendOutput(`Preloading course image: ${imgName}...\n`);
+                        const imgResponse = await fetch(`image/${imgName}`);
+                        if (imgResponse.ok) {
+                            const arrayBuffer = await imgResponse.arrayBuffer();
+                            const uint8Arr = new Uint8Array(arrayBuffer);
+                            pyodideInstance.FS.writeFile(imgName, uint8Arr);
+                            pyodideInstance.FS.writeFile(`image/${imgName}`, uint8Arr);
+                        }
+                    } catch (e) {
+                        console.warn(`Could not preload image asset ${imgName} into Pyodide FS:`, e);
+                    }
+                }
+                appendOutput("All dynamic image assets loaded successfully!\n");
+
+                await pyodideInstance.runPythonAsync(`
 import sys
 import types
 
@@ -339,43 +308,29 @@ try:
     import numpy as np
     from js import Uint8Array, Blob, URL
     
-    # 1. Custom mock image loader returning standard shape/colored gradients
     original_imread = cv2.imread
     def patch_imread(filename, flags=1):
         try:
-            # Try to read natively if file preloaded in virtual filesystem
             mat = original_imread(filename, flags)
             if mat is not None:
                 return mat
         except:
             pass
-            
-        # Mock fallback
         img = np.zeros((400, 400, 3), dtype=np.uint8)
         for y in range(400):
             for x in range(400):
-                img[y, x] = [
-                    int((x / 400.0) * 255),  # B
-                    int((y / 400.0) * 255),  # G
-                    150                      # R
-                ]
-        # Overlays
+                img[y, x] = [int((x / 400.0) * 255), int((y / 400.0) * 255), 150]
         cv2.circle(img, (200, 200), 80, (255, 255, 255), -1)
         cv2.putText(img, "PyPlay Live", (110, 210), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 0), 2)
         return img
         
-    # 2. Custom live-canvas preview bridge
     def patch_imshow(winname, mat):
         try:
-            # Display image in standard BGR color space (default OpenCV behavior).
-            # cv2.imencode natively expects standard BGR format and compiles it to standard RGB PNG
-            # bytes, so passing the matrix directly provides perfect color accuracy in the browser.
             success, encoded_img = cv2.imencode('.png', mat)
             if success:
                 arr = Uint8Array.new(encoded_img.tobytes())
                 blob = Blob.new([arr], type="image/png")
                 url = URL.createObjectURL(blob)
-                
                 from js import updateCanvasPreview
                 updateCanvasPreview(winname, url)
         except Exception as e:
@@ -384,7 +339,6 @@ try:
     cv2.imread = patch_imread
     cv2.imshow = patch_imshow
     
-    # 3. Bulletproof Video Capture Mocks
     class MockVideoCapture:
         def __init__(self, *args, **kwargs): pass
         def isOpened(self): return True
@@ -392,28 +346,18 @@ try:
         def release(self): pass
     cv2.VideoCapture = MockVideoCapture
     
-    # 4. Bulletproof contrib, deep learning, and advanced algorithm mocks
     if not hasattr(cv2, 'Stitcher_create'):
-        class MockStitcher: pass
-        cv2.Stitcher_create = lambda: MockStitcher()
-        
+        cv2.Stitcher_create = lambda: type('MockStitcher', (), {})()
     if not hasattr(cv2, 'createMergeMertens'):
-        class MockMergeMertens: pass
-        cv2.createMergeMertens = lambda: MockMergeMertens()
-        
+        cv2.createMergeMertens = lambda: type('MockMergeMertens', (), {})()
     if not hasattr(cv2, 'TrackerCSRT_create'):
-        class MockTrackerCSRT: pass
-        cv2.TrackerCSRT_create = lambda: MockTrackerCSRT()
-        
+        cv2.TrackerCSRT_create = lambda: type('MockTrackerCSRT', (), {})()
     if not hasattr(cv2, 'CascadeClassifier'):
-        class MockCascadeClassifier: pass
-        cv2.CascadeClassifier = MockCascadeClassifier
-        
+        cv2.CascadeClassifier = type('MockCascadeClassifier', (), {})
     if not hasattr(cv2, 'dnn'):
         class MockDNN:
             def readNetFromTensorflow(self, *args): return None
-            def blobFromImage(self, img, *args):
-                return np.zeros((1, 3, 224, 224))
+            def blobFromImage(self, img, *args): return np.zeros((1, 3, 224, 224))
         cv2.dnn = MockDNN()
     else:
         if not hasattr(cv2.dnn, 'readNetFromTensorflow'):
@@ -424,16 +368,35 @@ except Exception as e:
     print("Error initializing OpenCV sandbox: " + str(e))
         `);
 
-        pyodideReady = true;
+                pyodideReady = true;
+                dom.outputConsole.textContent = "Python & OpenCV Engine Ready! 📸🐍\n\nYou can write real Python code using 'import cv2' and preview your modifications live with cv2.imshow('Title', image)!\n\n";
+                dom.runBtn.disabled = false;
+            } catch (err) {
+                dom.outputConsole.innerHTML = `<span class="terminal-error">Failed to load Python Engine. Please check your internet connection.</span>`;
+                console.error("Pyodide load error:", err);
+            }
+        })();
 
-        dom.outputConsole.textContent = "Python & OpenCV Engine Ready! 📸🐍\n\nYou can write real Python code using 'import cv2' and preview your modifications live with cv2.imshow('Title', image)!\n\n";
-        dom.runBtn.disabled = false;
+        // --- Step 3: Sync from Google Sheets in background, then refresh lesson/progress ---
+        if (typeof PyPlayAuth !== 'undefined' && PyPlayAuth.user && PyPlayAuth.scriptUrl) {
+            PyPlayAuth.syncFromSheets().then(() => {
+                restoreProgressAndLoad();
+            }).catch(e => {
+                console.warn("Background sync failed, keeping local progress.", e);
+            });
+        }
+
     } catch (err) {
-        dom.outputConsole.innerHTML = `<span class="terminal-error">Failed to load Python Engine. Please check your internet connection.</span>`;
-        console.error(err);
+        console.error("Initialization failed:", err);
+        const conceptEl = document.getElementById('lesson-concept') || (dom && dom.lessonConcept);
+        if (conceptEl) {
+            conceptEl.innerHTML = `<div style="color: #ef4444; background: rgba(239,68,68,0.1); padding: 1rem; border-radius: 8px; border: 1px solid rgba(239,68,68,0.2); font-family: 'Inter', sans-serif;">
+                <strong>⚠️ App Initialization Failed</strong><br>
+                ${err.message || err}<br><br>
+                Please ensure you are connected to the internet and refresh the page.
+            </div>`;
+        }
     }
-
-    setupEventListeners();
 }
 
 // --- Live Preview Helper Functions ---
