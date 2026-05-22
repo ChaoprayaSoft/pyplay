@@ -1060,7 +1060,7 @@ function transpileArduinoCode(cppCode) {
     
     // 8. Extract setup() and loop() function bodies using brace matching
     function extractFunctionBody(src, funcName) {
-        const regex = new RegExp("void\\\\s+" + funcName + "\\\\s*\\\\(\\\\s*\\\\)\\\\s*\\\\{");
+        const regex = new RegExp("void\\s+" + funcName + "\\s*\\(\\s*\\)\\s*\\{");
         const match = regex.exec(src);
         if (!match) return null;
         
