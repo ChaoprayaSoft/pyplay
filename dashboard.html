@@ -227,7 +227,7 @@
                 </div>
 
                 <!-- Stats Grid -->
-                <div class="stats-grid" style="grid-template-columns: repeat(6, 1fr);">
+                <div class="stats-grid" style="grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));">
                     <div class="stat-card">
                         <div style="font-size:0.75rem; font-weight:600; text-transform:uppercase; color:var(--text-muted);">Python Progress</div>
                         <div class="stat-value" id="stat-python-completed">0 / 13</div>
@@ -243,6 +243,10 @@
                     <div class="stat-card">
                         <div style="font-size:0.75rem; font-weight:600; text-transform:uppercase; color:var(--text-muted);">DataVis Progress</div>
                         <div class="stat-value" id="stat-datavis-completed">0 / 10</div>
+                    </div>
+                    <div class="stat-card">
+                        <div style="font-size:0.75rem; font-weight:600; text-transform:uppercase; color:var(--text-muted);">JS Progress</div>
+                        <div class="stat-value" id="stat-javascript-completed">0 / 13</div>
                     </div>
                     <div class="stat-card">
                         <div style="font-size:0.75rem; font-weight:600; text-transform:uppercase; color:var(--text-muted);">Total XP</div>
@@ -286,11 +290,11 @@
                             <div class="badge-desc">Complete all 10 Python Data Visualization lessons</div>
                         </div>
                         
-                        <!-- Extra Locked Badges for upcoming courses -->
-                        <div class="badge-card" id="badge-js">
-                            <div class="badge-icon">🛡️</div>
-                            <div class="badge-title">JS Explorer</div>
-                            <div class="badge-desc">Complete all JavaScript lessons</div>
+                        <!-- JS Badge -->
+                        <div class="badge-card" id="badge-javascript">
+                            <div class="badge-icon">🟨</div>
+                            <div class="badge-title">JS Web Master</div>
+                            <div class="badge-desc">Complete all 13 JavaScript lessons</div>
                         </div>
 
                         <div class="badge-card" id="badge-html">
@@ -392,8 +396,12 @@
             const dvCompletedCount = dvProgress.completed_lessons ? dvProgress.completed_lessons.length : 0;
             document.getElementById('stat-datavis-completed').textContent = `${dvCompletedCount} / 10`;
             
+            const jsProgress = user.progress.javascript || { completed_lessons: [], completed: false };
+            const jsCompletedCount = jsProgress.completed_lessons ? jsProgress.completed_lessons.length : 0;
+            document.getElementById('stat-javascript-completed').textContent = `${jsCompletedCount} / 13`;
+            
             // 100 XP per completed lesson across all courses
-            const totalCompleted = pyCompletedCount + cvCompletedCount + ardCompletedCount + dvCompletedCount;
+            const totalCompleted = pyCompletedCount + cvCompletedCount + ardCompletedCount + dvCompletedCount + jsCompletedCount;
             const xp = totalCompleted * 100;
             document.getElementById('stat-xp').textContent = `${xp} XP`;
 
@@ -413,6 +421,10 @@
             }
             if (dvProgress.completed) {
                 document.getElementById('badge-datavis').classList.add('earned');
+                badgesCount++;
+            }
+            if (jsProgress.completed) {
+                document.getElementById('badge-javascript').classList.add('earned');
                 badgesCount++;
             }
             document.getElementById('stat-badges-earned').textContent = badgesCount;

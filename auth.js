@@ -311,6 +311,10 @@ const PyPlayAuth = {
                 python: {
                     completed_lessons: [],
                     completed: false
+                },
+                javascript: {
+                    completed_lessons: [],
+                    completed: false
                 }
             },
             lastUpdated: new Date().toISOString()
