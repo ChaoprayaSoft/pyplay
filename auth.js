@@ -104,9 +104,20 @@ const PyPlayAuth = {
         this.createLoginModal();
         this.createSettingsModal();
         this.initGoogleAuth();
+        
+        // Auto-logout after 3 hours of inactivity (10800000 ms)
+        setInterval(() => {
+            this.checkSessionTimeout();
+        }, 60000); // Check every minute
+        
+        // Update activity timestamp on user interaction
+        document.addEventListener('click', () => this.updateActivityTime());
+        document.addEventListener('keypress', () => this.updateActivityTime());
     },
 
     loadLocalUser() {
+        if (this.checkSessionTimeout()) return; // If session expired, user is wiped
+        
         const stored = localStorage.getItem('pyplay_user');
         if (stored) {
             this.user = JSON.parse(stored);
@@ -132,7 +143,28 @@ const PyPlayAuth = {
         }
         this.user = userData;
         localStorage.setItem('pyplay_user', JSON.stringify(userData));
+        this.updateActivityTime();
         this.updateHeaderUI();
+    },
+
+    updateActivityTime() {
+        if (this.user) {
+            localStorage.setItem('pyplay_last_activity', Date.now().toString());
+        }
+    },
+
+    checkSessionTimeout() {
+        const lastActivity = localStorage.getItem('pyplay_last_activity');
+        if (lastActivity && this.user) {
+            const now = Date.now();
+            const threeHours = 3 * 60 * 60 * 1000;
+            if (now - parseInt(lastActivity) > threeHours) {
+                // Session expired
+                this.logout(true); // pass true to indicate timeout
+                return true;
+            }
+        }
+        return false;
     },
 
     // --- Google Sheets Sync Methods ---
@@ -370,13 +402,26 @@ const PyPlayAuth = {
         window.location.reload();
     },
 
-    async logout() {
+    async logout(isTimeout = false) {
         if (this.user) {
-            await this.logToSheets(this.user.email, this.user.name, "Logged Out");
+            try {
+                await this.logToSheets(this.user.email, this.user.name, isTimeout ? "Session Timeout" : "Logged Out");
+            } catch(e) {}
         }
-        localStorage.removeItem('pyplay_user');
         this.user = null;
-        window.location.href = 'index.html';
+        localStorage.removeItem('pyplay_user');
+        localStorage.removeItem('pyplay_last_activity');
+        
+        this.updateHeaderUI();
+        
+        if (isTimeout) {
+            this.showToast("Session expired due to inactivity. You have been logged out.");
+            setTimeout(() => {
+                window.location.href = 'index.html?triggerLogin=true';
+            }, 2000);
+        } else {
+            window.location.href = 'index.html';
+        }
     },
 
     async updateProfile(avatar, color, name) {
