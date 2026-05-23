@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PyPlay - JavaScript Essentials</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <!-- CodeMirror for Code Editor -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/dracula.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
+    <script>
+        // Redirect to index page with login trigger if not authenticated
+        if (!localStorage.getItem('pyplay_user')) {
+            window.location.href = 'index.html?triggerLogin=true';
+        }
+    </script>
+    <style>
+        .output-wrapper {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+        .dom-viewport {
+            flex: 1;
+            background: #fff;
+            color: #111827;
+            padding: 1.5rem;
+            overflow-y: auto;
+            border-bottom: 1px solid var(--panel-border);
+            border-radius: 0;
+            font-family: 'Inter', sans-serif;
+            position: relative;
+        }
+        .dom-viewport button, .dom-viewport input {
+            font-family: inherit;
+        }
+        .terminal-container {
+            flex: 1;
+            min-height: 150px;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="glass-panel header">
+            <div style="display: flex; align-items: center; gap: 1.5rem;">
+                <a href="index.html" class="logo">
+                    <div class="logo-icon">🟨</div>
+                    <h1>PyPlay</h1>
+                </a>
+                <a href="index.html" class="btn btn-outline" style="padding: 0.35rem 0.75rem; font-size: 0.8rem;">🏠 Home</a>
+            </div>
+            
+            <div class="progress-container" style="width: 380px;">
+                <span class="progress-text">Lesson <span id="current-lesson-num">1</span> of <span id="total-lessons">13</span></span>
+                <div class="progress-steps-container" id="progress-steps-container"></div>
+            </div>
+            <div class="controls">
+                <button class="btn btn-outline" id="prev-btn" disabled>Previous</button>
+                <button class="btn btn-primary" id="next-btn" disabled>Next Lesson</button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-workspace">
+            <!-- Left Panel: Instructions -->
+            <section class="glass-panel instruction-panel">
+                <div class="lesson-content">
+                    <h2 id="lesson-title" class="lesson-title">Loading...</h2>
+                    <div class="badges">
+                        <span class="badge badge-difficulty" id="lesson-difficulty">Beginner</span>
+                        <span class="badge badge-topic" id="lesson-topic">JavaScript</span>
+                    </div>
+                    
+                    <div class="lesson-section">
+                        <h3>📖 Concept</h3>
+                        <p id="lesson-concept">Preparing JavaScript Environment...</p>
+                    </div>
+
+                    <div class="lesson-section">
+                        <h3>💡 Example</h3>
+                        <pre><code id="lesson-example" class="example-code"></code></pre>
+                    </div>
+
+                    <div class="lesson-section task-section">
+                        <h3>🎯 Your Task</h3>
+                        <p id="lesson-task"></p>
+                    </div>
+                    
+                    <div id="success-message" class="success-message hidden">
+                        🎉 Great job! You completed the task correctly.
+                    </div>
+                </div>
+            </section>
+
+            <!-- Right Panel: Editor & Output -->
+            <section class="editor-panel">
+                <!-- Editor Wrapper -->
+                <div class="glass-panel editor-wrapper">
+                    <div class="panel-header">
+                        <div class="tab active">script.js</div>
+                        <button class="btn btn-run" id="run-btn">
+                            <span class="run-icon">▶</span> Run Code
+                        </button>
+                    </div>
+                    <div class="editor-container">
+                        <textarea id="code-editor"></textarea>
+                    </div>
+                </div>
+
+                <!-- Output Wrapper -->
+                <div class="glass-panel output-wrapper">
+                    <div class="panel-header">
+                        <div class="tab active" style="margin-right: 1rem;">Web Preview</div>
+                        <div class="tab" style="opacity:0.6;">Console</div>
+                        <button class="btn btn-clear" id="clear-btn" style="margin-left: auto;">Clear</button>
+                    </div>
+                    
+                    <!-- Sandbox DOM Viewport -->
+                    <div id="dom-viewport" class="dom-viewport">
+                        <!-- User's script manipulates this area -->
+                    </div>
+                    
+                    <div class="terminal-container">
+                        <pre id="output-console" class="terminal-output">Ready to execute JavaScript...\n</pre>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/javascript/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/edit/closebrackets.min.js"></script>
+    <script src="auth.js"></script>
+    <script src="javascript_app.js"></script>
+</body>
+</html>
