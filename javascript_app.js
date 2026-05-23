@@ -164,6 +164,7 @@ const lessons = [
 // --- Application Logic ---
 let editor;
 let currentLessonIndex = 0;
+let highestLessonIndex = 0;
 let userLogs = [];
 let validationInterval = null;
 
@@ -182,6 +183,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (PyPlayAuth.user && PyPlayAuth.user.progress && PyPlayAuth.user.progress.javascript) {
         const jsProg = PyPlayAuth.user.progress.javascript;
         if (jsProg.highest_lesson && jsProg.highest_lesson > 0) {
+            highestLessonIndex = jsProg.highest_lesson;
             currentLessonIndex = jsProg.highest_lesson;
         }
     }
@@ -273,30 +275,63 @@ function loadLesson(index) {
     updateProgressSteps();
     
     // If they already completed it, enable Next
-    const jsProg = (PyPlayAuth.user && PyPlayAuth.user.progress && PyPlayAuth.user.progress.javascript) 
-                   ? PyPlayAuth.user.progress.javascript.completed_lessons : [];
-    if (jsProg.includes(index)) {
+    const progressObj = (typeof PyPlayAuth !== 'undefined' && PyPlayAuth.user) 
+        ? (PyPlayAuth.user.progress || {}) 
+        : {};
+    const jsProg = progressObj.javascript || { completed_lessons: [] };
+    let completed = jsProg.completed_lessons;
+    if (!Array.isArray(completed)) {
+        completed = [];
+    }
+    
+    if (completed.includes(index) || index < highestLessonIndex) {
         document.getElementById('next-btn').disabled = false;
         if (index === lessons.length - 1) {
             document.getElementById('next-btn').textContent = "Finish Course";
+        } else {
+            document.getElementById('next-btn').textContent = "Next Lesson";
         }
     } else {
+        document.getElementById('next-btn').disabled = true;
         document.getElementById('next-btn').textContent = "Next Lesson";
     }
 }
 
 function updateProgressSteps() {
     const container = document.getElementById('progress-steps-container');
+    if (!container) return;
     container.innerHTML = '';
-    const jsProg = (PyPlayAuth.user && PyPlayAuth.user.progress && PyPlayAuth.user.progress.javascript) 
-                   ? PyPlayAuth.user.progress.javascript.completed_lessons : [];
+    
+    let highest = highestLessonIndex;
+    if (PyPlayAuth.user && PyPlayAuth.user.progress && PyPlayAuth.user.progress.javascript) {
+        const jsProg = PyPlayAuth.user.progress.javascript;
+        if (jsProg.highest_lesson !== undefined && jsProg.highest_lesson !== null) {
+            highest = Number(jsProg.highest_lesson);
+        } else if (jsProg.completed_lessons && jsProg.completed_lessons.length > 0) {
+            highest = Math.max(...jsProg.completed_lessons) + 1;
+        }
+        highest = Math.min(highest, lessons.length - 1);
+        highestLessonIndex = highest;
+    }
                    
     for (let i = 0; i < lessons.length; i++) {
-        const step = document.createElement('div');
-        step.className = 'progress-step';
-        if (i < currentLessonIndex || jsProg.includes(i)) step.classList.add('completed');
-        if (i === currentLessonIndex) step.classList.add('active');
-        container.appendChild(step);
+        const pill = document.createElement('div');
+        pill.className = 'progress-step-pill';
+        pill.setAttribute('data-tooltip', `${i + 1}. ${lessons[i].title}`);
+        
+        if (i === currentLessonIndex) {
+            pill.classList.add('active');
+        } else if (i <= highest) {
+            pill.classList.add('completed');
+            pill.addEventListener('click', () => {
+                currentLessonIndex = i;
+                loadLesson(i);
+            });
+        } else {
+            pill.classList.add('locked');
+        }
+        
+        container.appendChild(pill);
     }
 }
 
@@ -382,6 +417,7 @@ function checkValidation() {
         }
         
         if (PyPlayAuth.user) {
+            highestLessonIndex = Math.max(highestLessonIndex, currentLessonIndex + 1);
             PyPlayAuth.updateProgress("javascript", currentLessonIndex, true);
             updateProgressSteps();
         }
