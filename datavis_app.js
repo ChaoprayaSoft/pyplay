@@ -836,7 +836,7 @@ async function runPythonCode() {
             
             // Emulate df.groupby("Category")
             groupby(col) {
-                return new GroupedDataFrame(this.data, col);
+                return createDataFrameProxy(new GroupedDataFrame(this.data, col));
             }
             
             // Dynamic column indexing df['Price']
