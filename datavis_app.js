@@ -797,15 +797,25 @@ async function runPythonCode() {
             plt_bar: async (x, y, title = "") => {
                 let p = sandbox.getActivePlot();
                 p.type = "bar";
-                p.labels = x;
-                p.datasets = [{ data: y }];
+                if (typeof y === "undefined" || typeof y === "string") {
+                    p.labels = x.map((_, i) => i);
+                    p.datasets = [{ data: x }];
+                } else {
+                    p.labels = x;
+                    p.datasets = [{ data: y }];
+                }
             },
             
             plt_plot: async (x, y, title = "") => {
                 let p = sandbox.getActivePlot();
                 p.type = "line";
-                p.labels = x;
-                p.datasets = [{ data: y }];
+                if (typeof y === "undefined" || typeof y === "string") {
+                    p.labels = x.map((_, i) => i);
+                    p.datasets = [{ data: x }];
+                } else {
+                    p.labels = x;
+                    p.datasets = [{ data: y }];
+                }
             },
             
             plt_pie: async (data, labels = null) => {
