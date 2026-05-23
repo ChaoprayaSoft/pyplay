@@ -710,6 +710,7 @@ function transpilePythonCode(pyCode) {
     code = code.replace(/plt\.scatter\s*\(\s*([^)]+)\s*\)/g, 'await plt_scatter($1)');
     code = code.replace(/plt\.boxplot\s*\(\s*([^)]+)\s*\)/g, 'await plt_boxplot($1)');
     code = code.replace(/sns\.heatmap\s*\(\s*([^)]+)\s*\)/g, 'await sns_heatmap($1)');
+    code = code.replace(/plt\.subplot\s*\(\s*([^)]+)\s*\)/g, 'await plt_subplot($1)');
     
     code = code.replace(/plt\.title\s*\(\s*([^)]+)\s*\)/g, 'await plt_title($1)');
     code = code.replace(/plt\.show\s*\(\s*\)/g, 'await plt_show()');
@@ -792,6 +793,11 @@ async function runPythonCode() {
             sns_heatmap: async (matrix, annot = true) => {
                 sandbox.pltState.type = "heatmap";
                 sandbox.pltState.data = matrix;
+            },
+            
+            plt_subplot: async (...args) => {
+                sandbox.pltState.subplots = sandbox.pltState.subplots || [];
+                sandbox.pltState.subplots.push(args);
             },
             
             plt_title: async (titleText) => {
