@@ -533,7 +533,7 @@ const PyPlayAuth = {
     createLoginModal() {
         const modal = document.createElement('div');
         modal.id = 'pyplay-login-modal';
-        modal.className = 'pyplay-modal-overlay hidden';
+        modal.className = 'pyplay-modal-overlay';
         modal.style.cssText = `
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);
@@ -569,7 +569,7 @@ const PyPlayAuth = {
 
         const modal = document.createElement('div');
         modal.id = 'pyplay-settings-modal';
-        modal.className = 'pyplay-modal-overlay hidden';
+        modal.className = 'pyplay-modal-overlay';
         modal.style.cssText = `
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);
