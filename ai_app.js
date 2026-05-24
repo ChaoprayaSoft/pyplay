@@ -88,7 +88,7 @@ const lessons = [
         example: "z = (input * weight) + bias\noutput = relu(z)",
         task: "Given `input = 5.0`, `weight = -1.0`, `bias = 2.0`. Calculate `z`, pass `z` through `relu(z)`, and print the final output.",
         initialCode: "def relu(x):\n    return max(0.0, x)\n\ninput_val = 5.0\nweight = -1.0\nbias = 2.0\n# Calculate and print final output\n",
-        expectedOutput: "0.0"
+        expectedOutput: ["0.0", "0"]
     },
     {
         title: "Loss & Error",
@@ -98,7 +98,7 @@ const lessons = [
         example: "pred = 2.5\ntarget = 3.0\nerror = (pred - target) ** 2\nprint(error)",
         task: "Your model predicted `[2.0, 4.0]` but the targets were `[3.0, 4.0]`. Calculate the MSE for both elements, average them, and print the `mean_error`.",
         initialCode: "preds = [2.0, 4.0]\ntargets = [3.0, 4.0]\n# calculate mean squared error and print it\n",
-        expectedOutput: "0.5"
+        expectedOutput: ["0.5", "0.50", "1/2"]
     },
     {
         title: "Generative AI (Markov Chains)",
@@ -108,7 +108,7 @@ const lessons = [
         example: "transitions = {'I': ['am', 'love'], 'am': ['happy']}\nprint(transitions['I'][0])",
         task: "Create a dictionary `model` where `'The'` maps to `['cat', 'dog']` and `'cat'` maps to `['sat']`. Print the next word after `'The'` (index 0), and then the word after that word.",
         initialCode: "model = {}\n# populate model and print 'cat' and 'sat' using the dictionary\n",
-        expectedOutput: "cat\nsat"
+        expectedOutput: ["cat\nsat", "cat sat", "'cat'\n'sat'"]
     },
     {
         title: "Connecting to an AI API",
@@ -118,7 +118,7 @@ const lessons = [
         example: "import json\ndata = '{\"result\": \"success\"}'\nparsed = json.loads(data)\nprint(parsed['result'])",
         task: "Import the `json` module. Parse the string `response = '{\"prediction\": 0.95, \"label\": \"dog\"}'` into a dictionary, and print the `label`.",
         initialCode: "response = '{\"prediction\": 0.95, \"label\": \"dog\"}'\n# Import json, parse, and print label\n",
-        expectedOutput: "dog"
+        expectedOutput: ["dog", "'dog'", "\"dog\""]
     }
 ];
 
