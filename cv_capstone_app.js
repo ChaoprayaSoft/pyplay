@@ -412,6 +412,45 @@ function loadLesson(index) {
         }
     }
 
+    const dlBtn1 = document.getElementById('download-img-btn-1');
+    const dlBtn2 = document.getElementById('download-img-btn-2');
+    if (dlBtn1 && dlBtn2) {
+        if (lesson.inputImage) {
+            if (Array.isArray(lesson.inputImage)) {
+                dlBtn1.style.display = 'block';
+                dlBtn1.textContent = '⬇️ Download Frame 1';
+                dlBtn1.onclick = () => {
+                    const a = document.createElement('a');
+                    a.href = lesson.inputImage[0];
+                    a.download = lesson.inputImage[0].split('/').pop();
+                    a.click();
+                };
+                
+                dlBtn2.style.display = 'block';
+                dlBtn2.textContent = '⬇️ Download Frame 2';
+                dlBtn2.onclick = () => {
+                    const a = document.createElement('a');
+                    a.href = lesson.inputImage[1];
+                    a.download = lesson.inputImage[1].split('/').pop();
+                    a.click();
+                };
+            } else {
+                dlBtn1.style.display = 'block';
+                dlBtn1.textContent = '⬇️ Download Input';
+                dlBtn1.onclick = () => {
+                    const a = document.createElement('a');
+                    a.href = lesson.inputImage;
+                    a.download = lesson.inputImage.split('/').pop();
+                    a.click();
+                };
+                dlBtn2.style.display = 'none';
+            }
+        } else {
+            dlBtn1.style.display = 'none';
+            dlBtn2.style.display = 'none';
+        }
+    }
+
     renderProgressSteps();
 
     dom.prevBtn.disabled = index === 0;
