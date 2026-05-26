@@ -237,6 +237,10 @@
                         <div class="stat-value" id="stat-opencv-completed">0 / 14</div>
                     </div>
                     <div class="stat-card">
+                        <div style="font-size:0.75rem; font-weight:600; text-transform:uppercase; color:var(--text-muted);">CV Capstone Progress</div>
+                        <div class="stat-value" id="stat-cvcapstone-completed">0 / 3</div>
+                    </div>
+                    <div class="stat-card">
                         <div style="font-size:0.75rem; font-weight:600; text-transform:uppercase; color:var(--text-muted);">Arduino Progress</div>
                         <div class="stat-value" id="stat-arduino-completed">0 / 10</div>
                     </div>
@@ -278,6 +282,13 @@
                             <div class="badge-icon">📷</div>
                             <div class="badge-title">OpenCV Visionary</div>
                             <div class="badge-desc">Complete all 14 OpenCV image processing lessons</div>
+                        </div>
+
+                        <!-- CV Capstone Badge -->
+                        <div class="badge-card" id="badge-cvcapstone">
+                            <div class="badge-icon">👁️</div>
+                            <div class="badge-title">CV Expert</div>
+                            <div class="badge-desc">Conquer all 3 Computer Vision Capstones</div>
                         </div>
 
                         <!-- Arduino Badge -->
@@ -399,6 +410,10 @@
             const cvCompletedCount = cvProgress.completed_lessons ? cvProgress.completed_lessons.length : 0;
             document.getElementById('stat-opencv-completed').textContent = `${cvCompletedCount} / 14`;
             
+            const cvcapProgress = user.progress.cvcapstone || { completed_lessons: [], completed: false };
+            const cvcapCompletedCount = cvcapProgress.completed_lessons ? cvcapProgress.completed_lessons.length : 0;
+            document.getElementById('stat-cvcapstone-completed').textContent = `${cvcapCompletedCount} / 3`;
+            
             const ardProgress = user.progress.arduino || { completed_lessons: [], completed: false };
             const ardCompletedCount = ardProgress.completed_lessons ? ardProgress.completed_lessons.length : 0;
             document.getElementById('stat-arduino-completed').textContent = `${ardCompletedCount} / 10`;
@@ -416,7 +431,7 @@
             document.getElementById('stat-ai-completed').textContent = `${aiCompletedCount} / 12`;
             
             // 100 XP per completed lesson across all courses
-            const totalCompleted = pyCompletedCount + cvCompletedCount + ardCompletedCount + dvCompletedCount + jsCompletedCount + aiCompletedCount;
+            const totalCompleted = pyCompletedCount + cvCompletedCount + cvcapCompletedCount + ardCompletedCount + dvCompletedCount + jsCompletedCount + aiCompletedCount;
             const xp = totalCompleted * 100;
             document.getElementById('stat-xp').textContent = `${xp} XP`;
 
@@ -428,6 +443,10 @@
             }
             if (cvProgress.completed) {
                 document.getElementById('badge-opencv').classList.add('earned');
+                badgesCount++;
+            }
+            if (cvcapProgress.completed) {
+                document.getElementById('badge-cvcapstone').classList.add('earned');
                 badgesCount++;
             }
             if (ardProgress.completed) {

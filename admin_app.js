@@ -40,6 +40,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const COURSE_TOTALS = {
         python: 13,
         opencv: 14,
+        cvcapstone: 3,
         arduino: 10,
         datavis: 10,
         javascript: 13,
@@ -49,6 +50,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const BADGE_ICONS = {
         python: '🏆',
         opencv: '📷',
+        cvcapstone: '👁️',
         arduino: '🤖',
         datavis: '📊',
         javascript: '🟨',
@@ -175,7 +177,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const progress = user.progress || {};
 
             // Build Progress Bars
-            const progressHtml = ['python', 'opencv', 'arduino', 'datavis', 'javascript', 'ai'].map(courseId => {
+            const progressHtml = ['python', 'opencv', 'cvcapstone', 'arduino', 'datavis', 'javascript', 'ai'].map(courseId => {
                 const p = progress[courseId];
                 const total = COURSE_TOTALS[courseId];
                 const completedCount = p && p.completed_lessons ? p.completed_lessons.length : 0;
