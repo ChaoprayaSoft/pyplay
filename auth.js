@@ -543,7 +543,7 @@ const PyPlayAuth = {
         modal.innerHTML = `
             <div class="glass-panel" style="width: 420px; padding: 2.5rem; display:flex; flex-direction:column; gap:1.5rem; text-align:center;">
                 <div style="display: flex; justify-content: center;">
-                    <img src="image/app_logo.png" alt="PyPlay Logo" style="width: 80px; height: 80px; object-fit: contain; border-radius: 50%;">
+                    <img src="image/app_logo.png" alt="PyPlay Logo" style="width: 90px; height: 90px; object-fit: contain; border-radius: 50%;">
                 </div>
                 <div>
                     <h3 style="font-size:1.75rem; font-weight:700; color:#fff;">Sign In with Google</h3>
