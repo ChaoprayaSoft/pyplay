@@ -6,7 +6,7 @@ const lessons = [
         topic: "Haar Cascades",
         concept: "In this capstone, you will use Haar Cascades to detect faces in an image. You must convert the image to grayscale, load the pre-trained cascade `cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')`, and detect faces using `detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5)`. Finally, draw a red rectangle `(0, 0, 255)` with thickness 2 around each detected face.",
         example: 'import cv2\n# Example of loading a cascade:\nface_cascade = cv2.CascadeClassifier("path_to_xml")\nfaces = face_cascade.detectMultiScale(gray, 1.1, 4)',
-        task: 'Load `image/face.png` (our test subject), convert to grayscale, instantiate the face cascade using a dummy path `"haarcascade_frontalface_default.xml"`. Call `detectMultiScale(gray, 1.1, 5)` to get the face coordinates (mocked to return one face `[150, 100, 100, 100]`). Loop through the faces and draw a red rectangle on the original image. Print the number of faces detected.',
+        task: 'Load `image/face.png` (our test subject), convert to grayscale, instantiate the face cascade using a dummy path `"haarcascade_frontalface_default.xml"`. Call `detectMultiScale(gray, 1.1, 5)` to get the face coordinates. Loop through the faces and draw a red rectangle on the original image. Print the number of faces detected.',
         initialCode: 'import cv2\n# Load image/face.png, convert to gray, load cascade, detect faces, draw red rectangles, print face count:\n',
         expectedOutput: ["1", "1\n"],
         inputImage: "image/face.png",
@@ -18,7 +18,7 @@ const lessons = [
         topic: "Perspective Transform",
         concept: "A document scanner takes a skewed image of a document and warps it to a top-down view. This requires finding the 4 corners of the document (usually via contours), defining 4 destination points (the corners of a flat rectangle), computing the perspective transform matrix using `cv2.getPerspectiveTransform(src_pts, dst_pts)`, and applying it with `cv2.warpPerspective(img, M, (width, height))`.",
         example: 'import cv2\nimport numpy as np\nM = cv2.getPerspectiveTransform(src, dst)\nwarped = cv2.warpPerspective(img, M, (300, 400))',
-        task: 'Load `image/document.png`. Define source points `src = np.float32([[50,50], [350,50], [50,350], [350,350]])` and destination points `dst = np.float32([[0,0], [300,0], [0,400], [300,400]])`. Calculate the perspective transform matrix `M`. Warp the image to size `(300, 400)`. Print the shape of the resulting warped image.',
+        task: 'Load `image/document.png`. Define source points `src = np.float32([[200,300], [800,300], [100,900], [900,900]])` and destination points `dst = np.float32([[0,0], [300,0], [0,400], [300,400]])`. Calculate the perspective transform matrix `M`. Warp the image to size `(300, 400)`. Print the shape of the resulting warped image.',
         initialCode: 'import cv2\nimport numpy as np\n# Load image/document.png, define src and dst points, get matrix M, warp to (300, 400), print warped shape:\n',
         expectedOutput: ["(400, 300, 3)", "(400,300,3)"],
         inputImage: "image/document.png",
@@ -30,11 +30,11 @@ const lessons = [
         topic: "Color Masking",
         concept: "The 'Invisible Cloak' effect works by tracking a specific color (like a green screen) and replacing it with a pre-captured background image. You use `cv2.inRange()` in the HSV color space to create a mask of the cloak, invert the mask using `cv2.bitwise_not()` to get the foreground, and combine the background and foreground using `cv2.bitwise_and()`.",
         example: 'import cv2\nmask = cv2.inRange(hsv, lower, upper)\nmask_inv = cv2.bitwise_not(mask)\nres1 = cv2.bitwise_and(bg, bg, mask=mask)\nres2 = cv2.bitwise_and(img, img, mask=mask_inv)',
-        task: 'Load `image/cloak_fg.png` as the current frame and `image/cloak_bg.png` as the background (for testing). Convert the frame to HSV. Create a mask for color range `lower = np.array([0, 0, 0])` and `upper = np.array([180, 255, 100])`. Invert the mask. Extract the background using the mask, and the foreground using the inverted mask. Add them together using `cv2.add()`. Print the value of `mask_inv[200, 200]`.',
-        initialCode: 'import cv2\nimport numpy as np\n# Frame = image/cloak_fg.png & BG = image/cloak_bg.png. Convert Frame to HSV. Mask range 0-0-0 to 180-255-100.\n# Invert mask. bitwise_and for bg and fg. cv2.add them. Print mask_inv[200, 200]:\n',
+        task: 'Load `image/cloak_fg.png` as the current frame and `image/cloak_bg.png` as the background (for testing). Convert the frame to HSV. Create a mask for color range `lower = np.array([35, 50, 50])` and `upper = np.array([85, 255, 255])` to target the green cloak. Invert the mask. Extract the background using the mask, and the foreground using the inverted mask. Add them together using `cv2.add()`. Print the value of `mask_inv[512, 512]`.',
+        initialCode: 'import cv2\nimport numpy as np\n# Frame = image/cloak_fg.png & BG = image/cloak_bg.png. Convert Frame to HSV. Mask range 35-50-50 to 85-255-255.\n# Invert mask. bitwise_and for bg and fg. cv2.add them. Print mask_inv[512, 512]:\n',
         expectedOutput: ["255", "0"], // Allow either depending on the mock image data at the center. 
         inputImage: "image/cloak_fg.png",
-        hint: "Use `mask = cv2.inRange(hsv, lower, upper)` then `mask_inv = cv2.bitwise_not(mask)`. `fg = cv2.bitwise_and(img, img, mask=mask_inv)`. `bg_part = cv2.bitwise_and(bg, bg, mask=mask)`. Print `mask_inv[200, 200]`."
+        hint: "Use `mask = cv2.inRange(hsv, lower, upper)` then `mask_inv = cv2.bitwise_not(mask)`. `fg = cv2.bitwise_and(img, img, mask=mask_inv)`. `bg_part = cv2.bitwise_and(bg, bg, mask=mask)`. Print `mask_inv[512, 512]`."
     }
 ];
 
@@ -201,8 +201,8 @@ try:
         def __init__(self, path):
             self.path = path
         def detectMultiScale(self, image, scaleFactor=1.1, minNeighbors=3, flags=0, minSize=None, maxSize=None):
-            # Mock returning one face coordinate
-            return np.array([[150, 100, 100, 100]])
+            # Return real face coordinate from face.png
+            return np.array([[333, 204, 374, 374]])
     
     cv2.CascadeClassifier = MockCascadeClassifier
     
