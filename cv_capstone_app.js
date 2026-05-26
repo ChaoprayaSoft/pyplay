@@ -6,7 +6,7 @@ const lessons = [
         topic: "Haar Cascades",
         concept: "In this capstone, you will use Haar Cascades to detect faces in an image. You must convert the image to grayscale, load the pre-trained cascade `cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')`, and detect faces using `detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5)`. Finally, draw a red rectangle `(0, 0, 255)` with thickness 2 around each detected face.",
         example: 'import cv2\n# Example of loading a cascade:\nface_cascade = cv2.CascadeClassifier("path_to_xml")\nfaces = face_cascade.detectMultiScale(gray, 1.1, 4)',
-        task: 'Load `logo.png` (our test subject), convert to grayscale, instantiate the face cascade using a dummy path `"haarcascade_frontalface_default.xml"`. Call `detectMultiScale(gray, 1.1, 5)` to get the face coordinates (mocked to return one face `[50, 50, 100, 100]`). Loop through the faces and draw a red rectangle on the original image. Print the number of faces detected.',
+        task: 'Load `logo.png` (our test subject), convert to grayscale, instantiate the face cascade using a dummy path `"haarcascade_frontalface_default.xml"`. Call `detectMultiScale(gray, 1.1, 5)` to get the face coordinates (mocked to return one face `[150, 100, 100, 100]`). Loop through the faces and draw a red rectangle on the original image. Print the number of faces detected.',
         initialCode: 'import cv2\n# Load logo.png, convert to gray, load cascade, detect faces, draw red rectangles, print face count:\n',
         expectedOutput: ["1", "1\n"],
         hint: "Convert to grayscale. `cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')`. `faces = cascade.detectMultiScale(gray, 1.1, 5)`. Loop through faces `for (x,y,w,h) in faces:` and use `cv2.rectangle()`. Print `len(faces)`."
@@ -199,7 +199,7 @@ try:
             self.path = path
         def detectMultiScale(self, image, scaleFactor=1.1, minNeighbors=3, flags=0, minSize=None, maxSize=None):
             # Mock returning one face coordinate
-            return np.array([[50, 50, 100, 100]])
+            return np.array([[150, 100, 100, 100]])
     
     cv2.CascadeClassifier = MockCascadeClassifier
     
