@@ -89,7 +89,7 @@ const lessons = [
         example: "queue = [(start_x, start_y)]",
         task: "Execute the provided BFS pathfinding script and watch the grid simulation animate the path.",
         hint: "Run the code and watch the pre-defined path trace through the maze.",
-        initialCode: "import robot\n\n# A simple hardcoded path for the maze for demonstration\npath = ['right', 'right', 'down', 'down', 'right']\nfor p in path:\n    robot.grid_move(p)\n",
+        initialCode: "import robot\n\n# A simple hardcoded path for the maze for demonstration\npath = ['down', 'down', 'down', 'right', 'right', 'right', 'up']\nfor p in path:\n    robot.grid_move(p)\n",
         expectedOutput: "",
         simType: "grid-maze",
         validate: (simState) => simState.atGoal
