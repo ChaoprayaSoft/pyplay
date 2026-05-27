@@ -427,10 +427,10 @@ import sys
 
 class Robot:
     def move_forward(self, dist):
-        print(f"Robot moved forward by {dist}")
+        print("Robot moved forward by " + str(dist))
         js.js_sim_move_forward(dist)
     def turn(self, angle):
-        print(f"Robot turned by {angle} degrees")
+        print("Robot turned by " + str(angle) + " degrees")
         js.js_sim_turn(angle)
     def stop(self):
         print("Robot stopped")
