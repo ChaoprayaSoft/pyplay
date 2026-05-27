@@ -340,14 +340,14 @@ const PyPlayAuth = {
             color: randomColor,
             role,
             progress: {
-                python: {
-                    completed_lessons: [],
-                    completed: false
-                },
-                javascript: {
-                    completed_lessons: [],
-                    completed: false
-                }
+                python: { completed_lessons: [], completed: false },
+                opencv: { completed_lessons: [], completed: false },
+                cvcapstone: { completed_lessons: [], completed: false },
+                arduino: { completed_lessons: [], completed: false },
+                datavis: { completed_lessons: [], completed: false },
+                javascript: { completed_lessons: [], completed: false },
+                ai: { completed_lessons: [], completed: false },
+                robotics: { completed_lessons: [], completed: false }
             },
             lastUpdated: new Date().toISOString()
         };
