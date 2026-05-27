@@ -35,7 +35,7 @@ const lessons = [
         example: "dist = robot.get_distance()\nprint('Distance:', dist)",
         task: "Write a `while` loop that keeps moving forward by 10 units as long as the distance to the obstacle is greater than 20.",
         hint: "The while loop should check `robot.get_distance() > 20`. Don't forget to call `robot.move_forward(10)` inside the loop!",
-        initialCode: "import robot\n\nwhile robot.get_distance() > 20:\n    robot.move_forward(10)\n",
+        initialCode: "import robot\n\n# Use a while loop and robot.get_distance() to stop before hitting the wall\n",
         expectedOutput: "",
         simType: "diff-drive-obstacle",
         validate: (simState) => simState.distanceToObstacle <= 20
@@ -143,7 +143,10 @@ let pyodideReady = false;
 let pyodideInstance = null;
 
 // Simulation State
+let logicState = {};
 let simState = {};
+let animationQueue = [];
+let isAnimating = false;
 let simCanvas, ctx;
 
 // --- DOM Elements ---
@@ -187,13 +190,18 @@ function initSimulation() {
 
 function resetSimulation() {
     const lesson = lessons[currentLessonIndex];
-    if(lesson.simType.startsWith('diff-drive')) {
-        simState = { x: 50, y: 150, angle: 0, distanceToObstacle: 150, steps: 0 };
+    let defaultState;
+    if(lesson.simType.startsWith('diff-drive') || lesson.simType === 'wall-following') {
+        defaultState = { x: 50, y: 150, angle: 0, distanceToObstacle: 150, steps: 0 };
     } else if (lesson.simType.startsWith('grid')) {
-        simState = { gridX: 0, gridY: 0, atGoal: false };
+        defaultState = { gridX: 0, gridY: 0, atGoal: false };
     } else if (lesson.simType.startsWith('arm')) {
-        simState = { joint1: 0, joint2: 0, gripperClosed: false, objectDroppedAtTarget: false, steps: 0 };
+        defaultState = { joint1: 0, joint2: 0, gripperClosed: false, objectDroppedAtTarget: false, steps: 0 };
     }
+    logicState = JSON.parse(JSON.stringify(defaultState));
+    simState = JSON.parse(JSON.stringify(defaultState));
+    animationQueue = [];
+    isAnimating = false;
     drawSimulation();
 }
 
@@ -205,7 +213,7 @@ function drawSimulation() {
     ctx.fillStyle = '#282a36';
     ctx.fillRect(0, 0, simCanvas.width, simCanvas.height);
     
-    if (lesson.simType.startsWith('diff-drive')) {
+    if (lesson.simType.startsWith('diff-drive') || lesson.simType === 'wall-following') {
         drawDiffDrive();
     } else if (lesson.simType.startsWith('grid')) {
         drawGrid();
@@ -232,10 +240,13 @@ function drawDiffDrive() {
     ctx.fill();
     ctx.restore();
 
-    // Draw obstacle if applicable
+    // Draw obstacle or wall if applicable
     if (lessons[currentLessonIndex].simType === 'diff-drive-obstacle') {
         ctx.fillStyle = '#ffb86c';
         ctx.fillRect(simState.x + simState.distanceToObstacle, simState.y - 20, 20, 40);
+    } else if (lessons[currentLessonIndex].simType === 'wall-following') {
+        ctx.fillStyle = '#ffb86c';
+        ctx.fillRect(0, 100, simCanvas.width, 10); // Infinite wall on the left (top visually)
     }
 }
 
@@ -335,54 +346,75 @@ function drawArm() {
 
 
 // Expose functions to global scope so Pyodide can call them via `js` module
+function pushAnimationState() {
+    animationQueue.push(JSON.parse(JSON.stringify(logicState)));
+}
+
 window.js_sim_move_forward = function(dist) {
-    simState.x += dist * Math.cos(simState.angle * Math.PI/180);
-    simState.y += dist * Math.sin(simState.angle * Math.PI/180);
-    simState.distanceToObstacle = Math.max(0, simState.distanceToObstacle - dist);
-    simState.steps++;
-    drawSimulation();
+    logicState.x += dist * Math.cos(logicState.angle * Math.PI/180);
+    logicState.y += dist * Math.sin(logicState.angle * Math.PI/180);
+    logicState.distanceToObstacle = Math.max(0, logicState.distanceToObstacle - dist);
+    logicState.steps++;
+    pushAnimationState();
 };
 window.js_sim_turn = function(angle) {
-    simState.angle += angle;
-    simState.steps++;
-    drawSimulation();
+    logicState.angle += angle;
+    logicState.steps++;
+    pushAnimationState();
 };
-window.js_sim_get_distance = function() {
-    return simState.distanceToObstacle;
+window.js_sim_get_distance = function(sensor = 'front') {
+    if (lessons[currentLessonIndex].simType === 'wall-following' && sensor === 'left') {
+        // Calculate distance from robot to the wall at y=110 (wall is at 100 with height 10)
+        // If angle is 0, left is towards negative y.
+        return Math.max(0, logicState.y - 110);
+    }
+    return logicState.distanceToObstacle;
 };
 
 window.js_sim_grid_move = function(dir) {
-    if (dir === 'up') simState.gridY--;
-    if (dir === 'down') simState.gridY++;
-    if (dir === 'left') simState.gridX--;
-    if (dir === 'right') simState.gridX++;
-    if (simState.gridX === 3 && simState.gridY === 2) simState.atGoal = true;
-    drawSimulation();
+    if (dir === 'up') logicState.gridY--;
+    if (dir === 'down') logicState.gridY++;
+    if (dir === 'left') logicState.gridX--;
+    if (dir === 'right') logicState.gridX++;
+    if (logicState.gridX === 3 && logicState.gridY === 2) logicState.atGoal = true;
+    pushAnimationState();
 };
 window.js_sim_grid_free = function(dir) {
     // Simple mock
     return true; 
 };
 window.js_sim_grid_at_goal = function() {
-    return simState.gridX === 3 && simState.gridY === 2;
+    return logicState.gridX === 3 && logicState.gridY === 2;
 };
 
 window.js_sim_arm_joints = function(j1, j2) {
-    simState.joint1 = j1;
-    simState.joint2 = j2;
-    simState.steps++;
+    logicState.joint1 = j1;
+    logicState.joint2 = j2;
+    logicState.steps++;
     
     if (lessons[currentLessonIndex].title === "Pick and Place") {
-        if (j1 === 135 && j2 === -45 && simState.gripperClosed) {
-            simState.objectDroppedAtTarget = true;
+        if (j1 === 135 && j2 === -45 && logicState.gripperClosed) {
+            logicState.objectDroppedAtTarget = true;
         }
     }
-    drawSimulation();
+    pushAnimationState();
 };
 window.js_sim_arm_gripper = function(closed) {
-    simState.gripperClosed = closed;
-    drawSimulation();
+    logicState.gripperClosed = closed;
+    pushAnimationState();
 };
+
+async function playAnimationQueue() {
+    isAnimating = true;
+    for (let i = 0; i < animationQueue.length; i++) {
+        simState = animationQueue[i];
+        drawSimulation();
+        // Delay 100ms per step
+        await new Promise(r => setTimeout(r, 100));
+    }
+    isAnimating = false;
+    animationQueue = [];
+}
 
 
 // --- Initialization ---
@@ -548,7 +580,7 @@ function appendError(msg) {
 function clearConsole() { dom.outputConsole.textContent = ""; }
 
 async function runCode() {
-    if (!pyodideReady) return;
+    if (!pyodideReady || isAnimating) return;
     const code = editor.getValue();
     clearConsole();
     resetSimulation(); // Reset simulation before each run
@@ -557,6 +589,7 @@ async function runCode() {
     
     try {
         await pyodideInstance.runPythonAsync(code);
+        await playAnimationQueue();
         checkLessonCompletion();
     } catch (err) {
         const errorMsg = err.toString().split('PythonError:').pop().trim();
@@ -572,7 +605,7 @@ function checkLessonCompletion() {
     let isMatch = false;
     
     if(lesson.validate && typeof lesson.validate === 'function') {
-        isMatch = lesson.validate(simState);
+        isMatch = lesson.validate(logicState);
     }
     
     // Also fallback to expected output check
