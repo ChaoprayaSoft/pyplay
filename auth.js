@@ -461,7 +461,7 @@ const PyPlayAuth = {
         let totalLessons = 13;
         if (courseId === 'opencv') totalLessons = 14;
         else if (courseId === 'cvcapstone') totalLessons = 5;
-        else if (courseId === 'arduino' || courseId === 'datavis') totalLessons = 10;
+        else if (courseId === 'arduino' || courseId === 'datavis' || courseId === 'robotics') totalLessons = 10;
         else if (courseId === 'ai') totalLessons = 12;
         
         if (courseProgress.completed_lessons.length === totalLessons) {

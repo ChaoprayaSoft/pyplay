@@ -256,6 +256,10 @@
                         <div class="stat-value" id="stat-ai-completed">0 / 12</div>
                     </div>
                     <div class="stat-card">
+                        <div style="font-size:0.75rem; font-weight:600; text-transform:uppercase; color:var(--text-muted);">Robotics Progress</div>
+                        <div class="stat-value" id="stat-robotics-completed">0 / 10</div>
+                    </div>
+                    <div class="stat-card">
                         <div style="font-size:0.75rem; font-weight:600; text-transform:uppercase; color:var(--text-muted);">Total XP</div>
                         <div class="stat-value" id="stat-xp">0 XP</div>
                     </div>
@@ -316,6 +320,13 @@
                             <div class="badge-icon">🤖</div>
                             <div class="badge-title">AI Pioneer</div>
                             <div class="badge-desc">Complete all 12 AI & ML lessons</div>
+                        </div>
+
+                        <!-- Robotics Badge -->
+                        <div class="badge-card" id="badge-robotics">
+                            <div class="badge-icon">🦾</div>
+                            <div class="badge-title">Robotics Engineer</div>
+                            <div class="badge-desc">Complete all 10 Robotics & Simulation lessons</div>
                         </div>
 
                         <div class="badge-card" id="badge-html">
@@ -429,8 +440,12 @@
             const aiCompletedCount = aiProgress.completed_lessons ? aiProgress.completed_lessons.length : 0;
             document.getElementById('stat-ai-completed').textContent = `${aiCompletedCount} / 12`;
             
+            const robProgress = user.progress.robotics || { completed_lessons: [], completed: false };
+            const robCompletedCount = robProgress.completed_lessons ? robProgress.completed_lessons.length : 0;
+            document.getElementById('stat-robotics-completed').textContent = `${robCompletedCount} / 10`;
+            
             // 100 XP per completed lesson across all courses
-            const totalCompleted = pyCompletedCount + cvCompletedCount + cvcapCompletedCount + ardCompletedCount + dvCompletedCount + jsCompletedCount + aiCompletedCount;
+            const totalCompleted = pyCompletedCount + cvCompletedCount + cvcapCompletedCount + ardCompletedCount + dvCompletedCount + jsCompletedCount + aiCompletedCount + robCompletedCount;
             const xp = totalCompleted * 100;
             document.getElementById('stat-xp').textContent = `${xp} XP`;
 
@@ -462,6 +477,10 @@
             }
             if (aiProgress.completed) {
                 document.getElementById('badge-ai').classList.add('earned');
+                badgesCount++;
+            }
+            if (robProgress.completed) {
+                document.getElementById('badge-robotics').classList.add('earned');
                 badgesCount++;
             }
             document.getElementById('stat-badges-earned').textContent = badgesCount;
