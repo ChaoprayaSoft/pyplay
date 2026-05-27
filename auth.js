@@ -116,8 +116,6 @@ const PyPlayAuth = {
     },
 
     loadLocalUser() {
-        if (this.checkSessionTimeout()) return; // If session expired, user is wiped
-        
         const stored = localStorage.getItem('pyplay_user');
         if (stored) {
             this.user = JSON.parse(stored);
@@ -135,6 +133,8 @@ const PyPlayAuth = {
                 this.user.progress = {};
             }
         }
+        
+        if (this.checkSessionTimeout()) return; // If session expired, user is wiped
     },
 
     saveLocalUser(userData) {
