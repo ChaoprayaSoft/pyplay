@@ -371,17 +371,42 @@ window.js_sim_get_distance = function(sensor = 'front') {
     return logicState.distanceToObstacle;
 };
 
+function isGridCellFree(x, y) {
+    if (x < 0 || x >= 10 || y < 0 || y >= 6) return false; // Bounds check
+    
+    if (lessons[currentLessonIndex].simType === 'grid-maze') {
+        if (x === 1 && y === 0) return false;
+        if (x === 1 && y === 1) return false;
+        if (x === 1 && y === 2) return false;
+        if (x === 2 && y === 4) return false;
+    }
+    return true;
+}
+
 window.js_sim_grid_move = function(dir) {
-    if (dir === 'up') logicState.gridY--;
-    if (dir === 'down') logicState.gridY++;
-    if (dir === 'left') logicState.gridX--;
-    if (dir === 'right') logicState.gridX++;
-    if (logicState.gridX === 3 && logicState.gridY === 2) logicState.atGoal = true;
+    let nextX = logicState.gridX;
+    let nextY = logicState.gridY;
+    if (dir === 'up') nextY--;
+    if (dir === 'down') nextY++;
+    if (dir === 'left') nextX--;
+    if (dir === 'right') nextX++;
+    
+    if (isGridCellFree(nextX, nextY)) {
+        logicState.gridX = nextX;
+        logicState.gridY = nextY;
+        if (logicState.gridX === 3 && logicState.gridY === 2) logicState.atGoal = true;
+    }
     pushAnimationState();
 };
 window.js_sim_grid_free = function(dir) {
-    // Simple mock
-    return true; 
+    let nextX = logicState.gridX;
+    let nextY = logicState.gridY;
+    if (dir === 'up') nextY--;
+    if (dir === 'down') nextY++;
+    if (dir === 'left') nextX--;
+    if (dir === 'right') nextX++;
+    
+    return isGridCellFree(nextX, nextY);
 };
 window.js_sim_grid_at_goal = function() {
     return logicState.gridX === 3 && logicState.gridY === 2;
