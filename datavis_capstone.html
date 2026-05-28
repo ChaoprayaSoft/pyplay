@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PyPlay - Data Analytic Capstones</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <!-- CodeMirror for Python Editor -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/dracula.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
+    
+    <style>
+        /* Custom DataVis overrides & Workbench styles */
+        :root {
+            --chart-grid: rgba(255, 255, 255, 0.05);
+            --chart-accent: #3b82f6;
+            --table-header: #1e293b;
+            --table-row-alt: rgba(255, 255, 255, 0.02);
+            --table-border: rgba(255, 255, 255, 0.05);
+        }
+
+        .main-workspace {
+            height: calc(100vh - 120px) !important;
+            position: relative;
+        }
+
+        .editor-panel {
+            flex: 1.2 !important;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .editor-wrapper {
+            flex: 1 !important;
+            display: flex;
+            flex-direction: column;
+            height: 100% !important;
+            margin-bottom: 0 !important;
+        }
+
+        .editor-container {
+            flex: 1 !important;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        .CodeMirror {
+            flex: 1 !important;
+            height: 100% !important;
+        }
+
+        /* --- Floating Dock & Left Drawer Custom CSS --- */
+        .floating-dock {
+            position: fixed;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            z-index: 2100; /* High z-index */
+        }
+
+        .dock-button {
+            width: 52px;
+            height: 52px;
+            border-radius: 14px;
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: #94a3b8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.35rem;
+            position: relative;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .dock-button:hover {
+            color: var(--accent-primary);
+            border-color: var(--accent-primary);
+            transform: translateY(-2px) scale(1.08);
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
+        }
+
+        .dock-button.active {
+            color: #fff;
+            background: var(--accent-primary);
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+            transform: scale(1.05);
+        }
+
+        .dock-button::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            left: 65px;
+            top: 50%;
+            transform: translateY(-50%) scale(0.9);
+            background: #0f172a;
+            color: #fff;
+            padding: 0.4rem 0.8rem;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+        }
+
+        .dock-button:hover::after {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(-50%) scale(1);
+        }
+
+        /* Slide-out Drawer Sizing & Styles */
+        .drawer-canvas-panel {
+            position: fixed;
+            left: 92px;
+            top: 100px;
+            bottom: 30px;
+            width: 450px;
+            background: rgba(15, 23, 42, 0.88);
+            backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            z-index: 2000;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.6), 0 0 30px rgba(59, 130, 246, 0.12);
+            transform: translateX(-130%);
+            transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .drawer-canvas-panel.open {
+            transform: translateX(0);
+        }
+
+        .drawer-console-panel {
+            position: fixed;
+            left: 92px;
+            top: 100px;
+            bottom: 30px;
+            width: 450px;
+            background: rgba(15, 23, 42, 0.88);
+            backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            z-index: 2000;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.6), 0 0 30px rgba(59, 130, 246, 0.12);
+            transform: translateX(-130%);
+            transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1), left 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .drawer-console-panel.open {
+            transform: translateX(0);
+        }
+
+        .drawer-console-panel.shifted {
+            left: 562px; /* Shifts right when Data Canvas is open! */
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.6), 0 0 30px rgba(16, 185, 129, 0.15);
+        }
+
+        .drawer-csv-panel {
+            position: fixed;
+            right: 20px;
+            top: 100px;
+            bottom: 30px;
+            width: 450px;
+            background: rgba(15, 23, 42, 0.88);
+            backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            z-index: 2000;
+            box-shadow: -10px 15px 50px rgba(0, 0, 0, 0.6), 0 0 30px rgba(59, 130, 246, 0.12);
+            transform: translateX(130%);
+            transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .drawer-csv-panel.open {
+            transform: translateX(0);
+        }
+
+        .drawer-header {
+            padding: 1rem 1.25rem;
+            background: rgba(0, 0, 0, 0.3);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .drawer-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            letter-spacing: 0.02em;
+        }
+
+        .btn-close-drawer {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: #94a3b8;
+            font-size: 1.5rem;
+            width: 50px; height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            line-height: 1;
+            padding-bottom: 3px;
+        }
+
+        .btn-close-drawer:hover {
+            color: #fff;
+            background: rgba(239, 68, 68, 0.2);
+            border-color: rgba(239, 68, 68, 0.4);
+            transform: rotate(90deg);
+        }
+
+        .drawer-body {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            padding: 1.25rem;
+        }
+
+        .drawer-panel-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        /* Panel specifics inside drawer */
+        .canvas-panel-inner {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            min-height: 0;
+            gap: 1rem;
+        }
+
+        .canvas-body {
+            flex: 1;
+            background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            padding: 1.25rem;
+            overflow: hidden;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .chart-wrapper-box {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #chart-canvas {
+            max-width: 100%;
+            max-height: 100%;
+            filter: drop-shadow(0 4px 15px rgba(0,0,0,0.3));
+        }
+
+        .custom-heatmap-grid {
+            display: grid;
+            width: 90%;
+            height: 90%;
+            gap: 6px;
+            padding: 8px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .heatmap-cell {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #fff;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .heatmap-cell:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+        }
+
+        .heatmap-label {
+            font-size: 0.55rem;
+            font-weight: 500;
+            opacity: 0.8;
+            margin-top: 2px;
+            text-transform: uppercase;
+        }
+
+        .canvas-footer-status {
+            padding: 0.5rem 0;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .csv-panel-inner {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            min-height: 0;
+            gap: 0.75rem;
+        }
+
+        .inspector-tabs-header-box {
+            display: flex;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+        }
+
+        .tab-active-title {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--accent-primary);
+            letter-spacing: 0.05em;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        
+        .tab-active-title::before {
+            content: "📄";
+        }
+
+        /* Table container inside drawer */
+        .dataset-table-container {
+            flex: 1;
+            background: #0d121f;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            overflow: auto;
+            position: relative;
+            min-height: 0;
+        }
+
+        .dataset-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: var(--font-sans);
+            font-size: 0.75rem;
+            color: #cbd5e1;
+            text-align: left;
+        }
+
+        .dataset-table th {
+            background: #1e293b;
+            color: #94a3b8;
+            font-weight: 700;
+            padding: 0.55rem 0.75rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            text-transform: uppercase;
+            font-size: 0.65rem;
+            letter-spacing: 0.05em;
+        }
+
+        .dataset-table td {
+            padding: 0.5rem 0.75rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+        }
+
+        .dataset-table tr:nth-child(even) td {
+            background: rgba(255,255,255,0.01);
+        }
+
+        .dataset-table tr:hover td {
+            background: rgba(59, 130, 246, 0.08);
+            color: #fff;
+        }
+
+        .console-panel-inner {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            min-height: 0;
+        }
+
+        .console-panel-inner .terminal-header {
+            padding: 0.5rem 0.75rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            margin-bottom: 0.5rem;
+        }
+
+        .console-panel-inner .terminal-console {
+            flex: 1;
+            padding: 0.75rem;
+            background: #06090f;
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 10px;
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            color: #10b981;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            line-height: 1.5;
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.5);
+        }
+
+        /* Custom Run Button */
+        .btn-run-code {
+            background: #10b981;
+            color: #fff;
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-run-code:hover {
+            background: #059669;
+        }
+
+        /* Chart status notifications */
+        .chart-placeholder-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .chart-placeholder-text::before {
+            content: "📈";
+            font-size: 2.5rem;
+            opacity: 0.5;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); }
+            100% { transform: translateY(0px); }
+        }
+
+        /* --- Mobile Responsive Floating Dock & Bottom Sheet Drawer --- */
+        @media (max-width: 768px) {
+            .floating-dock {
+                left: 50%;
+                top: auto;
+                bottom: 20px;
+                transform: translateX(-50%);
+                flex-direction: row;
+                background: rgba(15, 23, 42, 0.85);
+                border-radius: 20px;
+                padding: 0.6rem 1.2rem;
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 15px rgba(59, 130, 246, 0.15);
+                border: 1px solid rgba(255, 255, 255, 0.08);
+                width: max-content;
+            }
+
+            .dock-button {
+                width: 46px;
+                height: 46px;
+                border-radius: 12px;
+                font-size: 1.2rem;
+            }
+
+            .dock-button::after {
+                display: none !important; /* Hide hover tooltips on mobile */
+            }
+
+            .drawer-canvas-panel, .drawer-console-panel, .drawer-csv-panel {
+                left: 0 !important;
+                right: 0 !important;
+                top: auto !important;
+                bottom: 0 !important;
+                height: 75% !important;
+                width: 100% !important;
+                border-radius: 24px 24px 0 0 !important;
+                transform: translateY(115%) !important;
+                border-left: none !important;
+                border-right: none !important;
+                border-top: 1px solid rgba(255, 255, 255, 0.12) !important;
+                box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.6) !important;
+            }
+
+            .drawer-canvas-panel.open, .drawer-console-panel.open, .drawer-csv-panel.open {
+                transform: translateY(0) !important;
+            }
+
+            /* Adjust app containers for mobile tap overlay */
+            .main-workspace {
+                height: calc(100vh - 180px) !important;
+            }
+        }
+    </style>
+    <script>
+        // Redirect to index page with login trigger if not authenticated
+        if (!localStorage.getItem('pyplay_user')) {
+            window.location.href = 'index.html?triggerLogin=true';
+        }
+    </script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="glass-panel header">
+            <div style="display: flex; align-items: center; gap: 1.5rem;">
+                <a href="index.html" class="logo">
+                    <img src="image/app_logo.png" alt="Logo" class="logo-icon" style="width: 50px; height: 50px; object-fit: contain; border-radius: 50%;">
+                    <h1>PyPlay</h1>
+                </a>
+                <a href="index.html" class="btn btn-outline" style="padding: 0.35rem 0.75rem; font-size: 0.8rem;">🏠 Home</a>
+            </div>
+            
+            <div class="progress-container" style="width: 380px;">
+                <span class="progress-text">Capstone <span id="current-lesson-num">1</span> of <span id="total-lessons">6</span></span>
+                <div class="progress-steps-container" id="progress-steps-container"></div>
+            </div>
+            <div class="controls">
+                <button class="btn btn-outline" id="prev-btn" disabled>Previous</button>
+                <button class="btn btn-primary" id="next-btn" disabled>Next Capstone</button>
+            </div>
+        </header>
+
+        <!-- Main Workspace -->
+        <main class="main-workspace">
+            <!-- Left Panel: Instructions -->
+            <section class="glass-panel instruction-panel">
+                <div class="lesson-content">
+                    <h2 id="lesson-title" class="lesson-title">Loading...</h2>
+                    <div class="badges">
+                        <span class="badge badge-difficulty" id="lesson-difficulty">Expert</span>
+                        <span class="badge badge-topic" id="lesson-topic">Data Capstone</span>
+                    </div>
+                    
+                    <div class="lesson-section">
+                        <h3>📖 Concept</h3>
+                        <p id="lesson-concept">Please wait while the IDE is initializing...</p>
+                    </div>
+
+                    <div class="lesson-section">
+                        <h3>💡 Example</h3>
+                        <pre><code id="lesson-example" class="example-code"></code></pre>
+                    </div>
+
+                    <div class="lesson-section task-section">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                            <h3 style="margin-bottom: 0;">🎯 Your Task</h3>
+                            <button class="btn btn-outline" id="hint-btn" style="padding: 0.25rem 0.6rem; font-size: 0.75rem; border-radius: 6px; border: 1px dashed var(--accent-primary); color: #60a5fa; cursor: pointer; transition: all 0.2s; display: none;">💡 Show Hint</button>
+                        </div>
+                        <p id="lesson-task"></p>
+                        <div id="hint-container" class="hidden" style="margin-top: 1rem; padding: 0.75rem; border-left: 3px solid var(--accent-primary); background: rgba(59, 130, 246, 0.05); border-radius: 0 8px 8px 0; font-size: 0.875rem; color: var(--text-muted); line-height: 1.5; animation: fadeIn 0.3s ease;">
+                            <strong>Hint:</strong> <span id="lesson-hint-text"></span>
+                        </div>
+                    </div>
+                    
+                    <div id="success-message" class="success-message hidden">
+                        🎉 Superb! Data parsed and correct analytical graph successfully plotted!
+                    </div>
+                </div>
+            </section>
+
+            <!-- Right Panel: Editor & Visual Canvas -->
+            <section class="editor-panel">
+                <!-- Editor Wrapper -->
+                <div class="glass-panel editor-wrapper">
+                    <div class="panel-header">
+                        <div class="tab active">main.py</div>
+                        <button class="btn btn-run-code" id="run-btn">
+                            <span class="run-icon">▶</span> Run Code
+                        </button>
+                    </div>
+                    <div class="editor-container">
+                        <textarea id="code-editor"></textarea>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Floating Dock on Left Edge -->
+    <div class="floating-dock">
+        <button class="dock-button" id="dock-btn-canvas" data-tooltip="Data Canvas">📊</button>
+        <button class="dock-button" id="dock-btn-csv" data-tooltip="CSV Spreadsheet">📁</button>
+        <button class="dock-button" id="dock-btn-console" data-tooltip="Console Output">📟</button>
+    </div>
+
+    <!-- Drawer 1: Data Canvas -->
+    <div class="drawer-canvas-panel" id="drawer-canvas">
+        <div class="drawer-header">
+            <div class="drawer-title">
+                <span>📊</span>
+                <span>Data Canvas</span>
+            </div>
+            <button class="btn-close-drawer" id="close-canvas-btn" title="Close Panel">×</button>
+        </div>
+        <div class="drawer-body">
+            <div class="canvas-panel-inner">
+                <div class="canvas-body" id="canvas-body">
+                    <!-- Placeholder text before user plots -->
+                    <div class="chart-placeholder-text" id="chart-placeholder">
+                        Run your code to display visual data graphs here
+                    </div>
+                    
+                    <!-- Chart.js Canvas -->
+                    <div class="chart-wrapper-box hidden" id="chart-wrapper">
+                        <canvas id="chart-canvas"></canvas>
+                    </div>
+                    
+                    <!-- Custom HTML matrix heatmaps (fallback for high aesthetics) -->
+                    <div class="custom-heatmap-grid hidden" id="heatmap-grid-container">
+                        <!-- Dynamic grid will be loaded by javascript -->
+                    </div>
+                </div>
+                <div class="canvas-footer-status">
+                    Status: <span id="canvas-status-badge" class="badge" style="background: rgba(255,255,255,0.05); color: var(--text-muted); padding: 0.25rem 0.5rem; font-size: 0.65rem;">No Plot</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Drawer 2: Console Output -->
+    <div class="drawer-console-panel" id="drawer-console">
+        <div class="drawer-header">
+            <div class="drawer-title" style="color: #10b981;">
+                <span>📟</span>
+                <span>Python Console Output</span>
+            </div>
+            <button class="btn-close-drawer" id="close-console-btn" title="Close Panel">×</button>
+        </div>
+        <div class="drawer-body">
+            <div class="console-panel-inner">
+                <div class="terminal-console" id="terminal-console">--- IDE Console Opened ---</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Drawer 3: CSV Spreadsheet Inspector -->
+    <div class="drawer-csv-panel" id="drawer-csv">
+        <div class="drawer-header">
+            <div class="drawer-title" style="color: var(--accent-primary);">
+                <span>📁</span>
+                <span>CSV Spreadsheet Inspector</span>
+            </div>
+            <button class="btn-close-drawer" id="close-csv-btn" title="Close Panel">×</button>
+        </div>
+        <div class="drawer-body">
+            <div class="csv-panel-inner">
+                <!-- Spreadsheet tab headers -->
+                <div class="inspector-tabs-header-box">
+                    <span class="tab-active-title" id="tab-dataset">dataset.csv</span>
+                </div>
+                
+                <!-- SpreadSheet Grid View -->
+                <div class="dataset-table-container">
+                    <table class="dataset-table" id="dataset-grid">
+                        <thead>
+                            <!-- Dynamic headers -->
+                        </thead>
+                        <tbody>
+                            <!-- Dynamic data rows -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <!-- Chart.js library for drawing interactive charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- CodeMirror & Modes -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/python/python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/edit/closebrackets.min.js"></script>
+    <!-- App progress state -->
+    <script src="auth.js"></script>
+    <!-- Local custom visualization javascript -->
+    <script src="datavis_capstone_app.js"></script>
+</body>
+</html>
