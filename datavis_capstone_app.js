@@ -666,19 +666,19 @@ function transpilePythonCode(pyCode) {
     code = code.replace(/^\s*(\w+)\s*=\s*(.+)/gm, 'var $1 = $2');
     
     // 5. Transpile python standard print calls
-    code = code.replace(/print\s*\(\s*([^)]*)\s*\)/g, 'await print($1)');
+    code = code.replace(/\bprint\s*\(/g, 'await print(');
     
     // 6. Matplotlib and Seaborn plotting calls
-    code = code.replace(/plt\.bar\s*\(\s*([^)]+)\s*\)/g, 'await plt_bar($1)');
-    code = code.replace(/plt\.plot\s*\(\s*([^)]+)\s*\)/g, 'await plt_plot($1)');
-    code = code.replace(/plt\.pie\s*\(\s*([^)]+)\s*\)/g, 'await plt_pie($1)');
-    code = code.replace(/plt\.scatter\s*\(\s*([^)]+)\s*\)/g, 'await plt_scatter($1)');
-    code = code.replace(/plt\.boxplot\s*\(\s*([^)]+)\s*\)/g, 'await plt_boxplot($1)');
-    code = code.replace(/sns\.heatmap\s*\(\s*([^)]+)\s*\)/g, 'await sns_heatmap($1)');
-    code = code.replace(/plt\.subplot\s*\(\s*([^)]+)\s*\)/g, 'await plt_subplot($1)');
+    code = code.replace(/plt\.bar\s*\(/g, 'await plt_bar(');
+    code = code.replace(/plt\.plot\s*\(/g, 'await plt_plot(');
+    code = code.replace(/plt\.pie\s*\(/g, 'await plt_pie(');
+    code = code.replace(/plt\.scatter\s*\(/g, 'await plt_scatter(');
+    code = code.replace(/plt\.boxplot\s*\(/g, 'await plt_boxplot(');
+    code = code.replace(/sns\.heatmap\s*\(/g, 'await sns_heatmap(');
+    code = code.replace(/plt\.subplot\s*\(/g, 'await plt_subplot(');
     
-    code = code.replace(/plt\.title\s*\(\s*([^)]+)\s*\)/g, 'await plt_title($1)');
-    code = code.replace(/plt\.show\s*\(\s*\)/g, 'await plt_show()');
+    code = code.replace(/plt\.title\s*\(/g, 'await plt_title(');
+    code = code.replace(/plt\.show\s*\(/g, 'await plt_show(');
     
     return code;
 }
