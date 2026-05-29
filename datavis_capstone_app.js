@@ -736,39 +736,49 @@ async function runPythonCode() {
             plt_bar: async (x, y, title = "") => {
                 let p = sandbox.getActivePlot();
                 p.type = "bar";
-                if (typeof y === "undefined" || typeof y === "string") {
-                    p.labels = x.map((_, i) => i);
-                    p.datasets = [{ data: x }];
+                let xData = (x && typeof x.tolist === 'function') ? x.tolist() : (x && x.data ? x.data : x);
+                let yData = (y && typeof y.tolist === 'function') ? y.tolist() : (y && y.data ? y.data : y);
+                console.log("plt_bar xData:", xData);
+                console.log("plt_bar yData:", yData);
+                if (typeof yData === "undefined" || typeof yData === "string") {
+                    p.labels = Array.isArray(xData) ? xData.map((_, i) => i) : [];
+                    p.datasets = [{ data: xData }];
                 } else {
-                    p.labels = x;
-                    p.datasets = [{ data: y }];
+                    p.labels = xData;
+                    p.datasets = [{ data: yData }];
                 }
             },
             
             plt_plot: async (x, y, title = "") => {
                 let p = sandbox.getActivePlot();
                 p.type = "line";
-                if (typeof y === "undefined" || typeof y === "string") {
-                    p.labels = x.map((_, i) => i);
-                    p.datasets = [{ data: x }];
+                let xData = (x && typeof x.tolist === 'function') ? x.tolist() : (x && x.data ? x.data : x);
+                let yData = (y && typeof y.tolist === 'function') ? y.tolist() : (y && y.data ? y.data : y);
+                if (typeof yData === "undefined" || typeof yData === "string") {
+                    p.labels = Array.isArray(xData) ? xData.map((_, i) => i) : [];
+                    p.datasets = [{ data: xData }];
                 } else {
-                    p.labels = x;
-                    p.datasets = [{ data: y }];
+                    p.labels = xData;
+                    p.datasets = [{ data: yData }];
                 }
             },
             
             plt_pie: async (data, labels = null) => {
                 let p = sandbox.getActivePlot();
                 p.type = "pie";
-                p.labels = labels || data.map((d, i) => `Col ${i + 1}`);
-                p.datasets = [{ data: data }];
+                let dataData = (data && typeof data.tolist === 'function') ? data.tolist() : (data && data.data ? data.data : data);
+                let labelsData = (labels && typeof labels.tolist === 'function') ? labels.tolist() : (labels && labels.data ? labels.data : labels);
+                p.labels = labelsData || (Array.isArray(dataData) ? dataData.map((d, i) => `Col ${i + 1}`) : []);
+                p.datasets = [{ data: dataData }];
             },
             
             plt_scatter: async (x, y) => {
                 let p = sandbox.getActivePlot();
                 p.type = "scatter";
+                let xData = (x && typeof x.tolist === 'function') ? x.tolist() : (x && x.data ? x.data : x);
+                let yData = (y && typeof y.tolist === 'function') ? y.tolist() : (y && y.data ? y.data : y);
                 p.datasets = [{
-                    data: x.map((xv, i) => ({ x: xv, y: y[i] }))
+                    data: Array.isArray(xData) ? xData.map((xv, i) => ({ x: xv, y: yData[i] })) : []
                 }];
             },
             
@@ -947,7 +957,30 @@ async function runPythonCode() {
                 this.data = data;
                 this.groupCol = groupCol;
             }
-            // Emulate groupby sum
+            // Emulate groupby sum across all numeric columns
+            sum() {
+                if (!this.data || this.data.length === 0) return createDataFrameProxy(new DataFrame([], "Summed"));
+                
+                const groups = {};
+                const allCols = Object.keys(this.data[0]);
+                const numericCols = allCols.filter(c => c !== this.groupCol && !isNaN(Number(this.data[0][c])));
+
+                this.data.forEach(d => {
+                    const g = d[this.groupCol];
+                    if (!groups[g]) {
+                        groups[g] = {};
+                        groups[g][this.groupCol] = g;
+                        numericCols.forEach(c => groups[g][c] = 0);
+                    }
+                    numericCols.forEach(c => {
+                        groups[g][c] += (Number(d[c]) || 0);
+                    });
+                });
+                
+                return createDataFrameProxy(new DataFrame(Object.values(groups), "GroupedSum"));
+            }
+            
+            // Single column selector df.groupby('x')['y'].sum()
             columnSelector(colName) {
                 // Return aggregated group totals object
                 const groups = {};
@@ -1008,6 +1041,9 @@ async function runPythonCode() {
         `);
         
         await runner(sandbox);
+        
+        // Re-render the visual grid to show any newly calculated columns
+        populateDatasetGrid(currentData);
         
         // Trigger verification
         checkLessonCompletion();
