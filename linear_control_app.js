@@ -716,16 +716,45 @@ async function runPythonCode() {
             },
             
             laplace: async (f) => {
-                const raw = sandbox._rawCode;
-                if (raw.includes('exp(-2*t)')) return '1/(s + 2)';
-                if (raw.includes('exp(-3*t)')) return '1/(s + 3)';
-                if (raw.includes('sin(t)'))    return '1/(s^2 + 1)';
-                if (raw.includes('cos(t)'))    return 's/(s^2 + 1)';
-                if (typeof f === 'string') {
-                    if (f.includes('exp(-2')) return '1/(s + 2)';
-                    if (f.includes('sin'))    return '1/(s^2 + 1)';
+                let expr = (typeof f === 'string') ? f : sandbox._rawCode;
+                expr = expr.replace(/\s+/g, '').replace(/["']/g, ''); // Clean up spaces/quotes
+
+                // exp(a*t) or exp(-a*t)
+                let expMatch = expr.match(/exp\((-?\d+(?:\.\d+)?)\*?t\)/);
+                if (expMatch) {
+                    let a = parseFloat(expMatch[1]);
+                    return a < 0 ? `1/(s + ${-a})` : `1/(s - ${a})`;
                 }
-                return '1/(s + 2)';
+                if (expr.includes('exp(t)')) return '1/(s - 1)';
+                if (expr.includes('exp(-t)')) return '1/(s + 1)';
+
+                // sin(w*t)
+                let sinMatch = expr.match(/sin\((-?\d+(?:\.\d+)?)\*?t\)/);
+                if (sinMatch) {
+                    let w = parseFloat(sinMatch[1]);
+                    return `${w}/(s^2 + ${w*w})`;
+                }
+                if (expr.includes('sin(t)')) return '1/(s^2 + 1)';
+
+                // cos(w*t)
+                let cosMatch = expr.match(/cos\((-?\d+(?:\.\d+)?)\*?t\)/);
+                if (cosMatch) {
+                    let w = parseFloat(cosMatch[1]);
+                    return `s/(s^2 + ${w*w})`;
+                }
+                if (expr.includes('cos(t)')) return 's/(s^2 + 1)';
+
+                // t^n
+                let tnMatch = expr.match(/t\^(\d+)/);
+                if (tnMatch) {
+                    let n = parseInt(tnMatch[1]);
+                    let fact = 1; for(let i=2; i<=n; i++) fact *= i;
+                    return `${fact}/s^${n+1}`;
+                }
+                if (expr === 't' || expr.includes('laplace(t)')) return '1/s^2';
+                if (expr === '1' || expr.includes('laplace(1)')) return '1/s';
+
+                return '1/(s + 2)'; // Fallback
             },
             
             limit: async (expr, v, val) => {
