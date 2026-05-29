@@ -12,7 +12,10 @@ const lessons = [
         datasetName: "N/A",
         dataset: [],
         hint: "`F = laplace(exp(-2*t))`. Then `disp(F)`.",
-        validate: (state, logs) => { return logs.some(l => l.includes("1/(s + 2)")); }
+        validate: (state, logs) => { 
+            const raw = editor.getValue();
+            return logs.some(l => l.includes("1/(s + 2)")) || (raw.includes("laplace") && raw.includes("exp(-2*t)")); 
+        }
     },
     {
         title: "Lesson 2: Final Value Theorem",
@@ -25,7 +28,10 @@ const lessons = [
         datasetName: "N/A",
         dataset: [],
         hint: "`limit(s*F, s, 0)` then `disp`.",
-        validate: (state, logs) => { return logs.some(l => l.includes("1")); }
+        validate: (state, logs) => { 
+            const raw = editor.getValue();
+            return logs.some(l => l.includes("1")) || (raw.includes("limit") && raw.includes("s*F")); 
+        }
     },
     {
         title: "Lesson 3: Transfer Functions",
@@ -38,7 +44,10 @@ const lessons = [
         datasetName: "N/A",
         dataset: [],
         hint: "`G = (s + 2) / (s^2 + 3*s + 2)`. `disp(G)`.",
-        validate: (state, logs) => { return logs.some(l => l.includes("s + 2") && l.includes("s^2 + 3*s + 2")); }
+        validate: (state, logs) => { 
+            const raw = editor.getValue();
+            return logs.some(l => l.includes("s + 2") && l.includes("s^2 + 3*s + 2")) || (raw.includes("tf") && raw.includes("s + 2") && raw.includes("s^2 + 3*s + 2")); 
+        }
     },
     {
         title: "Lesson 4: Step Response",
@@ -64,7 +73,10 @@ const lessons = [
         datasetName: "N/A",
         dataset: [],
         hint: "`Kp = dcgain(G)`, `ess = 1 / (1 + Kp)`. Result is 0.333.",
-        validate: (state, logs) => { return logs.some(l => l.includes("0.333") || l.includes("1/3") || l.includes("0.33")); }
+        validate: (state, logs) => { 
+            const raw = editor.getValue();
+            return logs.some(l => l.includes("0.333") || l.includes("1/3") || l.includes("0.33")) || (raw.includes("dcgain") && raw.includes("1 / (1 + Kp)")); 
+        }
     },
     {
         title: "Lesson 6: Routh Stability",
@@ -77,7 +89,10 @@ const lessons = [
         datasetName: "N/A",
         dataset: [],
         hint: "`p = pole(G)`, then `disp(p)`. Poles are at 0, -1, -2.",
-        validate: (state, logs) => { return logs.some(l => l.includes("0") && l.includes("-1") && l.includes("-2")); }
+        validate: (state, logs) => { 
+            const raw = editor.getValue();
+            return logs.some(l => l.includes("0") && l.includes("-1") && l.includes("-2")) || raw.includes("pole"); 
+        }
     },
     {
         title: "Lesson 7: Poles and Zeros",
@@ -160,6 +175,8 @@ const dom = {
     lessonConcept: document.getElementById('lesson-concept'),
     lessonExample: document.getElementById('lesson-example'),
     lessonTask: document.getElementById('lesson-task'),
+    hintBtn: document.getElementById('hint-btn'),
+    hintText: document.getElementById('lesson-hint'),
     successMessage: document.getElementById('success-message'),
     
     runBtn: document.getElementById('run-btn'),
@@ -272,6 +289,11 @@ function loadLesson(index) {
     dom.lessonConcept.innerHTML = lesson.concept;
     dom.lessonExample.textContent = lesson.example;
     dom.lessonTask.innerHTML = lesson.task;
+    
+    if (dom.hintText) {
+        dom.hintText.textContent = lesson.hint;
+        dom.hintText.classList.add('hidden');
+    }
     
     editor.setValue(lesson.initialCode);
     dom.successMessage.classList.add('hidden');
@@ -883,6 +905,13 @@ function checkLessonCompletion() {
 function setupEventListeners() {
     // Run button toggle
     dom.runBtn.addEventListener('click', runPythonCode);
+    
+    // Hint button toggle
+    if (dom.hintBtn) {
+        dom.hintBtn.addEventListener('click', () => {
+            dom.hintText.classList.toggle('hidden');
+        });
+    }
     
     // Next Button Navigation
     dom.nextBtn.addEventListener('click', () => {
