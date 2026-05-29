@@ -45,11 +45,11 @@ import matplotlib.pyplot as plt
 `,
         datasetName: "cohorts.csv",
         dataset: [
-            { Cohort: "Q1-Acquired", Price: 50, Qty: 2 },
-            { Cohort: "Q1-Acquired", Price: 30, Qty: 1 },
-            { Cohort: "Q2-Acquired", Price: 100, Qty: 3 },
-            { Cohort: "Q2-Acquired", Price: 80, Qty: 2 },
-            { Cohort: "Q3-Acquired", Price: 200, Qty: 1 }
+            { Cohort: "Q1-Acquired", Price: 50, Qty: 2, Revenue: "?" },
+            { Cohort: "Q1-Acquired", Price: 30, Qty: 1, Revenue: "?" },
+            { Cohort: "Q2-Acquired", Price: 100, Qty: 3, Revenue: "?" },
+            { Cohort: "Q2-Acquired", Price: 80, Qty: 2, Revenue: "?" },
+            { Cohort: "Q3-Acquired", Price: 200, Qty: 1, Revenue: "?" }
         ],
         hint: "`df['Revenue'] = df['Price'] * df['Qty']`. `rev_by_cohort = df.groupby('Cohort')['Revenue'].sum()`. `plt.bar(rev_by_cohort.index.tolist(), rev_by_cohort.tolist())`. `plt.title('Cohort Revenue')`. `plt.show()`.",
         validate: (state) => {
