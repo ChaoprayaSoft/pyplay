@@ -110,53 +110,58 @@ plt.title('Scatter Example')`,
         }
     },
     {
-        title: "Capstone 5: Executive Dashboard",
+        title: "Capstone 5: Regional Sales Dashboard",
         difficulty: "Expert",
         topic: "Multi-Panel Dashboard",
-        concept: "Dashboards combine multiple visualizations. Create a Dashboard combining a Line Trend of quarterly revenue with a Pie chart of product shares.",
-        example: `plt.plot(trend)
-plt.title('Dashboard')
-plt.show()`,
-        task: "Generate a multi-panel dashboard. Just create any plot (like a line plot of `[1, 2, 3]`) and set the title to `Executive Summary Dashboard`. Then call `plt.show()`.",
-        initialCode: `import matplotlib.pyplot as plt
+        concept: "Dashboards combine multiple visualizations to tell a story. You need to use `plt.subplot` to create two plots from `regional_sales.csv`: a bar chart of total revenue by region, and a pie chart of units sold.",
+        example: `plt.subplot(1, 2, 1)
+plt.bar(x, y)
+plt.subplot(1, 2, 2)
+plt.pie(data)`,
+        task: "Load `regional_sales.csv`. Create a dashboard with two subplots side-by-side (1 row, 2 columns). In subplot 1, plot a Bar chart of Region vs Revenue. In subplot 2, plot a Pie chart of Units. Set the overall title to `Regional Sales Dashboard`.",
+        initialCode: `import pandas as pd
+import matplotlib.pyplot as plt
 
-# Plot a trend and set title to 'Executive Summary Dashboard':
+# Load regional_sales.csv, create 2 subplots (Bar for Revenue, Pie for Units):
 `,
-        datasetName: "executive_data.csv",
+        datasetName: "regional_sales.csv",
         dataset: [
-            { Quarter: "Q1", Revenue: "1M", Target: "0.9M" },
-            { Quarter: "Q2", Revenue: "1.2M", Target: "1.1M" }
+            { Region: "North", Revenue: 50000, Units: 500 },
+            { Region: "South", Revenue: 30000, Units: 400 },
+            { Region: "East", Revenue: 45000, Units: 600 },
+            { Region: "West", Revenue: 60000, Units: 800 }
         ],
-        hint: "`plt.plot([1, 2, 3])`. `plt.title('Executive Summary Dashboard')`. `plt.show()`.",
+        hint: "`df = pd.read_csv('regional_sales.csv')`. `plt.subplot(1, 2, 1)`. `plt.bar(df['Region'], df['Revenue'])`. `plt.subplot(1, 2, 2)`. `plt.pie(df['Units'])`. `plt.title('Regional Sales Dashboard')`. `plt.show()`.",
         validate: (state) => {
             const c = state.currentPlot;
-            return c && c.title === "Executive Summary Dashboard";
+            return c && c.isSubplots && c.subplots && c.subplots.length >= 2 && c.title === "Regional Sales Dashboard";
         }
     },
     {
-        title: "Final Challenge: The Ultimate Data Audit",
+        title: "Final Challenge: Server Anomaly Detection",
         difficulty: "Expert",
-        topic: "Box Plots & Outliers",
-        concept: "No guidance this time. You need to analyze the `audit_logs.csv` dataset, extract the `DelayMs` values as a list, and plot a Box Plot titled `Latency Audit` to spot the outliers.",
+        topic: "Data Transformation & Visualization",
+        concept: "No guidance this time! You must clean, transform, and visualize the data to pass.",
         example: ``,
-        task: "Plot a Box Plot using the data `[12, 15, 14, 13, 85, 16]`. Set the title to `Latency Audit` and render it.",
-        initialCode: `import matplotlib.pyplot as plt
+        task: "Load `server_metrics.csv`. Filter for servers where `Uptime_Hours > 0`. Calculate `Load_Score = CPU_Usage * Memory_Usage`. Group by `ServerID` and sum the `Load_Score`. Plot a Bar chart of the scores titled `Server Anomaly Detection`.",
+        initialCode: `import pandas as pd
+import matplotlib.pyplot as plt
 
 # Your code here:
 `,
-        datasetName: "audit_logs.csv",
+        datasetName: "server_metrics.csv",
         dataset: [
-            { RequestID: "Req1", DelayMs: 12 },
-            { RequestID: "Req2", DelayMs: 15 },
-            { RequestID: "Req3", DelayMs: 14 },
-            { RequestID: "Req4", DelayMs: 13 },
-            { RequestID: "Req5", DelayMs: 85 },
-            { RequestID: "Req6", DelayMs: 16 }
+            { ServerID: "S1", CPU_Usage: 35, Memory_Usage: 60, Uptime_Hours: 120 },
+            { ServerID: "S2", CPU_Usage: 42, Memory_Usage: 65, Uptime_Hours: 340 },
+            { ServerID: "S3", CPU_Usage: 98, Memory_Usage: 95, Uptime_Hours: 50 },
+            { ServerID: "S4", CPU_Usage: 0, Memory_Usage: 0, Uptime_Hours: 0 },
+            { ServerID: "S5", CPU_Usage: 45, Memory_Usage: 62, Uptime_Hours: 200 },
+            { ServerID: "S6", CPU_Usage: 0, Memory_Usage: 0, Uptime_Hours: 0 }
         ],
-        hint: "`plt.boxplot([12, 15, 14, 13, 85, 16])`. `plt.title('Latency Audit')`. `plt.show()`.",
+        hint: "`df = pd.read_csv('server_metrics.csv')`. `df = df[df['Uptime_Hours'] > 0]`. `df['Load_Score'] = df['CPU_Usage'] * df['Memory_Usage']`. `grouped = df.groupby('ServerID')['Load_Score'].sum()`. `plt.bar(grouped.index.tolist(), grouped.tolist())`. `plt.title('Server Anomaly Detection')`. `plt.show()`.",
         validate: (state) => {
             const c = state.currentPlot;
-            return c && c.type === "boxplot" && c.title === "Latency Audit";
+            return c && c.type === "bar" && c.title === "Server Anomaly Detection";
         }
     }
 ];
