@@ -887,38 +887,84 @@ async function runPythonCode() {
             },
             
             rlocus: async (sys) => {
-                sandbox.pltState.type = "line";
+                sandbox.pltState.type = "scatter";
                 sandbox.pltState.title = "Root Locus";
                 let sysStr = (typeof sys === 'string') ? sys : sandbox._rawCode;
-                let params = sandbox.parse2ndOrder(sysStr);
+                sysStr = sysStr.replace(/Transfer Function:\s*/, '');
                 
-                let reals = [];
-                let imags = [];
-                
-                if (params) {
-                    let {A, B} = params;
-                    let center = -A / 2;
-                    for(let k = 0; k <= 50; k++) {
-                        let gain = k * 0.5;
-                        let root = center * center - B - gain;
-                        if (root < 0) {
-                            reals.push(center.toFixed(2));
-                            imags.push(Math.sqrt(-root).toFixed(2));
-                        } else {
-                            reals.push((center + Math.sqrt(root)).toFixed(2));
-                            imags.push("0.00");
-                        }
-                    }
+                let numStr = "1";
+                let denStr = sysStr;
+                let splitMatch = sysStr.match(/(.*?)\/\s*\((.*?)\)/);
+                if (splitMatch) {
+                    numStr = splitMatch[1];
+                    denStr = splitMatch[2];
                 } else {
-                    for (let k = 0; k <= 50; k++) {
-                        let gain = k * 0.5;
-                        reals.push((-1 - gain * 0.1).toFixed(2));
-                        imags.push((Math.sqrt(Math.max(0, gain * 0.3))).toFixed(2));
+                    let simpleSplit = sysStr.split('/');
+                    if (simpleSplit.length === 2) {
+                        numStr = simpleSplit[0];
+                        denStr = simpleSplit[1];
                     }
                 }
                 
-                sandbox.pltState.labels = reals;
-                sandbox.pltState.datasets = [{ data: imags, label: "Root Locus Path" }];
+                let numCoeffs = sandbox.parsePoly(numStr);
+                let denCoeffs = sandbox.parsePoly(denStr);
+                
+                let maxDegree = Math.max(numCoeffs.length, denCoeffs.length);
+                while(numCoeffs.length < maxDegree) numCoeffs.push(0);
+                while(denCoeffs.length < maxDegree) denCoeffs.push(0);
+                
+                let K_vals = [];
+                for(let i = 0; i <= 200; i++) K_vals.push(i / 10);
+                for(let i = 0; i <= 50; i++) K_vals.push(20 + i * 2);
+                for(let i = 0; i <= 20; i++) K_vals.push(120 + i * 10);
+                
+                let openLoopPoles = sandbox.getRootsDK([...denCoeffs]);
+                let openLoopZeros = sandbox.getRootsDK([...numCoeffs]);
+                
+                let scatterPoints = [];
+                
+                for(let K of K_vals) {
+                    let charEq = [];
+                    for(let i = 0; i < maxDegree; i++) {
+                        charEq[i] = denCoeffs[i] + K * numCoeffs[i];
+                    }
+                    let roots = sandbox.getRootsDK(charEq);
+                    for(let rStr of roots) {
+                        let r = 0, i = 0;
+                        if (typeof rStr === 'number') {
+                            r = rStr;
+                        } else {
+                            let match = String(rStr).match(/([-0-9.]+)([-+][0-9.]+)i/);
+                            if (match) {
+                                r = parseFloat(match[1]);
+                                i = parseFloat(match[2]);
+                            } else {
+                                r = parseFloat(rStr);
+                            }
+                        }
+                        scatterPoints.push({x: r, y: i});
+                    }
+                }
+                
+                let parseComplexArray = (arr) => {
+                    return arr.map(rStr => {
+                        let r = 0, i = 0;
+                        if (typeof rStr === 'number') r = rStr;
+                        else {
+                            let match = String(rStr).match(/([-0-9.]+)([-+][0-9.]+)i/);
+                            if (match) { r = parseFloat(match[1]); i = parseFloat(match[2]); }
+                            else r = parseFloat(rStr);
+                        }
+                        return {x: r, y: i};
+                    });
+                };
+                
+                sandbox.pltState.datasets = [
+                    { data: scatterPoints, label: "Locus", pointRadius: 2, pointBackgroundColor: '#3b82f6', pointBorderColor: 'transparent', borderColor: 'transparent', backgroundColor: 'transparent' },
+                    { data: parseComplexArray(openLoopPoles), label: "Poles (×)", pointStyle: 'crossRot', pointRadius: 8, pointBorderColor: '#ef4444', pointBackgroundColor: 'transparent', borderColor: 'transparent', backgroundColor: 'transparent' },
+                    { data: parseComplexArray(openLoopZeros), label: "Zeros (○)", pointStyle: 'circle', pointRadius: 8, pointBorderColor: '#10b981', pointBackgroundColor: 'transparent', borderColor: 'transparent', backgroundColor: 'transparent' }
+                ];
+                
                 sandbox.pltState.isSubplots = false;
                 await sandbox.plt_show();
             },
