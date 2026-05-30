@@ -1234,45 +1234,85 @@ async function runPythonCode() {
                 let a = [];
                 for(let i=0; i<N; i++) a[i] = (den[i] || 0) / aN;
                 let D = (num[N] || 0) / aN;
-                let b = [];
-                for(let i=0; i<N; i++) b[i] = ((num[i] || 0) / aN) - D * a[i];
-
-                let A_str = "[ ";
+                
+                let A_mat = [];
                 for(let i=0; i<N; i++) {
                     let row = [];
-                    for(let j=0; j<N; j++) {
-                        if (i < N-1) {
-                            row.push(j === i+1 ? "1" : "0");
-                        } else {
-                            row.push((-a[j]).toFixed(2));
-                        }
+                    for(let j=N-1; j>=0; j--) {
+                        if (i === 0) row.push(-a[j]);
+                        else row.push(j === N - i ? 1 : 0);
                     }
-                    A_str += row.join(" ") + (i < N-1 ? " ;<br>&nbsp;&nbsp;&nbsp;&nbsp;" : " ]");
+                    A_mat.push(row);
                 }
-                if(N===0) A_str = "[ 0 ]";
-
-                let B_str = "[ ";
-                for(let i=0; i<N; i++) {
-                    B_str += (i === N-1 ? "1" : "0") + (i < N-1 ? " ;<br>&nbsp;&nbsp;&nbsp;&nbsp;" : " ]");
+                if(N===0) A_mat = [[0]];
+                
+                let B_mat = [];
+                for(let i=0; i<N; i++) B_mat.push([i === 0 ? 1 : 0]);
+                if(N===0) B_mat = [[0]];
+                
+                let C_mat = [[]];
+                for(let j=N-1; j>=0; j--) C_mat[0].push((num[j] || 0)/aN - D * a[j]);
+                if(N===0) C_mat = [[0]];
+                
+                let D_mat = [[D]];
+                
+                let formatMat = (name, mat, rowPrefix, colPrefix) => {
+                    let rows = mat.length;
+                    let cols = mat[0].length;
+                    let out = `  <b>${name}</b> = \n`;
+                    let formattedMat = [];
+                    let colWidths = [];
+                    
+                    for(let i=0; i<rows; i++) {
+                        let r = [];
+                        for(let j=0; j<cols; j++) {
+                            let v = mat[i][j];
+                            let s = Number.isInteger(v) ? v.toString() : parseFloat(v.toFixed(4)).toString();
+                            r.push(s);
+                        }
+                        formattedMat.push(r);
+                    }
+                    
+                    for(let j=0; j<cols; j++) {
+                        let maxW = (`${colPrefix}${j+1}`).length;
+                        for(let i=0; i<rows; i++) {
+                            if(formattedMat[i][j].length > maxW) maxW = formattedMat[i][j].length;
+                        }
+                        colWidths.push(maxW + 2); 
+                    }
+                    
+                    out += "       ";
+                    for(let j=0; j<cols; j++) out += (`${colPrefix}${j+1}`).padStart(colWidths[j], ' ');
+                    out += "\n";
+                    
+                    for(let i=0; i<rows; i++) {
+                        out += `   ${rowPrefix}${i+1}`;
+                        for(let j=0; j<cols; j++) {
+                            out += formattedMat[i][j].padStart(colWidths[j], ' ');
+                        }
+                        out += "\n";
+                    }
+                    return out;
+                };
+                
+                let fullOutput = `<pre style="font-family: monospace; color: #e2e8f0; font-size: 0.85rem; margin:0;">\n`;
+                if (N > 0) {
+                    fullOutput += formatMat("A", A_mat, "x", "x") + "\n";
+                    fullOutput += formatMat("B", B_mat, "x", "u") + "\n";
+                    fullOutput += formatMat("C", C_mat, "y", "x") + "\n";
+                    fullOutput += formatMat("D", D_mat, "y", "u") + "\n";
+                } else {
+                    fullOutput += formatMat("D", D_mat, "y", "u") + "\n";
                 }
-                if(N===0) B_str = "[ 0 ]";
-
-                let C_str = "[ ";
-                for(let i=0; i<N; i++) {
-                    C_str += b[i].toFixed(2) + " ";
-                }
-                C_str += "]";
-                if(N===0) C_str = "[ 0 ]";
-
-                let D_str = "[ " + D.toFixed(2) + " ]";
-
-                await sandbox.print(`<b>State Space (Controller Canonical Form):</b><br><br><b>A</b> = ${A_str}<br><br><b>B</b> = ${B_str}<br><br><b>C</b> = ${C_str}<br><br><b>D</b> = ${D_str}`);
+                fullOutput += `\nContinuous-time state-space model.</pre>`;
+                
+                await sandbox.print(fullOutput);
                 return `SS:${sys}`;
             },
 
             dcgain: async (sys) => {
                 let expr = (typeof sys === 'string') ? sys : sandbox._rawCode;
-                expr = expr.replace(/Transfer Function:\s*/, '');
+                expr = expr.replace(/(?:Transfer Function:|SS:)\s*/g, '');
                 try {
                     let toEval = expr.replace(/\bs\b/g, '0').replace(/\^/g, '**');
                     return eval(toEval);
@@ -1350,7 +1390,7 @@ async function runPythonCode() {
             },
             
             parseTF: (sysStr) => {
-                sysStr = String(sysStr).replace(/Transfer Function:\s*/, '');
+                sysStr = String(sysStr).replace(/(?:Transfer Function:|SS:)\s*/g, '');
                 let numStr = "1", denStr = "1";
                 let splitMatch = sysStr.match(/(.*?)\/\s*\((.*?)\)/);
                 if (splitMatch) { numStr = splitMatch[1]; denStr = splitMatch[2]; }
