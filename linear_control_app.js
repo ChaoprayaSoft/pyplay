@@ -1259,7 +1259,7 @@ async function runPythonCode() {
                 let formatMat = (name, mat, rowPrefix, colPrefix) => {
                     let rows = mat.length;
                     let cols = mat[0].length;
-                    let out = `  <b>${name}</b> = \n`;
+                    let out = `  ${name} = \n`;
                     let formattedMat = [];
                     let colWidths = [];
                     
@@ -1295,7 +1295,7 @@ async function runPythonCode() {
                     return out;
                 };
                 
-                let fullOutput = `<pre style="font-family: monospace; color: #e2e8f0; font-size: 0.85rem; margin:0;">\n`;
+                let fullOutput = `\n`;
                 if (N > 0) {
                     fullOutput += formatMat("A", A_mat, "x", "x") + "\n";
                     fullOutput += formatMat("B", B_mat, "x", "u") + "\n";
@@ -1304,7 +1304,7 @@ async function runPythonCode() {
                 } else {
                     fullOutput += formatMat("D", D_mat, "y", "u") + "\n";
                 }
-                fullOutput += `\nContinuous-time state-space model.</pre>`;
+                fullOutput += `\nContinuous-time state-space model.\n`;
                 
                 await sandbox.print(fullOutput);
                 return `SS:${sys}`;
