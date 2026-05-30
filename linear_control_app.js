@@ -1059,7 +1059,7 @@ async function runPythonCode() {
                 }
                 
                 sandbox.pltState.isSubplots = true;
-                sandbox.pltState.layout = 'row';
+                sandbox.pltState.layout = 'column';
                 sandbox.pltState.subplots = [
                     {
                         type: 'line',
