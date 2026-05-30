@@ -686,12 +686,28 @@ function transpileMATLABCode(mCode) {
             continue;
         }
 
+        let processArgs = (argsStr) => {
+            if (!argsStr) return argsStr;
+            let args = argsStr.split(',').map(s => s.trim());
+            return args.map(arg => {
+                let containsSym = [...symVars].some(sv => new RegExp(`\\b${sv}\\b`).test(arg));
+                if (containsSym && arg.match(/[-+*/()]/)) {
+                    let replacedArg = arg;
+                    [...symVars].forEach(sv => {
+                        replacedArg = replacedArg.replace(new RegExp(`\\b${sv}\\b`, 'g'), `\${${sv}}`);
+                    });
+                    return `\`${replacedArg}\``;
+                }
+                return arg;
+            }).join(', ');
+        };
+
         // 3) Assignment with command call: X = cmd(args)
         let aCmdM = t.match(new RegExp(`^([a-zA-Z_]\\w*)\\s*=\\s*(${cmds.join('|')})\\s*\\((.*)\\)$`));
         if (aCmdM) {
             let [, varName, cmd, rawArgs] = aCmdM;
-            // dcgain returns a number; others are symbolic
-            result.push(`var ${varName} = await sandbox.${cmd}(${rawArgs});`);
+            let pArgs = processArgs(rawArgs);
+            result.push(`var ${varName} = await sandbox.${cmd}(${pArgs});`);
             if (!['dcgain', 'pole', 'limit'].includes(cmd)) {
                 symVars.add(varName);
             }
@@ -701,7 +717,8 @@ function transpileMATLABCode(mCode) {
         // 4) Standalone command call: step(G), pzmap(G), etc.
         let sCmdM = t.match(new RegExp(`^(${cmds.join('|')})\\s*\\((.*)\\)$`));
         if (sCmdM) {
-            result.push(`await sandbox.${sCmdM[1]}(${sCmdM[2]});`);
+            let pArgs = processArgs(sCmdM[2]);
+            result.push(`await sandbox.${sCmdM[1]}(${pArgs});`);
             continue;
         }
 
@@ -1097,11 +1114,23 @@ async function runPythonCode() {
             },
             
             pid: async (Kp, Ki, Kd) => {
-                return `PID(${Kp}, ${Ki}, ${Kd})`;
+                let num = [Ki || 0, Kp || 0, Kd || 0];
+                while(num.length > 1 && num[num.length-1] === 0) num.pop();
+                return `(${sandbox.polyToStr(num)}) / (s)`;
             },
             
             feedback: async (sys1, sys2) => {
-                return `Feedback(${sys1}, ${sys2})`;
+                if (!sys2) sys2 = '1';
+                let tf1 = sandbox.parseTF(sys1);
+                let tf2 = sandbox.parseTF(sys2);
+                
+                let N1D2 = sandbox.multiplyPoly(tf1.num, tf2.den);
+                let D1D2 = sandbox.multiplyPoly(tf1.den, tf2.den);
+                let N1N2 = sandbox.multiplyPoly(tf1.num, tf2.num);
+                
+                let resDen = sandbox.addPoly(D1D2, N1N2);
+                
+                return `(${sandbox.polyToStr(N1D2)}) / (${sandbox.polyToStr(resDen)})`;
             },
             
             dcgain: async (sys) => {
@@ -1145,6 +1174,67 @@ async function runPythonCode() {
                 }
                 for(let i=0; i<coeffs.length; i++) if (coeffs[i] === undefined) coeffs[i] = 0;
                 return coeffs;
+            },
+            
+            multiplyPoly: (p1, p2) => {
+                if (p1.length === 0 || p2.length === 0) return [0];
+                let res = new Array(p1.length + p2.length - 1).fill(0);
+                for (let i = 0; i < p1.length; i++) {
+                    for (let j = 0; j < p2.length; j++) {
+                        res[i+j] += p1[i] * p2[j];
+                    }
+                }
+                return res;
+            },
+            
+            addPoly: (p1, p2) => {
+                let len = Math.max(p1.length, p2.length);
+                let res = new Array(len).fill(0);
+                for (let i = 0; i < len; i++) {
+                    res[i] = (p1[i] || 0) + (p2[i] || 0);
+                }
+                return res;
+            },
+            
+            polyToStr: (coeffs) => {
+                let terms = [];
+                for (let i = coeffs.length - 1; i >= 0; i--) {
+                    if (coeffs[i] === 0 && i !== 0) continue;
+                    if (coeffs[i] === 0 && i === 0 && terms.length > 0) continue;
+                    let c = coeffs[i];
+                    let term = "";
+                    if (i === 0) term = `${c}`;
+                    else if (i === 1) term = (c === 1 ? 's' : (c === -1 ? '-s' : `${c}*s`));
+                    else term = (c === 1 ? `s^${i}` : (c === -1 ? `-s^${i}` : `${c}*s^${i}`));
+                    terms.push(term);
+                }
+                if (terms.length === 0) return "0";
+                return terms.join(' + ').replace(/\+ -/g, '- ');
+            },
+            
+            parseTF: (sysStr) => {
+                sysStr = String(sysStr).replace(/Transfer Function:\s*/, '');
+                let parts = sysStr.split('*');
+                let finalNum = [1];
+                let finalDen = [1];
+                for (let part of parts) {
+                    let numStr = "1", denStr = "1";
+                    let splitMatch = part.match(/(.*?)\/\s*\((.*?)\)/);
+                    if (splitMatch) { numStr = splitMatch[1]; denStr = splitMatch[2]; }
+                    else {
+                        let simpleSplit = part.split('/');
+                        if (simpleSplit.length === 2) { numStr = simpleSplit[0]; denStr = simpleSplit[1]; }
+                        else numStr = part;
+                    }
+                    numStr = numStr.replace(/^\s*\(\s*|\s*\)\s*$/g, '');
+                    denStr = denStr.replace(/^\s*\(\s*|\s*\)\s*$/g, '');
+                    
+                    let nc = sandbox.parsePoly(numStr);
+                    let dc = sandbox.parsePoly(denStr);
+                    finalNum = sandbox.multiplyPoly(finalNum, nc);
+                    finalDen = sandbox.multiplyPoly(finalDen, dc);
+                }
+                return {num: finalNum, den: finalDen};
             },
             
             getRootsDK: (coeffs) => {
