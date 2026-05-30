@@ -474,6 +474,7 @@ function renderVisualChart(plotData) {
     
     dom.chartWrapper.classList.remove('hidden');
     dom.chartWrapper.innerHTML = '';
+    dom.chartWrapper.style.flexDirection = plotData.layout || 'row';
     
     window.currentCharts = window.currentCharts || [];
     window.currentCharts.forEach(c => c.destroy());
@@ -1058,6 +1059,7 @@ async function runPythonCode() {
                 }
                 
                 sandbox.pltState.isSubplots = true;
+                sandbox.pltState.layout = 'row';
                 sandbox.pltState.subplots = [
                     {
                         type: 'line',
