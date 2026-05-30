@@ -692,6 +692,10 @@ function transpileMATLABCode(mCode) {
             return args.map(arg => {
                 let containsSym = [...symVars].some(sv => new RegExp(`\\b${sv}\\b`).test(arg));
                 if (containsSym && arg.match(/[-+*/()]/)) {
+                    let multMatch = arg.match(/^\s*([a-zA-Z_]\w*)\s*\*\s*([a-zA-Z_]\w*)\s*$/);
+                    if (multMatch) {
+                        return `await sandbox.multiplyTF(${multMatch[1]}, ${multMatch[2]})`;
+                    }
                     let replacedArg = arg;
                     [...symVars].forEach(sv => {
                         replacedArg = replacedArg.replace(new RegExp(`\\b${sv}\\b`, 'g'), `\${${sv}}`);
@@ -1193,6 +1197,14 @@ async function runPythonCode() {
                 return `(${sandbox.polyToStr(N1D2)}) / (${sandbox.polyToStr(resDen)})`;
             },
             
+            multiplyTF: async (sys1, sys2) => {
+                let tf1 = sandbox.parseTF(sys1);
+                let tf2 = sandbox.parseTF(sys2);
+                let resNum = sandbox.multiplyPoly(tf1.num, tf2.num);
+                let resDen = sandbox.multiplyPoly(tf1.den, tf2.den);
+                return `(${sandbox.polyToStr(resNum)}) / (${sandbox.polyToStr(resDen)})`;
+            },
+            
             dcgain: async (sys) => {
                 let expr = (typeof sys === 'string') ? sys : sandbox._rawCode;
                 expr = expr.replace(/Transfer Function:\s*/, '');
@@ -1274,27 +1286,20 @@ async function runPythonCode() {
             
             parseTF: (sysStr) => {
                 sysStr = String(sysStr).replace(/Transfer Function:\s*/, '');
-                let parts = sysStr.split('*');
-                let finalNum = [1];
-                let finalDen = [1];
-                for (let part of parts) {
-                    let numStr = "1", denStr = "1";
-                    let splitMatch = part.match(/(.*?)\/\s*\((.*?)\)/);
-                    if (splitMatch) { numStr = splitMatch[1]; denStr = splitMatch[2]; }
-                    else {
-                        let simpleSplit = part.split('/');
-                        if (simpleSplit.length === 2) { numStr = simpleSplit[0]; denStr = simpleSplit[1]; }
-                        else numStr = part;
-                    }
-                    numStr = numStr.replace(/^\s*\(\s*|\s*\)\s*$/g, '');
-                    denStr = denStr.replace(/^\s*\(\s*|\s*\)\s*$/g, '');
-                    
-                    let nc = sandbox.parsePoly(numStr);
-                    let dc = sandbox.parsePoly(denStr);
-                    finalNum = sandbox.multiplyPoly(finalNum, nc);
-                    finalDen = sandbox.multiplyPoly(finalDen, dc);
+                let numStr = "1", denStr = "1";
+                let splitMatch = sysStr.match(/(.*?)\/\s*\((.*?)\)/);
+                if (splitMatch) { numStr = splitMatch[1]; denStr = splitMatch[2]; }
+                else {
+                    let simpleSplit = sysStr.split('/');
+                    if (simpleSplit.length === 2) { numStr = simpleSplit[0]; denStr = simpleSplit[1]; }
+                    else numStr = sysStr;
                 }
-                return {num: finalNum, den: finalDen};
+                numStr = numStr.replace(/^\s*\(\s*|\s*\)\s*$/g, '');
+                denStr = denStr.replace(/^\s*\(\s*|\s*\)\s*$/g, '');
+                
+                let nc = sandbox.parsePoly(numStr);
+                let dc = sandbox.parsePoly(denStr);
+                return {num: nc, den: dc};
             },
             
             getRootsDK: (coeffs) => {
