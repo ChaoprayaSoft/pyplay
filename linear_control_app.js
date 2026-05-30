@@ -145,6 +145,19 @@ const lessons = [
         dataset: [],
         hint: "`C = pid(10, 5, 2); T = feedback(C*G, 1); step(T)`",
         validate: (state) => { return state.currentPlot && state.currentPlot.type === "line" && state.currentPlot.title === "Step Response"; }
+    },
+    {
+        title: "Lesson 11: State-Space Representation",
+        difficulty: "Master",
+        topic: "Modern Control",
+        concept: "A transfer function can be converted into a State-Space representation (A, B, C, D matrices). Use `ss(G)`.",
+        example: `s = tf('s');\nG = 10 / (s^2 + 2*s + 10);\nss(G)`,
+        task: "Convert the transfer function `G = 5 / (s^3 + 2*s^2 + 3*s + 5)` into state-space representation.",
+        initialCode: `s = tf('s');\nG = 5 / (s^3 + 2*s^2 + 3*s + 5);\n\n% Print State-Space representation:\n`,
+        datasetName: "N/A",
+        dataset: [],
+        hint: "Call `ss(G)`.",
+        validate: (state) => { return state.consoleHistory.some(msg => msg.includes("State Space")); }
     }
 ];
 
@@ -664,7 +677,7 @@ function transpileMATLABCode(mCode) {
     let result = [];
     let symVars = new Set(); // Track symbolic variable names
 
-    const cmds = ['tf', 'laplace', 'limit', 'step', 'pzmap', 'rlocus', 'bode', 'pid', 'feedback', 'dcgain', 'pole'];
+    const cmds = ['tf', 'laplace', 'limit', 'step', 'pzmap', 'rlocus', 'bode', 'pid', 'feedback', 'dcgain', 'pole', 'ss'];
     const cmdPattern = new RegExp(`^(${cmds.join('|')})$`);
 
     for (let line of lines) {
@@ -1205,6 +1218,58 @@ async function runPythonCode() {
                 return `(${sandbox.polyToStr(resNum)}) / (${sandbox.polyToStr(resDen)})`;
             },
             
+            ss: async (sys) => {
+                let tf = sandbox.parseTF(sys);
+                let num = tf.num;
+                let den = tf.den;
+                while(den.length > 1 && Math.abs(den[den.length-1]) < 1e-9) den.pop();
+                let N = den.length - 1;
+                
+                if (num.length > den.length) {
+                    await sandbox.print(`<span style="color:#f87171;">Error: Improper transfer function cannot be converted to state space directly.</span>`);
+                    return null;
+                }
+                
+                let aN = den[N];
+                let a = [];
+                for(let i=0; i<N; i++) a[i] = (den[i] || 0) / aN;
+                let D = (num[N] || 0) / aN;
+                let b = [];
+                for(let i=0; i<N; i++) b[i] = ((num[i] || 0) / aN) - D * a[i];
+
+                let A_str = "[ ";
+                for(let i=0; i<N; i++) {
+                    let row = [];
+                    for(let j=0; j<N; j++) {
+                        if (i < N-1) {
+                            row.push(j === i+1 ? "1" : "0");
+                        } else {
+                            row.push((-a[j]).toFixed(2));
+                        }
+                    }
+                    A_str += row.join(" ") + (i < N-1 ? " ;<br>&nbsp;&nbsp;&nbsp;&nbsp;" : " ]");
+                }
+                if(N===0) A_str = "[ 0 ]";
+
+                let B_str = "[ ";
+                for(let i=0; i<N; i++) {
+                    B_str += (i === N-1 ? "1" : "0") + (i < N-1 ? " ;<br>&nbsp;&nbsp;&nbsp;&nbsp;" : " ]");
+                }
+                if(N===0) B_str = "[ 0 ]";
+
+                let C_str = "[ ";
+                for(let i=0; i<N; i++) {
+                    C_str += b[i].toFixed(2) + " ";
+                }
+                C_str += "]";
+                if(N===0) C_str = "[ 0 ]";
+
+                let D_str = "[ " + D.toFixed(2) + " ]";
+
+                await sandbox.print(`<b>State Space (Controller Canonical Form):</b><br><br><b>A</b> = ${A_str}<br><br><b>B</b> = ${B_str}<br><br><b>C</b> = ${C_str}<br><br><b>D</b> = ${D_str}`);
+                return `SS:${sys}`;
+            },
+
             dcgain: async (sys) => {
                 let expr = (typeof sys === 'string') ? sys : sandbox._rawCode;
                 expr = expr.replace(/Transfer Function:\s*/, '');

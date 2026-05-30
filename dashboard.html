@@ -265,7 +265,7 @@
                     </div>
                     <div class="stat-card">
                         <div style="font-size:0.75rem; font-weight:600; text-transform:uppercase; color:var(--text-muted);">Control Systems</div>
-                        <div class="stat-value" id="stat-linearcontrol-completed">0 / 10</div>
+                        <div class="stat-value" id="stat-linearcontrol-completed">0 / 11</div>
                     </div>
                     <div class="stat-card">
                         <div style="font-size:0.75rem; font-weight:600; text-transform:uppercase; color:var(--text-muted);">Total XP</div>
@@ -457,7 +457,7 @@
             
             const lcProgress = user.progress.linearcontrol || { completed_lessons: [], completed: false };
             const lcCompletedCount = lcProgress.completed_lessons ? lcProgress.completed_lessons.length : 0;
-            document.getElementById('stat-linearcontrol-completed').textContent = `${lcCompletedCount} / 10`;
+            document.getElementById('stat-linearcontrol-completed').textContent = `${lcCompletedCount} / 11`;
 
             const jsProgress = user.progress.javascript || { completed_lessons: [], completed: false };
             const jsCompletedCount = jsProgress.completed_lessons ? jsProgress.completed_lessons.length : 0;

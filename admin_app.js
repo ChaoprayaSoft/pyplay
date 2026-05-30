@@ -47,7 +47,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         javascript: 13,
         ai: 12,
         robotics: 10,
-        linearcontrol: 10
+        linearcontrol: 11
     };
 
     const BADGE_ICONS = {
