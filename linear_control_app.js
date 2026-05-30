@@ -973,22 +973,104 @@ async function runPythonCode() {
                 }
             },
             
+            parsePoly: (expr) => {
+                let s = expr.replace(/\s+/g, '').replace(/-/g, '+-').split('+');
+                let coeffs = [];
+                for (let term of s) {
+                    if (!term) continue;
+                    let c = 1, p = 0;
+                    if (!term.includes('s')) {
+                        c = parseFloat(term);
+                        p = 0;
+                    } else {
+                        let parts = term.split('*s');
+                        let cStr = '', pStr = '';
+                        if (parts.length === 1) { 
+                            let idx = term.indexOf('s');
+                            cStr = term.substring(0, idx);
+                            pStr = term.substring(idx);
+                        } else {
+                            cStr = parts[0];
+                            pStr = 's' + parts[1];
+                        }
+                        c = (cStr === '' || cStr === '+') ? 1 : (cStr === '-' ? -1 : parseFloat(cStr));
+                        if (pStr === 's') p = 1;
+                        else if (pStr.startsWith('s^')) p = parseInt(pStr.substring(2));
+                    }
+                    if (!isNaN(c) && !isNaN(p)) {
+                        coeffs[p] = (coeffs[p] || 0) + c;
+                    }
+                }
+                for(let i=0; i<coeffs.length; i++) if (coeffs[i] === undefined) coeffs[i] = 0;
+                return coeffs;
+            },
+            
+            getRootsDK: (coeffs) => {
+                while(coeffs.length > 0 && Math.abs(coeffs[coeffs.length-1]) < 1e-9) coeffs.pop();
+                if (coeffs.length <= 1) return [];
+                let n = coeffs.length - 1;
+                let P = coeffs.map(c => c / coeffs[n]);
+                
+                let evalPoly = (z) => {
+                    let sum = {r: 0, i: 0};
+                    for(let k=0; k<=n; k++) {
+                        let r = 1, i = 0;
+                        for(let j=0; j<k; j++) {
+                            let r_new = r*z.r - i*z.i;
+                            let i_new = r*z.i + i*z.r;
+                            r = r_new; i = i_new;
+                        }
+                        sum.r += P[k]*r;
+                        sum.i += P[k]*i;
+                    }
+                    return sum;
+                };
+                
+                let R = [];
+                for(let i=0; i<n; i++) {
+                    let angle = 2 * Math.PI * i / n + 0.1;
+                    R.push({r: Math.cos(angle), i: Math.sin(angle)});
+                }
+                
+                for(let iter=0; iter<100; iter++) {
+                    for(let i=0; i<n; i++) {
+                        let num = evalPoly(R[i]);
+                        let den = {r: 1, i: 0};
+                        for(let j=0; j<n; j++) {
+                            if (i !== j) {
+                                let diff = {r: R[i].r - R[j].r, i: R[i].i - R[j].i};
+                                let r_new = den.r*diff.r - den.i*diff.i;
+                                let i_new = den.r*diff.i + den.i*diff.r;
+                                den = {r: r_new, i: i_new};
+                            }
+                        }
+                        let mag2 = den.r*den.r + den.i*den.i;
+                        if(mag2 > 1e-15) {
+                            R[i].r -= (num.r*den.r + num.i*den.i)/mag2;
+                            R[i].i -= (num.i*den.r - num.r*den.i)/mag2;
+                        }
+                    }
+                }
+                
+                return R.map(z => {
+                    if (Math.abs(z.i) < 1e-3) return Math.round(z.r * 100) / 100;
+                    return (Math.round(z.r*100)/100) + (z.i > 0 ? "+" : "") + (Math.round(z.i*100)/100) + "i";
+                });
+            },
+            
             pole: async (sys) => {
                 let expr = (typeof sys === 'string') ? sys : sandbox._rawCode;
                 expr = expr.replace(/Transfer Function:\s*/, '');
                 let denMatch = expr.match(/\/\s*\((.*?)\)/);
                 let denStr = denMatch ? denMatch[1] : expr;
                 
-                let roots = [];
-                for(let i = -100; i <= 100; i++) {
-                    let toEval = denStr.replace(/\bs\b/g, `(${i})`).replace(/\^/g, '**');
-                    try {
-                        if (Math.abs(eval(toEval)) < 1e-6) {
-                            roots.push(i);
-                        }
-                    } catch(e) {}
-                }
-                return roots.length > 0 ? roots : [0, -1, -2];
+                try {
+                    let coeffs = sandbox.parsePoly(denStr);
+                    let roots = sandbox.getRootsDK(coeffs);
+                    if (roots.length > 0) return roots;
+                } catch(e) {}
+                
+                return [0, -1, -2]; // Ultimate fallback
             },
             
             plt_show: async () => {
