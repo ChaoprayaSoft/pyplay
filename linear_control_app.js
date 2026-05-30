@@ -63,7 +63,20 @@ const lessons = [
         validate: (state) => { return state.currentPlot && state.currentPlot.type === "line" && state.currentPlot.title === "Step Response"; }
     },
     {
-        title: "Lesson 5: Steady State Error",
+        title: "Lesson 5: State-Space Representation",
+        difficulty: "Intermediate",
+        topic: "Modern Control",
+        concept: "A transfer function can be converted into a State-Space representation (A, B, C, D matrices). Use `ss(G)`.",
+        example: `s = tf('s');\nG = 10 / (s^2 + 2*s + 10);\nss(G)`,
+        task: "Convert the transfer function `G = 5 / (s^3 + 2*s^2 + 3*s + 5)` into state-space representation.",
+        initialCode: `s = tf('s');\nG = 5 / (s^3 + 2*s^2 + 3*s + 5);\n\n% Print State-Space representation:\n`,
+        datasetName: "N/A",
+        dataset: [],
+        hint: "Call `ss(G)`.",
+        validate: (state) => { return state.consoleHistory.some(msg => msg.includes("State Space")); }
+    },
+    {
+        title: "Lesson 6: Steady State Error",
         difficulty: "Intermediate",
         topic: "System Performance",
         concept: "The steady state error is the difference between the desired and actual output as time approaches infinity.",
@@ -79,7 +92,7 @@ const lessons = [
         }
     },
     {
-        title: "Lesson 6: Routh Stability",
+        title: "Lesson 7: Routh Stability",
         difficulty: "Expert",
         topic: "Stability",
         concept: "The Routh-Hurwitz criterion determines if poles are in the right-half plane. In MATLAB, we can use `pole(G)`.",
@@ -95,7 +108,7 @@ const lessons = [
         }
     },
     {
-        title: "Lesson 7: Poles and Zeros",
+        title: "Lesson 8: Poles and Zeros",
         difficulty: "Intermediate",
         topic: "System Modeling",
         concept: "Visualizing the poles and zeros on the complex plane helps understand system behavior. Use `pzmap(G)`.",
@@ -108,7 +121,7 @@ const lessons = [
         validate: (state) => { return state.currentPlot && state.currentPlot.type === "scatter" && state.currentPlot.title === "Pole-Zero Map"; }
     },
     {
-        title: "Lesson 8: Root Locus",
+        title: "Lesson 9: Root Locus",
         difficulty: "Expert",
         topic: "Advanced Stability",
         concept: "The root locus shows how closed-loop poles move as a parameter varies. Use `rlocus(G)`.",
@@ -121,7 +134,7 @@ const lessons = [
         validate: (state) => { return state.currentPlot && state.currentPlot.type === "line" && state.currentPlot.title === "Root Locus"; }
     },
     {
-        title: "Lesson 9: Frequency Response (Bode Plot)",
+        title: "Lesson 10: Frequency Response (Bode Plot)",
         difficulty: "Expert",
         topic: "Frequency Domain",
         concept: "Bode plots show the magnitude and phase response of a system. Use `bode(G)`.",
@@ -134,7 +147,7 @@ const lessons = [
         validate: (state) => { return state.currentPlot && state.currentPlot.type === "line" && state.currentPlot.title === "Bode Diagram"; }
     },
     {
-        title: "Lesson 10: PID Controller Tuning",
+        title: "Lesson 11: PID Controller Tuning",
         difficulty: "Expert",
         topic: "Controller Design",
         concept: "A PID controller improves transient and steady-state response. Create one with `pid(Kp, Ki, Kd)` and close the loop with `feedback(C*G, 1)`.",
@@ -145,19 +158,6 @@ const lessons = [
         dataset: [],
         hint: "`C = pid(10, 5, 2); T = feedback(C*G, 1); step(T)`",
         validate: (state) => { return state.currentPlot && state.currentPlot.type === "line" && state.currentPlot.title === "Step Response"; }
-    },
-    {
-        title: "Lesson 11: State-Space Representation",
-        difficulty: "Master",
-        topic: "Modern Control",
-        concept: "A transfer function can be converted into a State-Space representation (A, B, C, D matrices). Use `ss(G)`.",
-        example: `s = tf('s');\nG = 10 / (s^2 + 2*s + 10);\nss(G)`,
-        task: "Convert the transfer function `G = 5 / (s^3 + 2*s^2 + 3*s + 5)` into state-space representation.",
-        initialCode: `s = tf('s');\nG = 5 / (s^3 + 2*s^2 + 3*s + 5);\n\n% Print State-Space representation:\n`,
-        datasetName: "N/A",
-        dataset: [],
-        hint: "Call `ss(G)`.",
-        validate: (state) => { return state.consoleHistory.some(msg => msg.includes("State Space")); }
     }
 ];
 
