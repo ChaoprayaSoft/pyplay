@@ -476,15 +476,33 @@ function renderVisualChart(plotData) {
     dom.chartWrapper.innerHTML = '';
     dom.chartWrapper.style.flexDirection = plotData.layout || 'row';
     
+    if (plotData.isSubplots) {
+        dom.chartWrapper.style.overflowY = "auto";
+        dom.chartWrapper.style.overflowX = "hidden";
+        dom.chartWrapper.style.justifyContent = "flex-start";
+        dom.chartWrapper.style.alignItems = "stretch";
+    } else {
+        dom.chartWrapper.style.overflowY = "hidden";
+        dom.chartWrapper.style.overflowX = "hidden";
+        dom.chartWrapper.style.justifyContent = "center";
+        dom.chartWrapper.style.alignItems = "center";
+    }
+    
     window.currentCharts = window.currentCharts || [];
     window.currentCharts.forEach(c => c.destroy());
     window.currentCharts = [];
     
     plotsToRender.forEach((pData, idx) => {
         let container = document.createElement('div');
-        container.style.flex = "1";
+        if (plotData.isSubplots && (plotData.layout === 'column' || !plotData.layout)) {
+            container.style.flex = "1 0 auto";
+            container.style.minHeight = "350px";
+            container.style.width = "100%";
+        } else {
+            container.style.flex = "1";
+            container.style.height = "100%";
+        }
         container.style.minWidth = "0";
-        container.style.height = "100%";
         container.style.position = "relative";
         
         let canvas = document.createElement('canvas');
