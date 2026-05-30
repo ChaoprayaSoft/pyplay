@@ -867,42 +867,102 @@ async function runPythonCode() {
                 let t = [];
                 let y = [];
                 let sysStr = (typeof sys === 'string') ? sys : sandbox._rawCode;
-                let params = sandbox.parse2ndOrder(sysStr);
+                let tf = sandbox.parseTF(sysStr);
+                let num = tf.num;
+                let den = tf.den;
                 
-                if (params) {
-                    let {K, A, B} = params;
-                    let wn = Math.sqrt(B);
-                    let zeta = A / (2 * wn);
-                    let dc = K / B;
-                    
-                    for (let i = 0; i <= 100; i++) {
-                        let time = i * 0.1;
-                        t.push(time.toFixed(1));
-                        let val = 0;
-                        if (zeta < 1) { // Underdamped
-                            let wd = wn * Math.sqrt(1 - zeta*zeta);
-                            let phi = Math.acos(zeta);
-                            val = dc * (1 - Math.exp(-zeta * wn * time) / Math.sqrt(1 - zeta*zeta) * Math.sin(wd * time + phi));
-                        } else if (zeta === 1) { // Critically damped
-                            val = dc * (1 - Math.exp(-wn * time) * (1 + wn * time));
-                        } else { // Overdamped
-                            let s1 = -zeta*wn + wn*Math.sqrt(zeta*zeta - 1);
-                            let s2 = -zeta*wn - wn*Math.sqrt(zeta*zeta - 1);
-                            val = dc * (1 - (s2*Math.exp(s1*time) - s1*Math.exp(s2*time))/(s2-s1));
-                        }
-                        y.push(parseFloat(val.toFixed(4)));
+                while(den.length > 1 && Math.abs(den[den.length-1]) < 1e-9) den.pop();
+                let N = den.length - 1;
+                
+                if (num.length > den.length) {
+                    sandbox.pltState.labels = ["0"];
+                    sandbox.pltState.datasets = [{ data: [0], label: "Improper System Error", pointRadius: 0 }];
+                    sandbox.pltState.isSubplots = false;
+                    await sandbox.plt_show();
+                    return;
+                }
+                
+                if (N === 0) {
+                    let gain = (num[0] || 0) / den[0];
+                    for(let i=0; i<=100; i++) { t.push((i*0.1).toFixed(1)); y.push(gain); }
+                    sandbox.pltState.labels = t;
+                    sandbox.pltState.datasets = [{ data: y, label: "Amplitude", pointRadius: 0 }];
+                    sandbox.pltState.isSubplots = false;
+                    await sandbox.plt_show();
+                    return;
+                }
+                
+                let aN = den[N];
+                let a = [];
+                for(let i=0; i<N; i++) a[i] = (den[i] || 0) / aN;
+                
+                let D = (num[N] || 0) / aN;
+                let b = [];
+                for(let i=0; i<N; i++) {
+                    b[i] = ((num[i] || 0) / aN) - D * a[i];
+                }
+                
+                let poles = sandbox.getRootsDK([...den]);
+                let slowestReal = -1e9;
+                let maxWn = 0.1;
+                for (let pStr of poles) {
+                    let r = 0, i = 0;
+                    if (typeof pStr === 'number') r = pStr;
+                    else {
+                        let match = String(pStr).match(/([-0-9.]+)([-+][0-9.]+)i/);
+                        if (match) { r = parseFloat(match[1]); i = parseFloat(match[2]); }
+                        else r = parseFloat(pStr);
                     }
-                } else {
-                    for (let i = 0; i <= 50; i++) {
-                        let time = i * 0.1;
-                        t.push(time.toFixed(1));
-                        let val = 1 - Math.exp(-0.5 * time) * Math.cos(2.5 * time);
-                        y.push(parseFloat(val.toFixed(4)));
+                    if (r < 0 && r > slowestReal) slowestReal = r;
+                    let wn = Math.sqrt(r*r + i*i);
+                    if (wn > maxWn) maxWn = wn;
+                }
+                
+                let tMax = 10.0;
+                if (slowestReal !== -1e9 && slowestReal < 0) {
+                    tMax = Math.abs(5.0 / slowestReal); 
+                }
+                if (tMax > 100) tMax = 100;
+                if (tMax < 0.1) tMax = 0.1;
+                
+                let dt = Math.min(0.01, 0.1 / maxWn); 
+                let steps = Math.ceil(tMax / dt);
+                let recordStep = Math.max(1, Math.floor(steps / 200));
+                
+                let x = new Array(N).fill(0);
+                
+                let computeDx = (currX) => {
+                    let dx = new Array(N).fill(0);
+                    for(let i=0; i<N-1; i++) dx[i] = currX[i+1];
+                    let sum = 1.0;
+                    for(let i=0; i<N; i++) sum -= a[i] * currX[i];
+                    dx[N-1] = sum;
+                    return dx;
+                };
+                
+                for(let step = 0; step <= steps; step++) {
+                    if (step % recordStep === 0) {
+                        t.push((step * dt).toFixed(2));
+                        let out = D * 1.0;
+                        for(let i=0; i<N; i++) out += b[i] * x[i];
+                        y.push(parseFloat(out.toFixed(4)));
+                    }
+                    
+                    let k1 = computeDx(x);
+                    let x_k2 = []; for(let i=0; i<N; i++) x_k2[i] = x[i] + 0.5 * dt * k1[i];
+                    let k2 = computeDx(x_k2);
+                    let x_k3 = []; for(let i=0; i<N; i++) x_k3[i] = x[i] + 0.5 * dt * k2[i];
+                    let k3 = computeDx(x_k3);
+                    let x_k4 = []; for(let i=0; i<N; i++) x_k4[i] = x[i] + dt * k3[i];
+                    let k4 = computeDx(x_k4);
+                    
+                    for(let i=0; i<N; i++) {
+                        x[i] += (dt / 6) * (k1[i] + 2*k2[i] + 2*k3[i] + k4[i]);
                     }
                 }
                 
                 sandbox.pltState.labels = t;
-                sandbox.pltState.datasets = [{ data: y, label: "Amplitude" }];
+                sandbox.pltState.datasets = [{ data: y, label: "Amplitude", pointRadius: 0 }];
                 sandbox.pltState.isSubplots = false;
                 await sandbox.plt_show();
             },
