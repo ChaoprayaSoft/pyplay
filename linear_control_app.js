@@ -1238,20 +1238,23 @@ async function runPythonCode() {
                 let A_mat = [];
                 for(let i=0; i<N; i++) {
                     let row = [];
-                    for(let j=N-1; j>=0; j--) {
-                        if (i === 0) row.push(-a[j]);
-                        else row.push(j === N - i ? 1 : 0);
+                    for(let j=0; j<N; j++) {
+                        if (i < N - 1) {
+                            row.push(j === i + 1 ? 1 : 0);
+                        } else {
+                            row.push(-a[j]);
+                        }
                     }
                     A_mat.push(row);
                 }
                 if(N===0) A_mat = [[0]];
                 
                 let B_mat = [];
-                for(let i=0; i<N; i++) B_mat.push([i === 0 ? 1 : 0]);
+                for(let i=0; i<N; i++) B_mat.push([i === N - 1 ? 1 : 0]);
                 if(N===0) B_mat = [[0]];
                 
                 let C_mat = [[]];
-                for(let j=N-1; j>=0; j--) C_mat[0].push((num[j] || 0)/aN - D * a[j]);
+                for(let j=0; j<N; j++) C_mat[0].push((num[j] || 0)/aN - D * a[j]);
                 if(N===0) C_mat = [[0]];
                 
                 let D_mat = [[D]];
