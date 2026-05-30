@@ -1249,13 +1249,25 @@ async function runPythonCode() {
                 }
                 if(N===0) A_mat = [[0]];
                 
-                let B_mat = [];
-                for(let i=0; i<N; i++) B_mat.push([i === N - 1 ? 1 : 0]);
-                if(N===0) B_mat = [[0]];
+                let isPureConstant = true;
+                for(let j=1; j<N; j++) {
+                    if (Math.abs(num[j] || 0) > 1e-9) {
+                        isPureConstant = false;
+                        break;
+                    }
+                }
                 
+                let B_mat = [];
                 let C_mat = [[]];
-                for(let j=0; j<N; j++) C_mat[0].push((num[j] || 0)/aN - D * a[j]);
-                if(N===0) C_mat = [[0]];
+                if (isPureConstant && N > 0) {
+                    let K = (num[0] || 0) / aN;
+                    for(let i=0; i<N; i++) B_mat.push([i === N - 1 ? K : 0]);
+                    for(let j=0; j<N; j++) C_mat[0].push(j === 0 ? 1 : 0);
+                } else {
+                    for(let i=0; i<N; i++) B_mat.push([i === N - 1 ? 1 : 0]);
+                    for(let j=0; j<N; j++) C_mat[0].push((num[j] || 0)/aN - D * a[j]);
+                }
+                if(N===0) { B_mat = [[0]]; C_mat = [[0]]; }
                 
                 let D_mat = [[D]];
                 
