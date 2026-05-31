@@ -350,22 +350,16 @@ async function runCode() {
                 window.draw = undefined;
                 
                 ${code}
-                
-                // Auto-parent DOM elements so they appear in canvas-container
-                if (typeof p5 !== 'undefined' && p5.prototype.createSlider) {
-                    if (!window.__p5SliderPatched) {
-                        const origP5CreateSlider = p5.prototype.createSlider;
-                        p5.prototype.createSlider = function(...args) {
-                            let slider = origP5CreateSlider.apply(this, args);
-                            slider.parent('canvas-container');
-                            return slider;
-                        };
-                        window.__p5SliderPatched = true;
-                    }
-                }
 
                 // p5 global mode with canvas inside canvas-container
                 window.p5Instance = new p5(null, 'canvas-container');
+                
+                // Bulletproof Hack: Move any sliders created on the body into our container
+                setTimeout(() => {
+                    document.querySelectorAll('body > input[type="range"]').forEach(el => {
+                        document.getElementById('canvas-container').appendChild(el);
+                    });
+                }, 50);
             } catch(e) {
                 console.error(e.message);
             }
