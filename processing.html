@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PyPlay - Creative Coding (Processing)</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <!-- CodeMirror for Code Editor -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/dracula.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
+    <script>
+        // Redirect to index page with login trigger if not authenticated
+        if (!localStorage.getItem('pyplay_user')) {
+            window.location.href = 'index.html?triggerLogin=true';
+        }
+    </script>
+    <style>
+        .dom-viewport {
+            flex: 1;
+            background: #fff;
+            color: #111827;
+            padding: 0;
+            overflow: hidden; /* p5 canvas should not scroll if we match window size, but auto is fine */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-bottom: 1px solid var(--panel-border);
+            border-radius: 0;
+            position: relative;
+        }
+        .terminal-container {
+            flex: 1;
+            min-height: 150px;
+        }
+        
+        /* Floating Dock Styles */
+        .output-dock {
+            position: fixed;
+            top: 0;
+            right: -450px; /* Hidden by default */
+            width: 450px;
+            height: 100vh;
+            background: var(--bg-color);
+            border-left: 1px solid var(--panel-border);
+            z-index: 1000;
+            transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: -5px 0 25px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+        }
+        .output-dock.open {
+            right: 0;
+        }
+        .dock-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .dock-overlay.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        /* Ensure editor takes full height */
+        .editor-wrapper {
+            flex: 1 !important;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+    <!-- Overlay for dock -->
+    <div id="dock-overlay" class="dock-overlay"></div>
+
+    <div class="app-container">
+        <!-- Header -->
+        <header class="glass-panel header">
+            <div style="display: flex; align-items: center; gap: 1.5rem;">
+                <a href="index.html" class="logo">
+                    <img src="image/app_logo.png" alt="Logo" class="logo-icon" style="width: 50px; height: 50px; object-fit: contain; border-radius: 50%;">
+                    <h1>PyPlay</h1>
+                </a>
+                <a href="index.html" class="btn btn-outline" style="padding: 0.35rem 0.75rem; font-size: 0.8rem;">🏠 Home</a>
+            </div>
+            
+            <div class="progress-container" style="width: 380px;">
+                <span class="progress-text">Lesson <span id="current-lesson-num">1</span> of <span id="total-lessons">10</span></span>
+                <div class="progress-steps-container" id="progress-steps-container"></div>
+            </div>
+            <div class="controls">
+                <button class="btn btn-outline" id="prev-btn" disabled>Previous</button>
+                <button class="btn btn-primary" id="next-btn" disabled>Next Lesson</button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-workspace">
+            <!-- Left Panel: Instructions -->
+            <section class="glass-panel instruction-panel">
+                <div class="lesson-content">
+                    <h2 id="lesson-title" class="lesson-title">Loading...</h2>
+                    <div class="badges">
+                        <span class="badge badge-difficulty" id="lesson-difficulty">Beginner</span>
+                        <span class="badge badge-topic" id="lesson-topic">Processing</span>
+                    </div>
+                    
+                    <div class="lesson-section">
+                        <h3>📖 Concept</h3>
+                        <p id="lesson-concept">Preparing Processing Environment...</p>
+                    </div>
+
+                    <div class="lesson-section">
+                        <h3>💡 Example</h3>
+                        <pre><code id="lesson-example" class="example-code"></code></pre>
+                    </div>
+
+                    <div class="lesson-section task-section">
+                        <h3>🎯 Your Task</h3>
+                        <p id="lesson-task"></p>
+                    </div>
+                    
+                    <div id="success-message" class="success-message hidden">
+                        🎉 Great job! You completed the task correctly.
+                    </div>
+                </div>
+            </section>
+
+            <!-- Right Panel: Editor -->
+            <section class="editor-panel">
+                <!-- Editor Wrapper -->
+                <div class="glass-panel editor-wrapper">
+                    <div class="panel-header">
+                        <div class="tab active">sketch.js</div>
+                        <div style="margin-left: auto; display: flex; gap: 0.5rem;">
+                            <button class="btn btn-outline" id="toggle-dock-btn" style="padding: 0.4rem 0.8rem;">
+                                👁️ View Canvas
+                            </button>
+                            <button class="btn btn-run" id="run-btn">
+                                <span class="run-icon">▶</span> Run Sketch
+                            </button>
+                        </div>
+                    </div>
+                    <div class="editor-container">
+                        <textarea id="code-editor"></textarea>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Floating Output Dock -->
+    <div id="output-dock" class="output-dock glass-panel" style="border-radius: 0;">
+        <div class="panel-header">
+            <div class="tab active" style="margin-right: 1rem;">Canvas</div>
+            <div class="tab" style="opacity:0.6;">Console</div>
+            <button class="btn btn-clear" id="clear-btn" style="margin-left: auto;">Clear</button>
+            <button class="btn btn-outline" id="close-dock-btn" style="margin-left: 0.5rem; padding: 0.2rem 0.5rem; font-size: 1.2rem;">×</button>
+        </div>
+        
+        <!-- Sandbox DOM Viewport for p5.js Canvas -->
+        <div id="dom-viewport" class="dom-viewport">
+            <div id="canvas-container"></div>
+        </div>
+        
+        <div class="terminal-container">
+            <pre id="output-console" class="terminal-output">Ready to execute Processing sketch...\n</pre>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/javascript/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/edit/closebrackets.min.js"></script>
+    <!-- p5.js library for Processing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+    <script src="auth.js"></script>
+    <script src="processing_app.js"></script>
+</body>
+</html>

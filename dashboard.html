@@ -268,6 +268,10 @@
                         <div class="stat-value" id="stat-linearcontrol-completed">0 / 11</div>
                     </div>
                     <div class="stat-card">
+                        <div style="font-size:0.75rem; font-weight:600; text-transform:uppercase; color:var(--text-muted);">Processing (p5.js)</div>
+                        <div class="stat-value" id="stat-processing-completed">0 / 10</div>
+                    </div>
+                    <div class="stat-card">
                         <div style="font-size:0.75rem; font-weight:600; text-transform:uppercase; color:var(--text-muted);">Total XP</div>
                         <div class="stat-value" id="stat-xp">0 XP</div>
                     </div>
@@ -343,6 +347,12 @@
                             <div class="badge-icon" style="background: rgba(16, 185, 129, 0.15); color: #10b981; border: 2px solid rgba(16, 185, 129, 0.3);">🎛️</div>
                             <h4 class="badge-title">CONTROL ENGINEER</h4>
                             <p class="badge-desc">Finished Linear Control Systems Course</p>
+                        </div>
+                        
+                        <div class="badge-card" id="badge-processing">
+                            <div class="badge-icon" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 2px solid rgba(245, 158, 11, 0.3);">🎨</div>
+                            <h4 class="badge-title">CREATIVE CODER</h4>
+                            <p class="badge-desc">Finished Processing (p5.js) Course</p>
                         </div>
     
                         <div class="badge-card" id="badge-robotics">
@@ -459,6 +469,10 @@
             const lcCompletedCount = lcProgress.completed_lessons ? lcProgress.completed_lessons.length : 0;
             document.getElementById('stat-linearcontrol-completed').textContent = `${lcCompletedCount} / 11`;
 
+            const procProgress = user.progress.processing || { completed_lessons: [], completed: false };
+            const procCompletedCount = procProgress.completed_lessons ? procProgress.completed_lessons.length : 0;
+            document.getElementById('stat-processing-completed').textContent = `${procCompletedCount} / 10`;
+
             const jsProgress = user.progress.javascript || { completed_lessons: [], completed: false };
             const jsCompletedCount = jsProgress.completed_lessons ? jsProgress.completed_lessons.length : 0;
             document.getElementById('stat-javascript-completed').textContent = `${jsCompletedCount} / 13`;
@@ -516,6 +530,10 @@
             }
             if (lcProgress.completed) {
                 document.getElementById('badge-linearcontrol').classList.add('earned');
+                badgesCount++;
+            }
+            if (procProgress.completed) {
+                document.getElementById('badge-processing').classList.add('earned');
                 badgesCount++;
             }
             document.getElementById('stat-badges-earned').textContent = badgesCount;
