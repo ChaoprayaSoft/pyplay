@@ -506,51 +506,51 @@
 
             // Badge Earned Logic
             let badgesCount = 0;
-            if (pyProgress.completed) {
+            if (pyProgress.completed || pyCompletedCount >= 13) {
                 document.getElementById('badge-python').classList.add('earned');
                 badgesCount++;
             }
-            if (cvProgress.completed) {
+            if (cvProgress.completed || cvCompletedCount >= 14) {
                 document.getElementById('badge-opencv').classList.add('earned');
                 badgesCount++;
             }
-            if (cvcapProgress.completed) {
+            if (cvcapProgress.completed || cvcapCompletedCount >= 5) {
                 document.getElementById('badge-cvcapstone').classList.add('earned');
                 badgesCount++;
             }
-            if (ardProgress.completed) {
+            if (ardProgress.completed || ardCompletedCount >= 10) {
                 document.getElementById('badge-arduino').classList.add('earned');
                 badgesCount++;
             }
-            if (dvProgress.completed) {
+            if (dvProgress.completed || dvCompletedCount >= 10) {
                 document.getElementById('badge-datavis').classList.add('earned');
                 badgesCount++;
             }
-            if (dvcapProgress.completed) {
+            if (dvcapProgress.completed || dvcapCompletedCount >= 6) {
                 document.getElementById('badge-dataviscapstone').classList.add('earned');
                 badgesCount++;
             }
-            if (jsProgress.completed) {
+            if (jsProgress.completed || jsCompletedCount >= 13) {
                 document.getElementById('badge-javascript').classList.add('earned');
                 badgesCount++;
             }
-            if (aiProgress.completed) {
+            if (aiProgress.completed || aiCompletedCount >= 12) {
                 document.getElementById('badge-ai').classList.add('earned');
                 badgesCount++;
             }
-            if (robProgress.completed) {
+            if (robProgress.completed || robCompletedCount >= 10) {
                 document.getElementById('badge-robotics').classList.add('earned');
                 badgesCount++;
             }
-            if (lcProgress.completed) {
+            if (lcProgress.completed || lcCompletedCount >= 11) {
                 document.getElementById('badge-linearcontrol').classList.add('earned');
                 badgesCount++;
             }
-            if (procProgress.completed) {
+            if (procProgress.completed || procCompletedCount >= 10) {
                 document.getElementById('badge-processing').classList.add('earned');
                 badgesCount++;
             }
-            if (proccapProgress.completed) {
+            if (proccapProgress.completed || proccapCompletedCount >= 7) {
                 document.getElementById('badge-processingcapstone').classList.add('earned');
                 badgesCount++;
             }
