@@ -10,7 +10,7 @@ const lessons = [
         hint: "Make sure you have exactly <code>function setup() { createCanvas(400, 400); }</code>",
         initialCode: "function setup() {\n  // Create a 400x400 canvas here\n  \n}\n",
         validate: (state, logs, code) => {
-            return /function\s+setup\s*\(/.test(code) && /createCanvas\s*\(\s*400\s*,\s*400\s*\)/.test(code);
+            return /function\s+setup\s*\(/.test(code) && /createCanvas\s*\(\s*400\s*,\s*400\s*\)\s*;/.test(code);
         }
     },
     {
@@ -23,7 +23,7 @@ const lessons = [
         hint: "Add <code>background('lightblue');</code> right after your createCanvas function.",
         initialCode: "function setup() {\n  createCanvas(400, 400);\n  // Set the background to 'lightblue'\n  \n}\n",
         validate: (state, logs, code) => {
-            return /background\s*\(\s*['"]lightblue['"]\s*\)/.test(code);
+            return /background\s*\(\s*['"]lightblue['"]\s*\)\s*;/.test(code);
         }
     },
     {
@@ -36,7 +36,7 @@ const lessons = [
         hint: "The function is <code>rect(x, y, w, h)</code>. For this task, it's <code>rect(50, 50, 150, 100);</code>",
         initialCode: "function setup() {\n  createCanvas(400, 400);\n  background(220);\n  // Draw your rectangle below\n  \n}\n",
         validate: (state, logs, code) => {
-            return /rect\s*\(\s*50\s*,\s*50\s*,\s*150\s*,\s*100\s*\)/.test(code);
+            return /rect\s*\(\s*50\s*,\s*50\s*,\s*150\s*,\s*100\s*\)\s*;/.test(code);
         }
     },
     {
@@ -49,7 +49,7 @@ const lessons = [
         hint: "The function is <code>ellipse(x, y, w, h)</code>. Center is at <code>200, 200</code>.",
         initialCode: "function setup() {\n  createCanvas(400, 400);\n  background(220);\n  // Draw an ellipse at the center (200, 200) with size 120, 120\n  \n}\n",
         validate: (state, logs, code) => {
-            return /ellipse\s*\(\s*200\s*,\s*200\s*,\s*120\s*,\s*120\s*\)/.test(code);
+            return /ellipse\s*\(\s*200\s*,\s*200\s*,\s*120\s*,\s*120\s*\)\s*;/.test(code);
         }
     },
     {
@@ -62,9 +62,9 @@ const lessons = [
         hint: "Remember the order matters: <code>fill('yellow');</code>, then <code>stroke('red');</code>, then draw the <code>ellipse(200, 200, 100, 100)</code>.",
         initialCode: "function setup() {\n  createCanvas(400, 400);\n  background(220);\n  \n  // Set fill and stroke, then draw ellipse\n  \n}\n",
         validate: (state, logs, code) => {
-            return /fill\s*\(\s*['"]yellow['"]\s*\)/.test(code) && 
-                   /stroke\s*\(\s*['"]red['"]\s*\)/.test(code) && 
-                   /ellipse\s*\(\s*200\s*,\s*200\s*,\s*100\s*(,\s*100)?\s*\)/.test(code);
+            return /fill\s*\(\s*['"]yellow['"]\s*\)\s*;/.test(code) && 
+                   /stroke\s*\(\s*['"]red['"]\s*\)\s*;/.test(code) && 
+                   /ellipse\s*\(\s*200\s*,\s*200\s*,\s*100\s*(,\s*100)?\s*\)\s*;/.test(code);
         }
     },
     {
@@ -77,7 +77,7 @@ const lessons = [
         hint: "Use <code>strokeWeight(10);</code> before <code>line(0, 0, 400, 400);</code>.",
         initialCode: "function setup() {\n  createCanvas(400, 400);\n  background(220);\n  \n  // Set stroke weight to 10 and draw a diagonal line\n  \n}\n",
         validate: (state, logs, code) => {
-            return /strokeWeight\s*\(\s*10\s*\)/.test(code) && /line\s*\(\s*0\s*,\s*0\s*,\s*400\s*,\s*400\s*\)/.test(code);
+            return /strokeWeight\s*\(\s*10\s*\)\s*;/.test(code) && /line\s*\(\s*0\s*,\s*0\s*,\s*400\s*,\s*400\s*\)\s*;/.test(code);
         }
     },
     {
@@ -103,7 +103,7 @@ const lessons = [
         hint: "Pass <code>mouseX</code> and <code>mouseY</code> as the first two arguments to <code>rect()</code>.",
         initialCode: "function setup() {\n  createCanvas(400, 400);\n}\n\nfunction draw() {\n  background('teal');\n  // Draw a rectangle at mouseX, mouseY\n  \n}\n",
         validate: (state, logs, code) => {
-            return /rect\s*\(\s*mouseX\s*,\s*mouseY\s*,\s*50\s*,\s*50\s*\)/.test(code);
+            return /rect\s*\(\s*mouseX\s*,\s*mouseY\s*,\s*50\s*,\s*50\s*\)\s*;/.test(code);
         }
     },
     {
@@ -117,8 +117,8 @@ const lessons = [
         initialCode: "function setup() {\n  createCanvas(400, 400);\n}\n\nfunction draw() {\n  background(220);\n  \n  // Add if-else logic here\n  \n  \n  ellipse(mouseX, mouseY, 80, 80);\n}\n",
         validate: (state, logs, code) => {
             return /if\s*\(\s*mouseIsPressed\s*\)/.test(code) && 
-                   /fill\s*\(\s*['"]red['"]\s*\)/.test(code) && 
-                   /fill\s*\(\s*['"]blue['"]\s*\)/.test(code);
+                   /fill\s*\(\s*['"]red['"]\s*\)\s*;/.test(code) && 
+                   /fill\s*\(\s*['"]blue['"]\s*\)\s*;/.test(code);
         }
     },
     {
@@ -131,8 +131,8 @@ const lessons = [
         hint: "Update x with <code>x = x + 5;</code> inside the draw loop before drawing the ellipse.",
         initialCode: "// Declare let x = 0; here\n\nfunction setup() {\n  createCanvas(400, 400);\n}\n\nfunction draw() {\n  background(220);\n  \n  // Increase x by 5 and draw an ellipse at (x, 200)\n  \n}\n",
         validate: (state, logs, code) => {
-            return /let\s+x\s*=\s*0\s*;?/.test(code) && 
-                   /x\s*=\s*x\s*\+\s*5\s*;?|x\s*\+=\s*5\s*;?/.test(code) && 
+            return /let\s+x\s*=\s*0\s*;/.test(code) && 
+                   /x\s*=\s*x\s*\+\s*5\s*;|x\s*\+=\s*5\s*;/.test(code) && 
                    /ellipse\s*\(\s*x\s*,\s*200/.test(code);
         }
     }

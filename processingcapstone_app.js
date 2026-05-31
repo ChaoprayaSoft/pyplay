@@ -23,7 +23,7 @@ const lessons = [
         hint: "Add the gravity to velocity, then velocity to position. Make sure your if statement uses <code>y > 380</code> to account for the ball's radius.",
         initialCode: "let y = 50;\nlet vy = 0;\nlet gravity = 0.5;\n\nfunction setup() {\n  createCanvas(400, 400);\n  fill(50, 150, 255);\n}\n\nfunction draw() {\n  background(220);\n  \n  // Apply physics here\n  \n  \n  ellipse(200, y, 40, 40);\n}\n",
         validate: (state, logs, code) => {
-            return /vy\s*\+=\s*gravity/.test(code) && /y\s*\+=\s*vy/.test(code) && /vy\s*\*\=\s*-?0\.8/.test(code);
+            return /vy\s*\+=\s*gravity\s*;/.test(code) && /y\s*\+=\s*vy\s*;/.test(code) && /vy\s*\*\=\s*-?0\.8\s*;/.test(code);
         }
     },
     {
@@ -36,7 +36,7 @@ const lessons = [
         hint: "Call <code>translate</code>, then <code>rotate</code>, then <code>rect</code> in that exact order inside <code>draw()</code>.",
         initialCode: "function setup() {\n  createCanvas(400, 400);\n  fill(100);\n}\n\nfunction draw() {\n  background(220);\n  \n  // Translate, rotate by mouseX * 0.01, and draw rectangle\n  \n}\n",
         validate: (state, logs, code) => {
-            return /translate\s*\(\s*200\s*,\s*200\s*\)/.test(code) && /rotate\s*\(\s*mouseX/.test(code) && /rect\s*\(\s*0\s*,\s*-10\s*,\s*150\s*,\s*20\s*\)/.test(code);
+            return /translate\s*\(\s*200\s*,\s*200\s*\)\s*;/.test(code) && /rotate\s*\(\s*mouseX/.test(code) && /rect\s*\(\s*0\s*,\s*-10\s*,\s*150\s*,\s*20\s*\)\s*;/.test(code);
         }
     },
     {
@@ -62,7 +62,7 @@ const lessons = [
         hint: "Ensure you call <code>slider.position(20, 20);</code> right after you create the slider in setup.",
         initialCode: "let slider;\n\nfunction setup() {\n  createCanvas(400, 400);\n  // Create slider and position it over the canvas\n  \n}\n\nfunction draw() {\n  background(220);\n  \n  // Read slider value and draw ellipse\n  \n}\n",
         validate: (state, logs, code) => {
-            return /slider\s*=\s*createSlider\s*\(\s*10\s*,\s*200\s*,\s*100\s*\)/.test(code) && /slider\.position\s*\(\s*20\s*,\s*20\s*\)/.test(code) && /slider\.value\(\)/.test(code) && /ellipse\s*\(\s*200\s*,\s*200/.test(code);
+            return /slider\s*=\s*createSlider\s*\(\s*10\s*,\s*200\s*,\s*100\s*\)\s*;/.test(code) && /slider\.position\s*\(\s*20\s*,\s*20\s*\)\s*;/.test(code) && /slider\.value\(\)/.test(code) && /ellipse\s*\(\s*200\s*,\s*200/.test(code);
         }
     },
     {
@@ -75,7 +75,7 @@ const lessons = [
         hint: "Use a <code>for (let p of particles)</code> loop. Remember to do <code>p.y -= 2;</code> before drawing the circle.",
         initialCode: "let particles = [];\n\nfunction setup() {\n  createCanvas(400, 400);\n  noStroke();\n  fill(255, 150, 0, 150);\n}\n\nfunction draw() {\n  background(30);\n  \n  // Push new particle at mouse location\n  \n  \n  // Loop through particles, update y, draw circle\n  \n}\n",
         validate: (state, logs, code) => {
-            return /particles\.push/.test(code) && /for\s*\(\s*let\s+p\s+of\s+particles/.test(code) && /circle\s*\(\s*p\.x\s*,\s*p\.y\s*,\s*10\s*\)/.test(code);
+            return /particles\.push/.test(code) && /for\s*\(\s*let\s+p\s+of\s+particles/.test(code) && /circle\s*\(\s*p\.x\s*,\s*p\.y\s*,\s*10\s*\)\s*;/.test(code);
         }
     },
     {
@@ -88,7 +88,7 @@ const lessons = [
         hint: "Your canvas setup should look exactly like: <code>createCanvas(400, 400, WEBGL);</code>.",
         initialCode: "function setup() {\n  // Enable WEBGL mode here\n  createCanvas(400, 400);\n}\n\nfunction draw() {\n  background(30);\n  fill(50, 150, 255);\n  \n  // Add rotateX, rotateY, and draw a box\n  \n}\n",
         validate: (state, logs, code) => {
-            return /createCanvas\s*\(\s*400\s*,\s*400\s*,\s*WEBGL\s*\)/.test(code) && /rotateX\s*\(\s*frameCount/.test(code) && /rotateY\s*\(\s*frameCount/.test(code) && /box\s*\(\s*100\s*\)/.test(code);
+            return /createCanvas\s*\(\s*400\s*,\s*400\s*,\s*WEBGL\s*\)\s*;/.test(code) && /rotateX\s*\(\s*frameCount/.test(code) && /rotateY\s*\(\s*frameCount/.test(code) && /box\s*\(\s*100\s*\)\s*;/.test(code);
         }
     }
 ];

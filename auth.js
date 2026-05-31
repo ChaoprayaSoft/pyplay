@@ -469,13 +469,14 @@ const PyPlayAuth = {
         }
 
         // Check completion based on course total lessons
-        let totalLessons = 13;
+        let totalLessons = 13; // default for javascript
         if (courseId === 'opencv') totalLessons = 14;
         else if (courseId === 'cvcapstone') totalLessons = 5;
-        else if (courseId === 'arduino' || courseId === 'datavis' || courseId === 'robotics') totalLessons = 10;
+        else if (courseId === 'arduino' || courseId === 'datavis' || courseId === 'robotics' || courseId === 'processing') totalLessons = 10;
         else if (courseId === 'linearcontrol') totalLessons = 11;
         else if (courseId === 'dataviscapstone') totalLessons = 6;
         else if (courseId === 'ai') totalLessons = 12;
+        else if (courseId === 'processingcapstone') totalLessons = 7;
         
         if (courseProgress.completed_lessons.length === totalLessons) {
             courseProgress.completed = true;
