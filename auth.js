@@ -350,7 +350,8 @@ const PyPlayAuth = {
                 ai: { completed_lessons: [], completed: false },
                 robotics: { completed_lessons: [], completed: false },
                 linearcontrol: { completed_lessons: [], completed: false },
-                processing: { completed_lessons: [], completed: false }
+                processing: { completed_lessons: [], completed: false },
+                processingcapstone: { completed_lessons: [], completed: false }
             },
             lastUpdated: new Date().toISOString()
         };

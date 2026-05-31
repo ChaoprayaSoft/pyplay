@@ -48,7 +48,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         ai: 12,
         robotics: 10,
         linearcontrol: 11,
-        processing: 10
+        processing: 10,
+        processingcapstone: 7
     };
 
     const BADGE_ICONS = {
@@ -60,7 +61,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         dataviscapstone: '📈',
         javascript: '🟨',
         ai: '🧠',
-        robotics: '🦾'
+        robotics: '🦾',
+        processing: '🎨',
+        processingcapstone: '🎩'
     };
 
     // 3. Data Fetching
@@ -183,7 +186,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const progress = user.progress || {};
 
             // Build Progress Bars
-            const progressHtml = ['python', 'opencv', 'cvcapstone', 'arduino', 'datavis', 'dataviscapstone', 'javascript', 'ai', 'robotics', 'linearcontrol', 'processing'].map(courseId => {
+            const progressHtml = ['python', 'opencv', 'cvcapstone', 'arduino', 'datavis', 'dataviscapstone', 'javascript', 'ai', 'robotics', 'linearcontrol', 'processing', 'processingcapstone'].map(courseId => {
                 const p = progress[courseId];
                 const total = COURSE_TOTALS[courseId];
                 const completedCount = p && p.completed_lessons ? p.completed_lessons.length : 0;
@@ -195,6 +198,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (courseId === 'robotics') label = 'ROB';
                 if (courseId === 'linearcontrol') label = 'CTRL';
                 if (courseId === 'processing') label = 'PROC';
+                if (courseId === 'processingcapstone') label = 'PCAP';
                 if (courseId === 'dataviscapstone') label = 'DVC';
 
                 return `

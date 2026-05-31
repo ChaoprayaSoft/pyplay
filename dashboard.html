@@ -272,6 +272,10 @@
                         <div class="stat-value" id="stat-processing-completed">0 / 10</div>
                     </div>
                     <div class="stat-card">
+                        <div style="font-size:0.75rem; font-weight:600; text-transform:uppercase; color:var(--text-muted);">Processing Capstone</div>
+                        <div class="stat-value" id="stat-processingcapstone-completed">0 / 7</div>
+                    </div>
+                    <div class="stat-card">
                         <div style="font-size:0.75rem; font-weight:600; text-transform:uppercase; color:var(--text-muted);">Total XP</div>
                         <div class="stat-value" id="stat-xp">0 XP</div>
                     </div>
@@ -353,6 +357,12 @@
                             <div class="badge-icon" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 2px solid rgba(245, 158, 11, 0.3);">🎨</div>
                             <h4 class="badge-title">CREATIVE CODER</h4>
                             <p class="badge-desc">Finished Processing (p5.js) Course</p>
+                        </div>
+                        
+                        <div class="badge-card" id="badge-processingcapstone">
+                            <div class="badge-icon" style="background: rgba(220, 38, 38, 0.15); color: #dc2626; border: 2px solid rgba(220, 38, 38, 0.3);">🎩</div>
+                            <h4 class="badge-title">P5 MASTER</h4>
+                            <p class="badge-desc">Finished Processing Capstone Course</p>
                         </div>
     
                         <div class="badge-card" id="badge-robotics">
@@ -472,6 +482,10 @@
             const procProgress = user.progress.processing || { completed_lessons: [], completed: false };
             const procCompletedCount = procProgress.completed_lessons ? procProgress.completed_lessons.length : 0;
             document.getElementById('stat-processing-completed').textContent = `${procCompletedCount} / 10`;
+            
+            const proccapProgress = user.progress.processingcapstone || { completed_lessons: [], completed: false };
+            const proccapCompletedCount = proccapProgress.completed_lessons ? proccapProgress.completed_lessons.length : 0;
+            document.getElementById('stat-processingcapstone-completed').textContent = `${proccapCompletedCount} / 7`;
 
             const jsProgress = user.progress.javascript || { completed_lessons: [], completed: false };
             const jsCompletedCount = jsProgress.completed_lessons ? jsProgress.completed_lessons.length : 0;
@@ -486,7 +500,7 @@
             document.getElementById('stat-robotics-completed').textContent = `${robCompletedCount} / 10`;
             
             // 100 XP per completed lesson across all courses
-            const totalCompleted = pyCompletedCount + cvCompletedCount + cvcapCompletedCount + ardCompletedCount + dvCompletedCount + dvcapCompletedCount + jsCompletedCount + aiCompletedCount + robCompletedCount + lcCompletedCount;
+            const totalCompleted = pyCompletedCount + cvCompletedCount + cvcapCompletedCount + ardCompletedCount + dvCompletedCount + dvcapCompletedCount + jsCompletedCount + aiCompletedCount + robCompletedCount + lcCompletedCount + procCompletedCount + proccapCompletedCount;
             const xp = totalCompleted * 100;
             document.getElementById('stat-xp').textContent = `${xp} XP`;
 
@@ -534,6 +548,10 @@
             }
             if (procProgress.completed) {
                 document.getElementById('badge-processing').classList.add('earned');
+                badgesCount++;
+            }
+            if (proccapProgress.completed) {
+                document.getElementById('badge-processingcapstone').classList.add('earned');
                 badgesCount++;
             }
             document.getElementById('stat-badges-earned').textContent = badgesCount;
