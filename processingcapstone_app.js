@@ -79,16 +79,16 @@ const lessons = [
         }
     },
     {
-        title: "Generative Art: Recursive Tree",
+        title: "3D Graphics: WEBGL Box",
         difficulty: "Advanced",
-        topic: "Generative Art",
-        concept: "Recursion is when a function calls itself. It's fantastic for generating natural fractal patterns, like the branches of a tree.",
-        example: "function branch(len) {\n  line(0, 0, 0, -len);\n  translate(0, -len);\n  if (len > 4) { branch(len * 0.67); }\n}",
-        task: "Complete the <code>branch(len)</code> function. Draw a line from <code>(0,0)</code> to <code>(0, -len)</code>, then <code>translate(0, -len)</code>. If <code>len > 10</code>, call <code>branch(len * 0.7)</code>.",
-        hint: "Be sure to put the recursive <code>branch()</code> call inside the <code>if (len > 10)</code> check, otherwise it will run forever and crash your browser!",
-        initialCode: "function setup() {\n  createCanvas(400, 400);\n  stroke(255);\n}\n\nfunction draw() {\n  background(0);\n  translate(200, 400);\n  branch(100);\n  noLoop(); // stop draw loop to save CPU\n}\n\nfunction branch(len) {\n  // Draw line, translate, and recurse if len > 10\n  \n}\n",
+        topic: "3D Graphics",
+        concept: "p5.js supports true 3D rendering using <code>WEBGL</code> mode. In 3D, the coordinate origin (0,0) is automatically placed in the <strong>center</strong> of the canvas.",
+        example: "function setup() {\n  createCanvas(400, 400, WEBGL);\n}\nfunction draw() {\n  rotateX(0.5);\n  box(50);\n}",
+        task: "Enable 3D by adding <code>WEBGL</code> to your <code>createCanvas()</code>. In <code>draw()</code>, animate the rotation using <code>rotateX(frameCount * 0.01)</code> and <code>rotateY(frameCount * 0.01)</code>, then draw a <code>box(100)</code>.",
+        hint: "Your canvas setup should look exactly like: <code>createCanvas(400, 400, WEBGL);</code>.",
+        initialCode: "function setup() {\n  // Enable WEBGL mode here\n  createCanvas(400, 400);\n}\n\nfunction draw() {\n  background(30);\n  fill(50, 150, 255);\n  \n  // Add rotateX, rotateY, and draw a box\n  \n}\n",
         validate: (state, logs, code) => {
-            return /line\s*\(\s*0\s*,\s*0\s*,\s*0\s*,\s*-len\s*\)/.test(code) && /translate\s*\(\s*0\s*,\s*-len\s*\)/.test(code) && /if\s*\(\s*len\s*>\s*10\s*\)/.test(code) && /branch\s*\(\s*len\s*\*\s*0\.7/.test(code);
+            return /createCanvas\s*\(\s*400\s*,\s*400\s*,\s*WEBGL\s*\)/.test(code) && /rotateX\s*\(\s*frameCount/.test(code) && /rotateY\s*\(\s*frameCount/.test(code) && /box\s*\(\s*100\s*\)/.test(code);
         }
     }
 ];
