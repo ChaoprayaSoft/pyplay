@@ -56,13 +56,13 @@ const lessons = [
         title: "Interactive GUI Slider",
         difficulty: "Advanced",
         topic: "Gui",
-        concept: "You can create DOM elements in p5.js using functions like <code>createSlider(min, max, default)</code>. To make sure it shows up in our sandbox, we must attach it using <code>.parent('canvas-container')</code>. You can read its value in the draw loop using <code>slider.value()</code>.",
-        example: "let slider;\nfunction setup() {\n  slider = createSlider(10, 100, 50);\n  slider.parent('canvas-container');\n}\nfunction draw() {\n  let val = slider.value();\n}",
-        task: "Inside <code>setup()</code>, create a slider: <code>slider = createSlider(10, 200, 100);</code> and attach it: <code>slider.parent('canvas-container');</code>. Inside <code>draw()</code>, read <code>let w = slider.value();</code> and draw an <code>ellipse(200, 200, w, w)</code>.",
-        hint: "Ensure you assign <code>createSlider()</code> to the global <code>slider</code> variable inside setup, and then immediately call <code>slider.parent('canvas-container');</code>.",
-        initialCode: "let slider;\n\nfunction setup() {\n  createCanvas(400, 400);\n  // Create slider here and set its parent\n  \n}\n\nfunction draw() {\n  background(220);\n  \n  // Read slider value and draw ellipse\n  \n}\n",
+        concept: "You can create DOM elements in p5.js using functions like <code>createSlider(min, max, default)</code>. The slider will appear right below the canvas. You can read its value in the draw loop using <code>slider.value()</code>.",
+        example: "let slider;\nfunction setup() {\n  createCanvas(400, 400);\n  slider = createSlider(10, 100, 50);\n}\nfunction draw() {\n  let val = slider.value();\n}",
+        task: "Inside <code>setup()</code>, create a slider: <code>slider = createSlider(10, 200, 100);</code>. Inside <code>draw()</code>, read <code>let w = slider.value();</code> and draw an <code>ellipse(200, 200, w, w)</code>.",
+        hint: "Ensure you assign <code>createSlider()</code> to the global <code>slider</code> variable inside setup, right after <code>createCanvas</code>.",
+        initialCode: "let slider;\n\nfunction setup() {\n  createCanvas(400, 400);\n  // Create slider here\n  \n}\n\nfunction draw() {\n  background(220);\n  \n  // Read slider value and draw ellipse\n  \n}\n",
         validate: (state, logs, code) => {
-            return /slider\s*=\s*createSlider\s*\(\s*10\s*,\s*200\s*,\s*100\s*\)/.test(code) && /slider\.parent\s*\(\s*['"]canvas-container['"]\s*\)/.test(code) && /slider\.value\(\)/.test(code) && /ellipse\s*\(\s*200\s*,\s*200/.test(code);
+            return /slider\s*=\s*createSlider\s*\(\s*10\s*,\s*200\s*,\s*100\s*\)/.test(code) && /slider\.value\(\)/.test(code) && /ellipse\s*\(\s*200\s*,\s*200/.test(code);
         }
     },
     {
@@ -343,7 +343,8 @@ async function runCode() {
         script.id = 'p5-user-script';
         
         // Wrap the user's code to evaluate it globally, and instantiate p5.
-        // We override setup/draw locally in the script if they exist globally.
+        // We use INSTANCE mode so that DOM elements (createSlider, createButton, etc.)
+        // are automatically placed inside the canvas-container rather than the body.
         script.textContent = `
             try {
                 // clear old global setup/draw
@@ -352,8 +353,33 @@ async function runCode() {
                 
                 ${code}
                 
-                // If user defined setup or draw, p5 instance will pick it up automatically
-                window.p5Instance = new p5(null, 'canvas-container');
+                // Wrap user's global functions into p5 instance mode sketch.
+                // This ensures createSlider etc. attach to canvas-container.
+                var _userSetup = window.setup;
+                var _userDraw = window.draw;
+                window.p5Instance = new p5(function(p) {
+                    // Copy all p5 methods to window so user code works
+                    var methods = Object.getOwnPropertyNames(p.__proto__);
+                    methods.forEach(function(m) {
+                        if (typeof p[m] === 'function' && m !== 'constructor') {
+                            window[m] = p[m].bind(p);
+                        }
+                    });
+                    // Also expose common p5 properties
+                    p.setup = function() {
+                        if (_userSetup) _userSetup();
+                    };
+                    p.draw = function() {
+                        // Re-expose dynamic properties each frame
+                        window.mouseX = p.mouseX;
+                        window.mouseY = p.mouseY;
+                        window.mouseIsPressed = p.mouseIsPressed;
+                        window.frameCount = p.frameCount;
+                        window.width = p.width;
+                        window.height = p.height;
+                        if (_userDraw) _userDraw();
+                    };
+                }, 'canvas-container');
             } catch(e) {
                 console.error(e.message);
             }
