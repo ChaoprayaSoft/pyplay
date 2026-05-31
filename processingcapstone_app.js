@@ -53,16 +53,16 @@ const lessons = [
         }
     },
     {
-        title: "Interactive GUI Slider",
+        title: "Canvas-Drawn GUI Slider",
         difficulty: "Advanced",
         topic: "Gui",
-        concept: "You can create DOM elements in p5.js using functions like <code>createSlider(min, max, default)</code>. The slider will appear right below the canvas. You can read its value in the draw loop using <code>slider.value()</code>.",
-        example: "let slider;\nfunction setup() {\n  createCanvas(400, 400);\n  slider = createSlider(10, 100, 50);\n}\nfunction draw() {\n  let val = slider.value();\n}",
-        task: "Inside <code>setup()</code>, create a slider: <code>slider = createSlider(10, 200, 100);</code>. Inside <code>draw()</code>, read <code>let w = slider.value();</code> and draw an <code>ellipse(200, 200, w, w)</code>.",
-        hint: "Ensure you assign <code>createSlider()</code> to the global <code>slider</code> variable inside setup, right after <code>createCanvas</code>.",
-        initialCode: "let slider;\n\nfunction setup() {\n  createCanvas(400, 400);\n  // Create slider here\n  \n}\n\nfunction draw() {\n  background(220);\n  \n  // Read slider value and draw ellipse\n  \n}\n",
+        concept: "Real GUI development means building controls from scratch! We can draw a slider track with <code>rect()</code>, a draggable handle with <code>ellipse()</code>, and convert the handle's x-position to a value using <code>map(handleX, trackLeft, trackRight, minVal, maxVal)</code>.",
+        example: "// map() converts a range to another range:\nlet val = map(handleX, 50, 350, 10, 200);\n\n// mouseDragged() fires while dragging:\nfunction mouseDragged() {\n  handleX = constrain(mouseX, 50, 350);\n}",
+        task: "Complete the <code>mouseDragged()</code> function: set <code>handleX = constrain(mouseX, 50, 350);</code>. In <code>draw()</code>, calculate <code>let sz = map(handleX, 50, 350, 10, 200);</code> and draw <code>ellipse(200, 180, sz, sz)</code>.",
+        hint: "<code>constrain()</code> keeps handleX between 50 and 350 so the handle stays on the track. <code>map()</code> converts that range to 10-200 for the ellipse size.",
+        initialCode: "let handleX = 200;\n\nfunction setup() {\n  createCanvas(400, 400);\n}\n\nfunction draw() {\n  background(230);\n  \n  // Draw slider track\n  fill(180);\n  noStroke();\n  rect(50, 360, 300, 8, 4);\n  \n  // Draw handle\n  fill(50, 130, 240);\n  ellipse(handleX, 364, 22, 22);\n  \n  // Map handleX to a size value and draw ellipse\n  // let sz = map(handleX, 50, 350, 10, 200);\n  // ellipse(200, 180, sz, sz);\n  \n}\n\nfunction mouseDragged() {\n  // Set handleX = constrain(mouseX, 50, 350);\n  \n}\n",
         validate: (state, logs, code) => {
-            return /slider\s*=\s*createSlider\s*\(\s*10\s*,\s*200\s*,\s*100\s*\)/.test(code) && /slider\.value\(\)/.test(code) && /ellipse\s*\(\s*200\s*,\s*200/.test(code);
+            return /constrain\s*\(\s*mouseX\s*,\s*50\s*,\s*350\s*\)/.test(code) && /map\s*\(\s*handleX\s*,\s*50\s*,\s*350\s*,\s*10\s*,\s*200\s*\)/.test(code) && /ellipse\s*\(\s*200\s*,\s*180/.test(code);
         }
     },
     {
@@ -343,8 +343,6 @@ async function runCode() {
         script.id = 'p5-user-script';
         
         // Wrap the user's code to evaluate it globally, and instantiate p5.
-        // We use INSTANCE mode so that DOM elements (createSlider, createButton, etc.)
-        // are automatically placed inside the canvas-container rather than the body.
         script.textContent = `
             try {
                 // clear old global setup/draw
@@ -353,33 +351,8 @@ async function runCode() {
                 
                 ${code}
                 
-                // Wrap user's global functions into p5 instance mode sketch.
-                // This ensures createSlider etc. attach to canvas-container.
-                var _userSetup = window.setup;
-                var _userDraw = window.draw;
-                window.p5Instance = new p5(function(p) {
-                    // Copy all p5 methods to window so user code works
-                    var methods = Object.getOwnPropertyNames(p.__proto__);
-                    methods.forEach(function(m) {
-                        if (typeof p[m] === 'function' && m !== 'constructor') {
-                            window[m] = p[m].bind(p);
-                        }
-                    });
-                    // Also expose common p5 properties
-                    p.setup = function() {
-                        if (_userSetup) _userSetup();
-                    };
-                    p.draw = function() {
-                        // Re-expose dynamic properties each frame
-                        window.mouseX = p.mouseX;
-                        window.mouseY = p.mouseY;
-                        window.mouseIsPressed = p.mouseIsPressed;
-                        window.frameCount = p.frameCount;
-                        window.width = p.width;
-                        window.height = p.height;
-                        if (_userDraw) _userDraw();
-                    };
-                }, 'canvas-container');
+                // p5 global mode with canvas inside canvas-container
+                window.p5Instance = new p5(null, 'canvas-container');
             } catch(e) {
                 console.error(e.message);
             }
