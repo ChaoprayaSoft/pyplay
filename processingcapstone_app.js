@@ -119,8 +119,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (PyPlayAuth.user && PyPlayAuth.user.progress && PyPlayAuth.user.progress.processingcapstone) {
         const prog = PyPlayAuth.user.progress.processingcapstone;
         if (prog.highest_lesson && prog.highest_lesson > 0) {
-            highestLessonIndex = prog.highest_lesson;
-            currentLessonIndex = prog.highest_lesson;
+            highestLessonIndex = Math.min(prog.highest_lesson, lessons.length - 1);
+            currentLessonIndex = highestLessonIndex;
         }
     }
 
