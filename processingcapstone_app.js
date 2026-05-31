@@ -56,13 +56,13 @@ const lessons = [
         title: "Interactive GUI Slider",
         difficulty: "Advanced",
         topic: "Gui",
-        concept: "You can create DOM elements in p5.js using functions like <code>createSlider(min, max, default)</code>. The slider will appear right below the canvas. You can read its value in the draw loop using <code>slider.value()</code>.",
-        example: "let slider;\nfunction setup() {\n  createCanvas(400, 400);\n  slider = createSlider(10, 100, 50);\n}\nfunction draw() {\n  let val = slider.value();\n}",
-        task: "Inside <code>setup()</code>, create a slider: <code>slider = createSlider(10, 200, 100);</code>. Inside <code>draw()</code>, read <code>let w = slider.value();</code> and draw an <code>ellipse(200, 200, w, w)</code>.",
-        hint: "Ensure you assign <code>createSlider()</code> to the global <code>slider</code> variable inside setup, right after <code>createCanvas</code>.",
-        initialCode: "let slider;\n\nfunction setup() {\n  createCanvas(400, 400);\n  // Create slider here\n  \n}\n\nfunction draw() {\n  background(220);\n  \n  // Read slider value and draw ellipse\n  \n}\n",
+        concept: "You can create DOM elements using <code>createSlider(min, max, default)</code>. To make it appear <strong>inside</strong> the canvas visually, we must use <code>slider.position(x, y)</code> to place it over the graphics.",
+        example: "let slider;\nfunction setup() {\n  createCanvas(400, 400);\n  slider = createSlider(10, 100, 50);\n  slider.position(10, 10);\n}\nfunction draw() {\n  let val = slider.value();\n}",
+        task: "Inside <code>setup()</code>, create a slider: <code>slider = createSlider(10, 200, 100);</code>. Then position it over the canvas: <code>slider.position(20, 20);</code>. Inside <code>draw()</code>, read <code>let w = slider.value();</code> and draw an <code>ellipse(200, 200, w, w)</code>.",
+        hint: "Ensure you call <code>slider.position(20, 20);</code> right after you create the slider in setup.",
+        initialCode: "let slider;\n\nfunction setup() {\n  createCanvas(400, 400);\n  // Create slider and position it over the canvas\n  \n}\n\nfunction draw() {\n  background(220);\n  \n  // Read slider value and draw ellipse\n  \n}\n",
         validate: (state, logs, code) => {
-            return /slider\s*=\s*createSlider\s*\(\s*10\s*,\s*200\s*,\s*100\s*\)/.test(code) && /slider\.value\(\)/.test(code) && /ellipse\s*\(\s*200\s*,\s*200/.test(code);
+            return /slider\s*=\s*createSlider\s*\(\s*10\s*,\s*200\s*,\s*100\s*\)/.test(code) && /slider\.position\s*\(\s*20\s*,\s*20\s*\)/.test(code) && /slider\.value\(\)/.test(code) && /ellipse\s*\(\s*200\s*,\s*200/.test(code);
         }
     },
     {
