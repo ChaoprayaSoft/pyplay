@@ -23,7 +23,7 @@
             background: #fff;
             color: #111827;
             padding: 0;
-            overflow: hidden; /* p5 canvas should not scroll if we match window size, but auto is fine */
+            overflow: auto; /* Allow scrolling for DOM elements like sliders */
             display: flex;
             justify-content: center;
             align-items: center;
@@ -34,6 +34,14 @@
         .terminal-container {
             flex: 1;
             min-height: 150px;
+        }
+
+        #canvas-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
         }
         
         /* Floating Dock Styles */
