@@ -1017,7 +1017,26 @@ function stopBuzzerTone() {
 
 // --- C++ TO JAVASCRIPT TRANSPILER ---
 function transpileArduinoCode(cppCode) {
-    // 0. Auto-heal beginner copy-paste mistakes (nested setup/loop)
+    // 0. Enforce C++ semicolon syntax
+    const lines = cppCode.split('\n');
+    for (let i = 0; i < lines.length; i++) {
+        let line = lines[i].trim();
+        // Remove inline comments for checking
+        line = line.split('//')[0].trim();
+        if (line === '') continue;
+        
+        if (line.startsWith('/*') || line.startsWith('*') || line.endsWith('*/')) continue;
+        if (line.endsWith('{') || line.endsWith('}') || line === '}') continue;
+        if (line.startsWith('#')) continue;
+        if (line.match(/^(if|else|while|for)\b/)) continue;
+        if (line.startsWith('void ')) continue;
+        
+        if (!line.endsWith(';')) {
+            throw new Error(`Syntax Error: Missing ';' at the end of line ${i + 1}`);
+        }
+    }
+
+    // 0.5. Auto-heal beginner copy-paste mistakes (nested setup/loop)
     // If they pasted a whole loop inside the existing loop boilerplate:
     let code = cppCode.replace(/void\s+loop\s*\(\s*\)\s*\{[\s\S]*?void\s+loop\s*\(\s*\)\s*\{/g, "void loop() {");
     code = code.replace(/void\s+setup\s*\(\s*\)\s*\{[\s\S]*?void\s+setup\s*\(\s*\)\s*\{/g, "void setup() {");

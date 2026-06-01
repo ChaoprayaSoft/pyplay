@@ -62,6 +62,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         javascript: '🟨',
         ai: '🧠',
         robotics: '🦾',
+        linearcontrol: '🎛️',
         processing: '🎨',
         processingcapstone: '🎩'
     };
