@@ -327,8 +327,45 @@ const PyPlayAuth = {
         }
     },
 
+    showFullScreenLoading(message) {
+        let overlay = document.getElementById('pyplay-fullscreen-loading');
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = 'pyplay-fullscreen-loading';
+            overlay.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+                background: rgba(15, 17, 26, 0.9); backdrop-filter: blur(10px);
+                display: flex; flex-direction: column; align-items: center; justify-content: center;
+                z-index: 1000000; color: #fff; font-family: 'Inter', sans-serif;
+            `;
+            const spinner = document.createElement('div');
+            spinner.style.cssText = `
+                width: 50px; height: 50px; border: 4px solid rgba(255,255,255,0.2);
+                border-top-color: #3b82f6; border-radius: 50%;
+                animation: pyplay-spin 1s linear infinite; margin-bottom: 1.5rem;
+            `;
+            const text = document.createElement('div');
+            text.id = 'pyplay-fullscreen-loading-text';
+            text.style.fontSize = '1.25rem';
+            text.style.fontWeight = '600';
+            
+            overlay.appendChild(spinner);
+            overlay.appendChild(text);
+            document.body.appendChild(overlay);
+        }
+        document.getElementById('pyplay-fullscreen-loading-text').textContent = message;
+        overlay.style.display = 'flex';
+    },
+
+    hideFullScreenLoading() {
+        const overlay = document.getElementById('pyplay-fullscreen-loading');
+        if (overlay) overlay.style.display = 'none';
+    },
+
     // --- Actions ---
     async login(email, name, role = "Learner", avatar = null) {
+        this.showFullScreenLoading("Authenticating...");
+        
         email = String(email).toLowerCase().trim();
         const randomAvatar = avatar || DEFAULT_AVATARS[Math.floor(Math.random() * DEFAULT_AVATARS.length)];
         const randomColor = DEFAULT_COLORS[Math.floor(Math.random() * DEFAULT_COLORS.length)];
@@ -359,6 +396,7 @@ const PyPlayAuth = {
         // Try to fetch existing profile from Google Sheets if scriptUrl is configured
         if (this.scriptUrl) {
             try {
+                this.showFullScreenLoading("Fetching your profile & progress...");
                 // Set temporary user object so syncFromSheets has access to the email for fetching
                 this.user = { email, name };
                 const sheetsData = await this.syncFromSheets();
@@ -386,6 +424,7 @@ const PyPlayAuth = {
                     };
                 } else {
                     // New user! Initiate and push newly created data to Sheets
+                    this.showFullScreenLoading("Setting up new profile...");
                     await this.pushUserToSheets(userData);
                 }
             } catch (err) {
@@ -399,9 +438,11 @@ const PyPlayAuth = {
             await this.pushUserToSheets(userData);
         }
 
+        this.showFullScreenLoading("Logging you in...");
         this.saveLocalUser(userData);
         await this.logToSheets(email, userData.name, "Logged In");
 
+        this.showFullScreenLoading("Welcome to PyPlay!");
         // Refresh page or redirect
         window.location.reload();
     },
