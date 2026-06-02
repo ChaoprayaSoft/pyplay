@@ -227,7 +227,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (!badgesHtml) badgesHtml = `<span style="color:var(--text-muted); font-size:0.8rem;">None</span>`;
 
             // Format Date
-            const dateStr = user.lastUpdated ? new Date(user.lastUpdated).toLocaleDateString() : 'N/A';
+            const dateStr = user.lastUpdated ? new Date(user.lastUpdated).toLocaleDateString('en-GB') : 'N/A';
 
             return `
                 <tr>
@@ -298,7 +298,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             
             const progressStr = `"${progressParts.join(" | ")}"`;
             const badgesStr = `"${badgesParts.join(", ")}"`;
-            const dateStr = user.lastUpdated ? new Date(user.lastUpdated).toLocaleDateString() : 'N/A';
+            const dateStr = user.lastUpdated ? new Date(user.lastUpdated).toLocaleDateString('en-GB') : 'N/A';
             
             rows.push([name, email, progressStr, badgesStr, `"${dateStr}"`].join(","));
         });
