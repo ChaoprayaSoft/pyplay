@@ -8,7 +8,8 @@ const lessons = [
         example: 'print("Hello, World!")',
         task: 'Use the `print()` function to output the exact phrase: `Hello, Python!`',
         initialCode: '# Write your code below:\n',
-        expectedOutput: "Hello, Python!"
+        expectedOutput: "Hello, Python!",
+        requiredKeywords: ["print", "Hello, Python!"]
     },
     {
         title: "Variables and Types",
@@ -18,7 +19,8 @@ const lessons = [
         example: 'myint = 7\nmyfloat = 7.0\nmystring = "hello"\nprint(myint)\nprint(myfloat)\nprint(mystring)',
         task: 'Create three variables: an integer named `myint` with the value `10`, a float named `myfloat` with the value `20.5`, and a string named `mystring` with the value `"interactive"`. Print all three on separate lines.',
         initialCode: '# Create and print your variables below:\n',
-        expectedOutput: "10\n20.5\ninteractive"
+        expectedOutput: "10\n20.5\ninteractive",
+        requiredKeywords: ["myint", "myfloat", "mystring", "10", "20.5", "interactive", "print"]
     },
     {
         title: "Lists",
@@ -28,7 +30,8 @@ const lessons = [
         example: 'mylist = []\nmylist.append(1)\nmylist.append(2)\nprint(mylist)',
         task: 'Create a list called `colors`. Add the strings `"red"`, `"green"`, and `"blue"` to it in that order using `.append()`. Finally, print the `colors` list.',
         initialCode: 'colors = []\n# Append elements and print below:\n',
-        expectedOutput: "['red', 'green', 'blue']"
+        expectedOutput: "['red', 'green', 'blue']",
+        requiredKeywords: ["colors", "append", "red", "green", "blue", "print"]
     },
     {
         title: "Basic Operators",
@@ -38,7 +41,8 @@ const lessons = [
         example: 'remainder = 11 % 3\nsquared = 5 ** 2\nprint(remainder)\nprint(squared)',
         task: 'Calculate the remainder of `25` divided by `4`, store it in a variable called `result`, and print it.',
         initialCode: '# Calculate remainder and print:\n',
-        expectedOutput: "1"
+        expectedOutput: "1",
+        requiredKeywords: ["25", "4", "%", "result", "print"]
     },
     {
         title: "String Formatting",
@@ -48,7 +52,8 @@ const lessons = [
         example: 'name = "John"\nage = 30\nprint(f"My name is {name} and I am {age} years old.")',
         task: 'Using f-strings, format the variables `course = "Python"` and `rating = 5` into the exact sentence: `I rate the Python course 5 stars!` and print it.',
         initialCode: 'course = "Python"\nrating = 5\n# Format and print below:\n',
-        expectedOutput: "I rate the Python course 5 stars!"
+        expectedOutput: "I rate the Python course 5 stars!",
+        requiredKeywords: ["f", "course", "rating", "print"]
     },
     {
         title: "Basic String Operations",
@@ -58,7 +63,8 @@ const lessons = [
         example: 's = "Hello World!"\nprint(len(s))\nprint(s[0:5]) # prints Hello',
         task: 'Given the string `msg = "Coding Sandbox"`, print its length on the first line, and its first word `"Coding"` (sliced from index 0 to 6) on the second line.',
         initialCode: 'msg = "Coding Sandbox"\n# Print length and the sliced word below:\n',
-        expectedOutput: "14\nCoding"
+        expectedOutput: "14\nCoding",
+        requiredKeywords: ["len", "msg", "[", "]", "print"]
     },
     {
         title: "Conditions",
@@ -68,7 +74,8 @@ const lessons = [
         example: 'name = "John"\nage = 23\nif name == "John" and age > 20:\n    print("Welcome John!")',
         task: 'Write an `if` condition that checks if `score` is greater than or equal to `50` AND `is_active` is `True`. If both are true, print `"Access Granted"`.',
         initialCode: 'score = 75\nis_active = True\n# Write your condition below:\n',
-        expectedOutput: "Access Granted"
+        expectedOutput: "Access Granted",
+        requiredKeywords: ["if", "score", "50", "is_active", "print"]
     },
     {
         title: "Loops",
@@ -78,7 +85,8 @@ const lessons = [
         example: 'for i in range(1, 4):\n    print(i)',
         task: 'Write a `for` loop to print all **even** numbers between `1` and `10` (inclusive) using a loop over `range(1, 11)`. (Hint: check if `i % 2 == 0`).',
         initialCode: '# Print even numbers from 1 to 10 below:\n',
-        expectedOutput: "2\n4\n6\n8\n10"
+        expectedOutput: "2\n4\n6\n8\n10",
+        requiredKeywords: ["for", "in", "range", "print"]
     },
     {
         title: "Functions",
@@ -88,7 +96,8 @@ const lessons = [
         example: 'def greet(name):\n    return f"Hello, {name}!"\n\nprint(greet("Bob"))',
         task: 'Define a function called `square(num)` that returns the square of the given number. Call the function with the argument `9` and print the returned value.',
         initialCode: '# Define your function and call it below:\n',
-        expectedOutput: "81"
+        expectedOutput: "81",
+        requiredKeywords: ["def", "square", "return", "print"]
     },
     {
         title: "Classes and Objects",
@@ -98,7 +107,8 @@ const lessons = [
         example: 'class Dog:\n    def bark(self):\n        print("Woof!")\n\nmy_dog = Dog()\nmy_dog.bark()',
         task: 'Create a class called `Student` with a variable attribute `grade = "A"` and a method called `report(self)` that prints `"Grade is A"`. Instantiate an object of `Student` named `student1`, and call its `report()` method.',
         initialCode: '# Create Student class and run method:\n',
-        expectedOutput: "Grade is A"
+        expectedOutput: "Grade is A",
+        requiredKeywords: ["class", "Student", "def", "report", "self", "print"]
     },
     {
         title: "Dictionaries",
@@ -108,7 +118,8 @@ const lessons = [
         example: 'phonebook = {\n    "Alice": 5551234,\n    "Bob": 5555678\n}\nprint(phonebook["Alice"])',
         task: 'Create a dictionary named `inventory` containing two pairs: `"apples"` with value `15`, and `"bananas"` with value `24`. Print the `inventory` dictionary.',
         initialCode: 'inventory = {}\n# Populate inventory and print below:\n',
-        expectedOutput: "{'apples': 15, 'bananas': 24}"
+        expectedOutput: "{'apples': 15, 'bananas': 24}",
+        requiredKeywords: ["inventory", "apples", "15", "bananas", "24", "print"]
     },
     {
         title: "Modules and Packages",
@@ -118,7 +129,8 @@ const lessons = [
         example: 'import math\nprint(math.cos(0)) # prints 1.0',
         task: 'Import the `random` module, then use `random.randint(10, 10)` to generate a number (which will always be `10`), and print it. (Hint: run `print(random.randint(10, 10))`).',
         initialCode: '# Import and print below:\n',
-        expectedOutput: "10"
+        expectedOutput: "10",
+        requiredKeywords: ["import", "random", "randint", "print"]
     },
     {
         title: "Input and Output",
@@ -128,7 +140,8 @@ const lessons = [
         example: 'with open("test.txt", "w") as f:\n    f.write("Hello File")\nwith open("test.txt", "r") as f:\n    print(f.read())',
         task: 'Open a file called `log.txt` in write mode (`"w"`), write the string `"PyPlay Log Active"` to it, and close it. Then open the same file in read mode (`"r"`), read its content, and print it to standard output.',
         initialCode: '# Perform File I/O below:\n',
-        expectedOutput: "PyPlay Log Active"
+        expectedOutput: "PyPlay Log Active",
+        requiredKeywords: ["open", "log.txt", "write", "read", "print"]
     }
 ];
 
@@ -401,12 +414,23 @@ async function runCode() {
 function checkLessonCompletion() {
     const lesson = lessons[currentLessonIndex];
     const currentOutput = dom.outputConsole.textContent;
+    const code = editor.getValue();
     
     // Normalize spaces and quotes to ensure robust validation for dictionaries, lists, etc.
     const normalizedOutput = currentOutput.trim().replace(/\s+/g, ' ').replace(/"/g, "'");
     const normalizedExpected = lesson.expectedOutput.trim().replace(/\s+/g, ' ').replace(/"/g, "'");
 
-    if (normalizedOutput === normalizedExpected) {
+    let isCodeValid = true;
+    if (lesson.requiredKeywords) {
+        for (const req of lesson.requiredKeywords) {
+            if (!code.includes(req)) {
+                isCodeValid = false;
+                break;
+            }
+        }
+    }
+
+    if (normalizedOutput === normalizedExpected && isCodeValid) {
         dom.successMessage.classList.remove('hidden');
         dom.nextBtn.disabled = false;
         
@@ -427,6 +451,8 @@ function checkLessonCompletion() {
             dom.nextBtn.textContent = "Finish Course";
             dom.nextBtn.disabled = false;
         }
+    } else if (normalizedOutput === normalizedExpected && !isCodeValid) {
+        appendError("Output is correct, but the code doesn't seem to follow all the task requirements. Make sure you are using the requested concepts/variables.\n");
     }
 }
 
