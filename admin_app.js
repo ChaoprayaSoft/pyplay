@@ -30,11 +30,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         tableBody: document.getElementById('users-table-body'),
         searchInput: document.getElementById('search-users'),
         filterCourse: document.getElementById('filter-course'),
-        filterRole: document.getElementById('filter-role')
+        filterRole: document.getElementById('filter-role'),
+        btnExportCSV: document.getElementById('btn-export-csv')
     };
 
     let allUsers = [];
     let allLogs = [];
+    let currentFilteredUsers = [];
 
     // Course configuration constants
     const COURSE_TOTALS = {
@@ -177,9 +179,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
 
         if (filteredUsers.length === 0) {
+            currentFilteredUsers = [];
             UI.tableBody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">No users found matching filters.</td></tr>`;
             return;
         }
+
+        currentFilteredUsers = filteredUsers;
 
         UI.tableBody.innerHTML = filteredUsers.map(user => {
             const roleColor = user.role === 'Admin' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(59, 130, 246, 0.2)';
@@ -257,6 +262,57 @@ document.addEventListener('DOMContentLoaded', async () => {
     UI.searchInput.addEventListener('input', renderTable);
     UI.filterCourse.addEventListener('change', renderTable);
     UI.filterRole.addEventListener('change', renderTable);
+    UI.btnExportCSV.addEventListener('click', exportCSV);
+
+    function exportCSV() {
+        if (currentFilteredUsers.length === 0) {
+            alert("No users to export.");
+            return;
+        }
+
+        const headers = ["User", "Email", "Progress", "Badges", "Last Active"];
+        const rows = [];
+        rows.push(headers.join(","));
+
+        currentFilteredUsers.forEach(user => {
+            const name = `"${(user.name || '').replace(/"/g, '""')}"`;
+            const email = `"${(user.email || '').replace(/"/g, '""')}"`;
+            
+            const progress = user.progress || {};
+            const progressParts = [];
+            let badgesParts = [];
+            
+            Object.keys(COURSE_TOTALS).forEach(courseId => {
+                const p = progress[courseId];
+                const total = COURSE_TOTALS[courseId];
+                const completedCount = p && p.completed_lessons ? p.completed_lessons.length : 0;
+                
+                if (completedCount > 0) {
+                    progressParts.push(`${courseId}: ${completedCount}/${total}`);
+                }
+                
+                if (p && p.completed) {
+                    badgesParts.push(courseId);
+                }
+            });
+            
+            const progressStr = `"${progressParts.join(" | ")}"`;
+            const badgesStr = `"${badgesParts.join(", ")}"`;
+            const dateStr = user.lastUpdated ? new Date(user.lastUpdated).toLocaleDateString() : 'N/A';
+            
+            rows.push([name, email, progressStr, badgesStr, `"${dateStr}"`].join(","));
+        });
+
+        const csvContent = rows.join("\n");
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.setAttribute("href", url);
+        link.setAttribute("download", "users_export.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
 
     // Initial Load
     loadData();
