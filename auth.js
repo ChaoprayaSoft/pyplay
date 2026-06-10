@@ -112,6 +112,11 @@ const PyPlayAuth = {
         // Update activity timestamp on user interaction
         document.addEventListener('click', () => this.updateActivityTime());
         document.addEventListener('keypress', () => this.updateActivityTime());
+
+        // Background sync if user is already logged in
+        if (this.user) {
+            this.syncFromSheets(true).catch(e => console.warn('Background sync failed:', e));
+        }
     },
 
     loadLocalUser() {
@@ -167,10 +172,10 @@ const PyPlayAuth = {
     },
 
     // --- Google Sheets Sync Methods ---
-    async syncFromSheets() {
+    async syncFromSheets(silent = false) {
         if (!this.user || !this.scriptUrl) return;
 
-        this.showToast("Syncing progress from cloud...");
+        if (!silent) this.showToast("Syncing progress from cloud...");
 
         try {
             const controller = new AbortController();
@@ -189,7 +194,7 @@ const PyPlayAuth = {
             
             // Apps Script sometimes returns "null" for not-found users — treat as no data
             if (!text || text === 'null') {
-                this.hideToast();
+                if (!silent) this.hideToast();
                 return null;
             }
             const data = JSON.parse(text);
@@ -216,15 +221,15 @@ const PyPlayAuth = {
                     role: data.role || this.user.role,
                     progress: parsedProgress
                 });
-                this.showToast("Progress synced! ☁️", true);
+                if (!silent) this.showToast("Progress synced! ☁️", true);
                 return data;
             } else {
-                this.hideToast();
+                if (!silent) this.hideToast();
                 return null;
             }
         } catch (e) {
             console.warn("Cloud sync skipped (offline or script unreachable):", e.message);
-            this.hideToast();
+            if (!silent) this.hideToast();
             throw e; // Rethrow to let login() handle the failure appropriately
         }
     },
