@@ -6,6 +6,6 @@
     "dev": "vercel dev"
   },
   "devDependencies": {
-    "vercel": "latest"
+    "vercel": "^50.41.0"
   }
 }
