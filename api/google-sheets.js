@@ -36,8 +36,10 @@ module.exports = async function handler(req, res) {
 
             const request = https.request(options, (response) => {
                 if (response.statusCode >= 300 && response.statusCode < 400 && response.headers.location) {
-                    // Follow redirect
-                    return makeRequest(response.headers.location, method, bodyStr).then(resolve).catch(reject);
+                    // Follow redirect. If it was a POST, standard 302/303 behavior is to change to GET and drop the body.
+                    const redirectMethod = (method === 'POST' || response.statusCode === 303) ? 'GET' : method;
+                    const redirectBody = redirectMethod === 'GET' ? null : bodyStr;
+                    return makeRequest(response.headers.location, redirectMethod, redirectBody).then(resolve).catch(reject);
                 }
 
                 let data = '';
