@@ -1,11 +1,10 @@
 // --- Auth & Google Sheets Sync Utility ---
 
 // ==========================================
-// ⚙️ GOOGLE CLOUD INTEGRATION VARIABLES
+// ⚙️ BACKEND & AUTH INTEGRATION VARIABLES
 // ==========================================
-// 1. Paste your deployed Google Apps Script Web App URL here:
-const GOOGLE_SHEETS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbywkBFnCaI9mXEeh833XTeD8lnqO6rn2Zw9_d9hxvF_nBmVGhy9CM4K-ZMESq7PCZLF/exec";
-
+// 1. Backend Proxy API URL (Vercel Serverless Function):
+const BACKEND_API_URL = "/api/google-sheets";
 
 // 2. Paste your Google OAuth Client ID here:
 const GOOGLE_OAUTH_CLIENT_ID = "1049203742621-tce9mr7k2qne7a7b1jn6b6mujlj9fcpu.apps.googleusercontent.com";
@@ -17,8 +16,8 @@ const DEFAULT_COLORS = ["#3b82f6", "#10b981", "#ef4444", "#f59e0b", "#8b5cf6", "
 const PyPlayAuth = {
     // Current local state
     user: null,
-    scriptUrl: localStorage.getItem('pyplay_script_url') || GOOGLE_SHEETS_SCRIPT_URL, // Configured via GOOGLE_SHEETS_SCRIPT_URL above
-    googleClientId: localStorage.getItem('pyplay_google_client_id') || GOOGLE_OAUTH_CLIENT_ID, // Configured via GOOGLE_OAUTH_CLIENT_ID above
+    scriptUrl: localStorage.getItem('pyplay_script_url') || BACKEND_API_URL, 
+    googleClientId: localStorage.getItem('pyplay_google_client_id') || GOOGLE_OAUTH_CLIENT_ID,
     toastElement: null,
 
     showToast(message, isSuccess = false) {
@@ -97,7 +96,7 @@ const PyPlayAuth = {
     },
 
     init() {
-        this.scriptUrl = localStorage.getItem('pyplay_script_url') || GOOGLE_SHEETS_SCRIPT_URL;
+        this.scriptUrl = localStorage.getItem('pyplay_script_url') || BACKEND_API_URL;
         this.googleClientId = localStorage.getItem('pyplay_google_client_id') || GOOGLE_OAUTH_CLIENT_ID;
         this.loadLocalUser();
         this.createAppHeader();
@@ -282,9 +281,8 @@ const PyPlayAuth = {
         try {
             await fetch(this.scriptUrl, {
                 method: 'POST',
-                mode: 'no-cors',
                 headers: {
-                    'Content-Type': 'text/plain',
+                    'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
                     type: 'user',
@@ -310,9 +308,8 @@ const PyPlayAuth = {
         try {
             await fetch(this.scriptUrl, {
                 method: 'POST',
-                mode: 'no-cors',
                 headers: {
-                    'Content-Type': 'text/plain',
+                    'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
                     type: 'log',
@@ -643,8 +640,8 @@ const PyPlayAuth = {
                 
                 <div style="display:flex; flex-direction:column; gap:1.25rem;">
                     <div>
-                        <label style="font-size:0.8rem; font-weight:700; text-transform:uppercase; color:var(--text-muted);">Google Apps Script Web App URL</label>
-                        <input type="text" id="settings-script-url" class="edit-input" style="width:100%; margin-top:0.35rem;" placeholder="https://script.google.com/macros/s/.../exec">
+                        <label style="font-size:0.8rem; font-weight:700; text-transform:uppercase; color:var(--text-muted);">Backend API Proxy URL</label>
+                        <input type="text" id="settings-script-url" class="edit-input" style="width:100%; margin-top:0.35rem;" placeholder="/api/google-sheets">
                     </div>
                     <div>
                         <label style="font-size:0.8rem; font-weight:700; text-transform:uppercase; color:var(--text-muted);">Google OAuth Client ID</label>
@@ -677,7 +674,7 @@ const PyPlayAuth = {
             this.scriptUrl = scriptUrl;
         } else {
             localStorage.removeItem('pyplay_script_url');
-            this.scriptUrl = GOOGLE_SHEETS_SCRIPT_URL;
+            this.scriptUrl = BACKEND_API_URL;
         }
 
         if (clientId) {

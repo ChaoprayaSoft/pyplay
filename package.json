@@ -1,0 +1,11 @@
+{
+  "name": "pyplay",
+  "version": "1.0.0",
+  "description": "PyPlay Vercel Project",
+  "scripts": {
+    "dev": "vercel dev"
+  },
+  "devDependencies": {
+    "vercel": "latest"
+  }
+}
