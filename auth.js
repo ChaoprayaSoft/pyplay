@@ -181,7 +181,7 @@ const PyPlayAuth = {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 5000);
             const userEmail = String(this.user.email).toLowerCase().trim();
-            const response = await fetch(`${this.scriptUrl}?email=${encodeURIComponent(userEmail)}`, { signal: controller.signal });
+            const response = await fetch(`${this.scriptUrl}?email=${encodeURIComponent(userEmail)}&_t=${Date.now()}`, { signal: controller.signal });
             clearTimeout(timeoutId);
 
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
@@ -238,7 +238,7 @@ const PyPlayAuth = {
         if (!this.scriptUrl) return [];
 
         try {
-            const response = await fetch(`${this.scriptUrl}?action=get_all_users`);
+            const response = await fetch(`${this.scriptUrl}?action=get_all_users&_t=${Date.now()}`);
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             
             const text = await response.text();
@@ -260,7 +260,7 @@ const PyPlayAuth = {
         if (!this.scriptUrl) return [];
 
         try {
-            const response = await fetch(`${this.scriptUrl}?action=get_all_logs`);
+            const response = await fetch(`${this.scriptUrl}?action=get_all_logs&_t=${Date.now()}`);
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             
             const text = await response.text();
