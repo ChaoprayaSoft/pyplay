@@ -179,7 +179,7 @@ const PyPlayAuth = {
 
         try {
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 5000);
+            const timeoutId = setTimeout(() => controller.abort(), 15000);
             const userEmail = String(this.user.email).toLowerCase().trim();
             const response = await fetch(`${this.scriptUrl}?email=${encodeURIComponent(userEmail)}&_t=${Date.now()}`, { signal: controller.signal });
             clearTimeout(timeoutId);
