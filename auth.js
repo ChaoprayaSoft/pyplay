@@ -539,7 +539,6 @@ const PyPlayAuth = {
         } else {
             profileDiv.innerHTML = `
                 <button class="btn btn-outline" onclick="PyPlayAuth.openLoginModal()">Join Now</button>
-                <button class="btn btn-primary" onclick="PyPlayAuth.tryDemo()">Try Demo</button>
             `;
         }
 
