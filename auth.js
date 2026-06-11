@@ -3,10 +3,7 @@
 // ==========================================
 // ⚙️ BACKEND & AUTH INTEGRATION VARIABLES
 // ==========================================
-// 1. Backend Proxy API URL (Vercel Serverless Function):
-const BACKEND_API_URL = "/api/google-sheets";
-
-// 2. Paste your Google OAuth Client ID here:
+// 1. Firebase configuration will be loaded dynamically
 const GOOGLE_OAUTH_CLIENT_ID = "1049203742621-tce9mr7k2qne7a7b1jn6b6mujlj9fcpu.apps.googleusercontent.com";
 // ==========================================
 
@@ -16,7 +13,8 @@ const DEFAULT_COLORS = ["#3b82f6", "#10b981", "#ef4444", "#f59e0b", "#8b5cf6", "
 const PyPlayAuth = {
     // Current local state
     user: null,
-    scriptUrl: localStorage.getItem('pyplay_script_url') || BACKEND_API_URL, 
+    db: null,
+    firestoreHelpers: null,
     googleClientId: localStorage.getItem('pyplay_google_client_id') || GOOGLE_OAUTH_CLIENT_ID,
     toastElement: null,
 
@@ -96,7 +94,6 @@ const PyPlayAuth = {
     },
 
     init() {
-        this.scriptUrl = localStorage.getItem('pyplay_script_url') || BACKEND_API_URL;
         this.googleClientId = localStorage.getItem('pyplay_google_client_id') || GOOGLE_OAUTH_CLIENT_ID;
         this.loadLocalUser();
         this.createAppHeader();
@@ -171,48 +168,45 @@ const PyPlayAuth = {
         return false;
     },
 
-    // --- Google Sheets Sync Methods ---
-    async syncFromSheets(silent = false) {
-        if (!this.user || !this.scriptUrl) return;
+    async getDb() {
+        if (this.db) return this.db;
+        const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+        const { getFirestore, collection, doc, getDoc, setDoc, getDocs, addDoc, query, orderBy } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSyCuBnG-UhG8HjI9ot97sv9rUh8KfVWLEUs",
+            authDomain: "pyplay-69499.firebaseapp.com",
+            databaseURL: "https://pyplay-69499-default-rtdb.firebaseio.com",
+            projectId: "pyplay-69499",
+            storageBucket: "pyplay-69499.firebasestorage.app",
+            messagingSenderId: "484594716922",
+            appId: "1:484594716922:web:149204e3a0a434c8a5b943",
+            measurementId: "G-07BT4XEQK3"
+        };
+        
+        this.firebaseApp = initializeApp(firebaseConfig);
+        this.db = getFirestore(this.firebaseApp);
+        this.firestoreHelpers = { collection, doc, getDoc, setDoc, getDocs, addDoc, query, orderBy };
+        return this.db;
+    },
 
+    // --- Firebase Sync Methods ---
+    async syncFromSheets(silent = false) {
+        if (!this.user) return;
         if (!silent) this.showToast("Syncing progress from cloud...");
 
         try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 15000);
+            const db = await this.getDb();
+            const { doc, getDoc } = this.firestoreHelpers;
             const userEmail = String(this.user.email).toLowerCase().trim();
-            const response = await fetch(`${this.scriptUrl}?email=${encodeURIComponent(userEmail)}&_t=${Date.now()}`, { signal: controller.signal });
-            clearTimeout(timeoutId);
-
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             
-            const text = await response.text();
-            const trimmed = text.trim();
-            if (trimmed.startsWith('<') || trimmed.toLowerCase().startsWith('<!doctype')) {
-                throw new Error('Response is HTML instead of JSON — script may need to be redeployed.');
-            }
-            
-            // Apps Script sometimes returns "null" for not-found users — treat as no data
-            if (!text || text === 'null') {
-                if (!silent) this.hideToast();
-                return null;
-            }
-            const data = JSON.parse(text);
+            const docRef = doc(db, "users", userEmail);
+            const docSnap = await getDoc(docRef);
 
-            if (data && data.email) {
-                // Safely parse progress
-                let parsedProgress = this.user.progress || {};
-                try {
-                    if (typeof data.progress === 'string' && data.progress.trim()) {
-                        parsedProgress = JSON.parse(data.progress);
-                    } else if (typeof data.progress === 'object' && data.progress) {
-                        parsedProgress = data.progress;
-                    }
-                } catch (e) {
-                    console.warn("Failed to parse progress from Sheets:", e);
-                }
-
-                // Update local storage with fresh sheets data
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                let parsedProgress = data.progress || {};
+                
                 this.saveLocalUser({
                     ...this.user,
                     name: data.name || this.user.name,
@@ -228,104 +222,83 @@ const PyPlayAuth = {
                 return null;
             }
         } catch (e) {
-            console.warn("Cloud sync skipped (offline or script unreachable):", e.message);
+            console.warn("Cloud sync skipped:", e.message);
             if (!silent) this.hideToast();
-            throw e; // Rethrow to let login() handle the failure appropriately
+            throw e;
         }
     },
 
     async getAllUsersFromSheets() {
-        if (!this.scriptUrl) return [];
-
         try {
-            const response = await fetch(`${this.scriptUrl}?action=get_all_users&_t=${Date.now()}`);
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-            
-            const text = await response.text();
-            const trimmed = text.trim();
-            if (trimmed.startsWith('<') || trimmed.toLowerCase().startsWith('<!doctype')) {
-                throw new Error('Response is HTML instead of JSON — script may need to be redeployed.');
-            }
-            
-            if (!text || text === 'null') return [];
-            const data = JSON.parse(text);
-            return Array.isArray(data) ? data : [];
+            const db = await this.getDb();
+            const { collection, getDocs } = this.firestoreHelpers;
+            const querySnapshot = await getDocs(collection(db, "users"));
+            const users = [];
+            querySnapshot.forEach((doc) => {
+                users.push(doc.data());
+            });
+            return users;
         } catch (e) {
             console.warn("getAllUsersFromSheets failed:", e.message);
-            throw e; // Re-throw so admin.html's catch block shows the sync error banner
+            throw e;
         }
     },
 
     async getAllLogsFromSheets() {
-        if (!this.scriptUrl) return [];
-
         try {
-            const response = await fetch(`${this.scriptUrl}?action=get_all_logs&_t=${Date.now()}`);
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-            
-            const text = await response.text();
-            const trimmed = text.trim();
-            if (trimmed.startsWith('<') || trimmed.toLowerCase().startsWith('<!doctype')) {
-                throw new Error('Response is HTML instead of JSON — script may need to be redeployed.');
-            }
-            
-            if (!text || text === 'null') return [];
-            const data = JSON.parse(text);
-            return Array.isArray(data) ? data : [];
+            const db = await this.getDb();
+            const { collection, getDocs, query, orderBy } = this.firestoreHelpers;
+            const q = query(collection(db, "logs"), orderBy("timestamp", "desc"));
+            const querySnapshot = await getDocs(q);
+            const logs = [];
+            querySnapshot.forEach((doc) => {
+                logs.push(doc.data());
+            });
+            return logs;
         } catch (e) {
             console.warn("getAllLogsFromSheets failed:", e.message);
-            throw e; // Re-throw so admin.html's catch block shows the sync error banner
+            throw e;
         }
     },
 
     async pushUserToSheets(userData) {
-        if (!this.scriptUrl) return;
-
         this.showToast("Syncing settings to cloud...");
-
         try {
-            await fetch(this.scriptUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    type: 'user',
-                    email: String(userData.email).toLowerCase().trim(),
-                    name: userData.name,
-                    avatar: userData.avatar,
-                    color: userData.color,
-                    role: userData.role,
-                    progress: userData.progress,
-                    lastUpdated: new Date().toISOString()
-                })
+            const db = await this.getDb();
+            const { doc, setDoc } = this.firestoreHelpers;
+            
+            const userEmail = String(userData.email).toLowerCase().trim();
+            const docRef = doc(db, "users", userEmail);
+            
+            await setDoc(docRef, {
+                email: userEmail,
+                name: userData.name,
+                avatar: userData.avatar,
+                color: userData.color,
+                role: userData.role,
+                progress: userData.progress,
+                lastUpdated: new Date().toISOString()
             });
             this.showToast("Settings synced with cloud!", true);
         } catch (e) {
-            console.error("Sheets push failed:", e);
+            console.error("Firebase push failed:", e);
             this.showToast("Sync failed (Offline)", true);
         }
     },
 
     async logToSheets(email, name, status) {
-        if (!this.scriptUrl) return;
-
         try {
-            await fetch(this.scriptUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    type: 'log',
-                    email: email ? String(email).toLowerCase().trim() : "",
-                    name: name,
-                    status: status,
-                    timestamp: new Date().toISOString()
-                })
+            const db = await this.getDb();
+            const { collection, addDoc } = this.firestoreHelpers;
+            
+            await addDoc(collection(db, "logs"), {
+                email: email ? String(email).toLowerCase().trim() : "",
+                name: name,
+                action: status,
+                timestamp: new Date().toISOString()
             });
         } catch (e) {
-            console.error("Sheets logging failed:", e);
+            console.error("Firebase logging failed:", e);
         }
     },
 
@@ -395,49 +368,40 @@ const PyPlayAuth = {
             lastUpdated: new Date().toISOString()
         };
 
-        // Try to fetch existing profile from Google Sheets if scriptUrl is configured
-        if (this.scriptUrl) {
-            try {
-                this.showFullScreenLoading("Fetching your profile & progress...");
-                // Set temporary user object so syncFromSheets has access to the email for fetching
-                this.user = { email, name };
-                const sheetsData = await this.syncFromSheets();
-                if (sheetsData && sheetsData.email) {
-                    // Existing user found! Restore their profile and progress
-                    let restoredProgress = userData.progress || {};
-                    try {
-                        if (typeof sheetsData.progress === 'string' && sheetsData.progress.trim()) {
-                            restoredProgress = JSON.parse(sheetsData.progress);
-                        } else if (typeof sheetsData.progress === 'object' && sheetsData.progress) {
-                            restoredProgress = sheetsData.progress;
-                        }
-                    } catch (e) {
-                        console.warn("Could not parse sheetsData progress", e);
+        try {
+            this.showFullScreenLoading("Fetching your profile & progress...");
+            // Set temporary user object so syncFromSheets has access to the email for fetching
+            this.user = { email, name };
+            const sheetsData = await this.syncFromSheets();
+            if (sheetsData && sheetsData.email) {
+                // Existing user found! Restore their profile and progress
+                let restoredProgress = userData.progress || {};
+                try {
+                    if (typeof sheetsData.progress === 'string' && sheetsData.progress.trim()) {
+                        restoredProgress = JSON.parse(sheetsData.progress);
+                    } else if (typeof sheetsData.progress === 'object' && sheetsData.progress) {
+                        restoredProgress = sheetsData.progress;
                     }
-                    
-                    userData = {
-                        email: String(sheetsData.email).toLowerCase().trim(),
-                        name: sheetsData.name || name,
-                        avatar: sheetsData.avatar || randomAvatar,
-                        color: sheetsData.color || randomColor,
-                        role: sheetsData.role || role,
-                        progress: restoredProgress,
-                        lastUpdated: sheetsData.lastUpdated || new Date().toISOString()
-                    };
-                } else {
-                    // New user! Initiate and push newly created data to Sheets
-                    this.showFullScreenLoading("Setting up new profile...");
-                    await this.pushUserToSheets(userData);
+                } catch (e) {
+                    console.warn("Could not parse sheetsData progress", e);
                 }
-            } catch (err) {
-                console.warn("Could not sync with Google Sheets during login.", err);
-                // DO NOT push newly created user if sync failed due to network/CORS error,
-                // as that would overwrite their cloud data with blank progress.
-                // Just log them in locally.
+                
+                userData = {
+                    email: String(sheetsData.email).toLowerCase().trim(),
+                    name: sheetsData.name || name,
+                    avatar: sheetsData.avatar || randomAvatar,
+                    color: sheetsData.color || randomColor,
+                    role: sheetsData.role || role,
+                    progress: restoredProgress,
+                    lastUpdated: sheetsData.lastUpdated || new Date().toISOString()
+                };
+            } else {
+                // New user! Initiate and push newly created data to Firebase
+                this.showFullScreenLoading("Setting up new profile...");
+                await this.pushUserToSheets(userData);
             }
-        } else {
-            // Push locally if no scriptUrl is set yet
-            await this.pushUserToSheets(userData);
+        } catch (err) {
+            console.warn("Could not sync with Firebase during login.", err);
         }
 
         this.showFullScreenLoading("Logging you in...");
@@ -645,8 +609,8 @@ const PyPlayAuth = {
                 
                 <div style="display:flex; flex-direction:column; gap:1.25rem;">
                     <div>
-                        <label style="font-size:0.8rem; font-weight:700; text-transform:uppercase; color:var(--text-muted);">Backend API Proxy URL</label>
-                        <input type="text" id="settings-script-url" class="edit-input" style="width:100%; margin-top:0.35rem;" placeholder="/api/google-sheets">
+                        <label style="font-size:0.8rem; font-weight:700; text-transform:uppercase; color:var(--text-muted);">Database Provider</label>
+                        <input type="text" class="edit-input" style="width:100%; margin-top:0.35rem;" value="Firebase Firestore (Active)" disabled>
                     </div>
                     <div>
                         <label style="font-size:0.8rem; font-weight:700; text-transform:uppercase; color:var(--text-muted);">Google OAuth Client ID</label>
@@ -666,21 +630,11 @@ const PyPlayAuth = {
     openSettingsModal() {
         this.createSettingsModal();
         document.getElementById('pyplay-settings-modal').style.display = 'flex';
-        document.getElementById('settings-script-url').value = this.scriptUrl || '';
         document.getElementById('settings-client-id').value = this.googleClientId || '';
     },
 
     saveSettings() {
-        const scriptUrl = document.getElementById('settings-script-url').value.trim();
         const clientId = document.getElementById('settings-client-id').value.trim();
-
-        if (scriptUrl) {
-            localStorage.setItem('pyplay_script_url', scriptUrl);
-            this.scriptUrl = scriptUrl;
-        } else {
-            localStorage.removeItem('pyplay_script_url');
-            this.scriptUrl = BACKEND_API_URL;
-        }
 
         if (clientId) {
             localStorage.setItem('pyplay_google_client_id', clientId);
